@@ -1,0 +1,46 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=conll2003-multimodel
+
+defaults:
+  - override /dataset: conll2003.yaml
+  - override /datamodule: default.yaml
+  - override /taskmodule: transformer_token_classification.yaml
+  - override /model: multi_model_token_classification.yaml
+  - override /callbacks: default.yaml
+  - override /logger: wandb.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "conll2003/multi_model_token_classification"
+
+tags: ["dataset=conll2003", "model=multi_model_token_classification"]
+
+seed: 12345
+
+transformer_model: bert-base-cased
+
+taskmodule:
+  tokenizer_name_or_path: ${transformer_model}
+
+model:
+  model_name: ${transformer_model}
+  model_paths:
+    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
+    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+    # TODO: add co-reference resolution model
+
+  # configure learning rate. Default learning rate is set in model constructor
+  learning_rate: 1e-5
+
+trainer:
+  min_epochs: 5
+  max_epochs: 20
+  # gradient_clip_val: 0.5
+
+datamodule:
+  batch_size: 32

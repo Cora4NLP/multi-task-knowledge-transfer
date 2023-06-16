@@ -47,6 +47,7 @@ from pytorch_lightning.loggers import Logger
 
 from src import utils
 from src.datamodules import PieDataModule
+from src.models import MultiModelTokenClassificationModel
 
 log = utils.get_pylogger(__name__)
 
@@ -93,6 +94,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     model_cls = get_class(cfg.model["_target_"])
     # NOTE: DEFINE THE additional_model_kwargs IF YOU WANT TO USE ANOTHER MODEL! SEE EXAMPLES BELOW.
     if model_cls == TransformerTokenClassificationModel:
+        additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
+    elif model_cls == MultiModelTokenClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     # elif model_cls == pytorch_ie.models.TransformerSpanClassificationModel:
     #     additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
