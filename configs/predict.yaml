@@ -1,0 +1,41 @@
+# @package _global_
+
+# specify here default prediction configuration
+defaults:
+  - _self_
+  - dataset: conll2003
+  - pipeline: from_pretrained
+  - serializer: json
+  - paths: default.yaml
+  - extras: default.yaml
+  - hydra: default.yaml
+
+pipeline_type: "prediction"
+
+print_config: True
+
+ignore_warnings: True
+
+seed: null
+
+name: "default"
+
+# This should be the value of save_dir from the train config
+# or the url to huggingface hub where the taskmodule and model was pushed to.
+# It is used in the pipeline config.
+model_name_or_path: pie/example-ner-spanclf-conll03
+
+# to override model weights with content of a checkpoint
+ckpt_path: null
+
+# which split from the loaded dataset will be used
+dataset_split: test
+
+prediction_save_dir: ${paths.save_dir}/predictions/${name}/${dataset_split}/${now:%Y-%m-%d_%H-%M-%S}
+
+# set the output path for the serializer
+serializer:
+  path: ${prediction_save_dir}/documents.jsonl
+
+# if set, the final config including resolved paths etc. will be written to this location
+config_out_path: ${prediction_save_dir}/config.yaml
