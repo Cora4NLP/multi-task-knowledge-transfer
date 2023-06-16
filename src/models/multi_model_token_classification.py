@@ -5,8 +5,7 @@ import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
 from torch.nn import CrossEntropyLoss
-from transformers import AutoConfig, AutoModel, AutoModelForTokenClassification, BatchEncoding
-from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+from transformers import AutoConfig, AutoModel, BatchEncoding
 
 MultiModelTokenClassificationModelBatchEncoding = BatchEncoding
 MultiModelTokenClassificationModelBatchOutput = Dict[str, Any]
@@ -94,7 +93,9 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         sequence_output = self.dropout(aggregated_sequence_output)
         logits = self.classifier(sequence_output)
 
-        return logits
+        # Return a dict with "logits" as key to confirm to the interface of the taskmodule,
+        # i.e. pytorch_ie.taskmodules.TransformerTokenClassificationTaskModule
+        return {"logits": logits}
 
     def step(
         self,
@@ -104,7 +105,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         input_, target = batch
         assert target is not None, "target has to be available for training"
 
-        logits = self(input_)
+        logits = self(input_)["logits"]
 
         loss_fct = CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, self.num_classes), target.view(-1))
