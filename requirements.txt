@@ -1,5 +1,6 @@
 # --------- pytorch-ie --------- #
-pytorch-ie~=0.15
+#pytorch-ie~=0.15
+git+https://github.com/ChristophAlt/pytorch-ie#egg=pytorch_ie
 
 # --------- hydra --------- #
 hydra-core>=1.3.0
