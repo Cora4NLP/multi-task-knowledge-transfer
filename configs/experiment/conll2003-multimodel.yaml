@@ -1,7 +1,7 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=conll2003
+# python train.py experiment=conll2003-multimodel
 
 defaults:
   - override /dataset: conll2003.yaml
@@ -34,7 +34,7 @@ model:
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     # TODO: add co-reference resolution model
 
-  # configure learning rate. Default learning rate is set in model constructor (here: TransformerTokenClassificationModel)
+  # configure learning rate. Default learning rate is set in model constructor
   learning_rate: 1e-5
 
 trainer:
