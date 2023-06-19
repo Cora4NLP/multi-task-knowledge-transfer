@@ -27,7 +27,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self,
         model_name: str,
         num_classes: int,
-        model_paths: Dict[str, str],
+        pretrained_models: Dict[str, str],
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,
@@ -43,13 +43,13 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self.label_pad_token_id = label_pad_token_id
         self.num_classes = num_classes
 
-        if len(model_paths) < 1:
+        if len(pretrained_models) < 1:
             raise ValueError("At least one model path must be provided")
 
         config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
         if self.is_from_pretrained:
             self.models = nn.ModuleDict(
-                {model_id: AutoModel.from_config(config=config) for model_id in model_paths}
+                {model_id: AutoModel.from_config(config=config) for model_id in pretrained_models}
             )
         else:
             self.models = nn.ModuleDict(
@@ -57,7 +57,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
                     model_id: AutoModel.from_pretrained(
                         path, config=config, ignore_mismatched_sizes=True
                     )
-                    for model_id, path in model_paths.items()
+                    for model_id, path in pretrained_models.items()
                 }
             )
 
