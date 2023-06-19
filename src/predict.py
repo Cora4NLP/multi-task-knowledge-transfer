@@ -42,6 +42,7 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_ie import DatasetDict, Pipeline
 
 from src import utils
+from src.models import MultiModelTokenClassificationModel
 from src.serializer.interface import DocumentSerializer
 
 log = utils.get_pylogger(__name__)
