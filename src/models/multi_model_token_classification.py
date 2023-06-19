@@ -29,6 +29,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         num_classes: int,
         model_paths: Dict[str, str],
         aggregate: str = "mean",
+        freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,
         learning_rate: float = 1e-5,
         label_pad_token_id: int = -100,
@@ -59,6 +60,9 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
                     for model_id, path in model_paths.items()
                 }
             )
+
+        for model_id in freeze_models or []:
+            self.models[model_id].requires_grad_(False)
 
         if aggregate == "mean":
 
