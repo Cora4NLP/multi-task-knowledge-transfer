@@ -10,13 +10,13 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class SpanCluster(Annotation):
+class SpanSet(Annotation):
     spans: Tuple[Tuple[int, int], ...]
     score: float = 1.0
 
     def __post_init__(self) -> None:
-        # sort spans and convert to tuples
-        object.__setattr__(self, "spans", tuple(sorted(tuple(s) for s in self.spans)))
+        # make spans unique, sort them and convert to tuples to make them hashable
+        object.__setattr__(self, "spans", tuple(sorted(set(tuple(s) for s in self.spans))))
 
 
 @dataclasses.dataclass
@@ -26,7 +26,7 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     speakers: List[List[str]]
     sentence_map: List[int]
     subtoken_map: Optional[List[int]] = None
-    clusters: AnnotationList[SpanCluster] = annotation_field(target="tokens")
+    clusters: AnnotationList[SpanSet] = annotation_field(target="tokens")
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     # these are not needed:
@@ -47,7 +47,7 @@ def example_to_document(
         subtoken_map=example["subtoken_map"],
     )
     for spans in example["clusters"]:
-        document.clusters.append(SpanCluster(spans=spans))
+        document.clusters.append(SpanSet(spans=spans))
     return document
 
 

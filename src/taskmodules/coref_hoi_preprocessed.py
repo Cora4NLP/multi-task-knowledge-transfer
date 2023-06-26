@@ -36,13 +36,13 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class SpanCluster(Annotation):
+class SpanSet(Annotation):
     spans: Tuple[Tuple[int, int], ...]
     score: float = 1.0
 
     def __post_init__(self) -> None:
-        # sort spans and convert to tuples
-        object.__setattr__(self, "spans", tuple(sorted(tuple(s) for s in self.spans)))
+        # make spans unique, sort them and convert to tuples to make them hashable
+        object.__setattr__(self, "spans", tuple(sorted(set(tuple(s) for s in self.spans))))
 
 
 @dataclasses.dataclass
@@ -52,7 +52,7 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     speakers: List[List[str]]
     sentence_map: List[int]
     subtoken_map: Optional[List[int]] = None
-    clusters: AnnotationList[SpanCluster] = annotation_field(target="tokens")
+    clusters: AnnotationList[SpanSet] = annotation_field(target="tokens")
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
@@ -266,7 +266,7 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
             inputs=inputs,
         )
 
-    def tensorize_example_targets(self, doc_key, clusters: Iterable[SpanCluster]) -> TaskTargets:
+    def tensorize_example_targets(self, doc_key, clusters: Iterable[SpanSet]) -> TaskTargets:
         # Mentions and clusters
         cluster_list = [[spans for spans in cluster.spans] for cluster in clusters]
         self.stored_info["gold"][doc_key] = cluster_list
@@ -413,4 +413,4 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
         """
 
         for spans in task_outputs["clusters"]:
-            yield "clusters", SpanCluster(spans=spans, score=1.0)
+            yield "clusters", SpanSet(spans=spans, score=1.0)
