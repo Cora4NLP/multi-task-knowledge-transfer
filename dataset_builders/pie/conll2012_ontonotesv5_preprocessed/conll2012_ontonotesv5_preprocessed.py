@@ -1,11 +1,10 @@
 import dataclasses
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import datasets
 import pytorch_ie.data.builder
-from pytorch_ie.annotations import BinaryRelation, LabeledSpan
-from pytorch_ie.core import Annotation, AnnotationList, Document, annotation_field
+from pytorch_ie.core import Document
 
 log = logging.getLogger(__name__)
 
