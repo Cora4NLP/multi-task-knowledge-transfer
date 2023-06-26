@@ -14,7 +14,14 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, TypedDi
 import numpy as np
 import torch
 from pytorch_ie.annotations import Label
-from pytorch_ie.core import Document, TaskEncoding, TaskModule
+from pytorch_ie.core import (
+    Annotation,
+    AnnotationList,
+    Document,
+    TaskEncoding,
+    TaskModule,
+    annotation_field,
+)
 from transformers import AutoTokenizer
 from typing_extensions import TypeAlias
 
@@ -28,14 +35,24 @@ from src.models.coref_hoi import (
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass(eq=True, frozen=True)
+class SpanCluster(Annotation):
+    spans: Tuple[Tuple[int, int], ...]
+    score: float = 1.0
+
+    def __post_init__(self) -> None:
+        if isinstance(self.spans, list):
+            object.__setattr__(self, "spans", tuple(tuple(s) for s in self.spans))
+
+
 @dataclasses.dataclass
 class Conll2012OntonotesV5PreprocessedDocument(Document):
     tokens: List[str]
     sentences: List[List[str]]
     speakers: List[List[str]]
-    clusters: List[List[List[int]]]
     sentence_map: List[int]
     subtoken_map: Optional[List[int]] = None
+    clusters: AnnotationList[SpanCluster] = annotation_field(target="tokens")
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
@@ -392,9 +409,8 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
     ) -> Iterator[Tuple[str, Label]]:
         """Convert a task output to annotations.
 
-        The method has to yield tuples (annotation_name, annotation).
+        The method has to yield tuples (annotation_layer_name, annotation).
         """
 
-        # just yield a single annotation (other tasks may need multiple annotations per task output)
-        # yield "label", Label(label=task_outputs["label"], score=task_outputs["probability"])
-        raise NotImplementedError
+        for spans in task_outputs["clusters"]:
+            yield "clusters", SpanCluster(spans=spans, score=1.0)

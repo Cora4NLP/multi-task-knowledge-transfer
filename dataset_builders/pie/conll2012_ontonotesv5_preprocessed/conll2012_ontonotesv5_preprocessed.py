@@ -1,12 +1,22 @@
 import dataclasses
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import datasets
 import pytorch_ie.data.builder
-from pytorch_ie.core import Document
+from pytorch_ie.core import Annotation, AnnotationList, Document, annotation_field
 
 log = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(eq=True, frozen=True)
+class SpanCluster(Annotation):
+    spans: Tuple[Tuple[int, int], ...]
+    score: float = 1.0
+
+    def __post_init__(self) -> None:
+        if isinstance(self.spans, list):
+            object.__setattr__(self, "spans", tuple(tuple(s) for s in self.spans))
 
 
 @dataclasses.dataclass
@@ -14,9 +24,9 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     tokens: List[str]
     sentences: List[List[str]]
     speakers: List[List[str]]
-    clusters: List[List[List[int]]]
     sentence_map: List[int]
     subtoken_map: Optional[List[int]] = None
+    clusters: AnnotationList[SpanCluster] = annotation_field(target="tokens")
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     # these are not needed:
@@ -33,10 +43,11 @@ def example_to_document(
         tokens=example["tokens"],
         sentences=example["sentences"],
         speakers=example["speakers"],
-        clusters=example["clusters"],
         sentence_map=example["sentence_map"],
         subtoken_map=example["subtoken_map"],
     )
+    for spans in example["clusters"]:
+        document.clusters.append(SpanCluster(spans=spans))
     return document
 
 
@@ -48,7 +59,7 @@ def document_to_example(
         "tokens": document.tokens,
         "sentences": document.sentences,
         "speakers": document.speakers,
-        "clusters": document.clusters,
+        "clusters": list(document.clusters),
         "sentence_map": document.sentence_map,
         "subtoken_map": document.subtoken_map,
     }
