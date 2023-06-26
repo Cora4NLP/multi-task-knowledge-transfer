@@ -41,8 +41,8 @@ class SpanCluster(Annotation):
     score: float = 1.0
 
     def __post_init__(self) -> None:
-        if isinstance(self.spans, list):
-            object.__setattr__(self, "spans", tuple(tuple(s) for s in self.spans))
+        # sort spans and convert to tuples
+        object.__setattr__(self, "spans", tuple(sorted(tuple(s) for s in self.spans)))
 
 
 @dataclasses.dataclass
