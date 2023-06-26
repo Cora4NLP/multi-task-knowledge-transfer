@@ -6,8 +6,8 @@
 defaults:
   - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
   - override /datamodule: default.yaml
-  - override /taskmodule: coref_hoi_bert_base.yaml
-  - override /model: coref_hoi_bert_base.yaml
+  - override /taskmodule: coref_hoi.yaml
+  - override /model: coref_hoi.yaml
   - override /callbacks: default.yaml
   - override /logger: aim.yaml
   - override /trainer: default.yaml
@@ -22,6 +22,22 @@ tags: ["dataset=conll2012", "model=coref_hoi_bert_base"]
 
 seed: 12345
 
+taskmodule:
+  tokenizer_name_or_path: bert-base-cased
+  max_segment_len: 384
+  max_training_sentences: 3
+
+model:
+  # taken from bert_base subset
+  bert_pretrained_name_or_path: bert-large-cased
+  #num_docs: 2802  # seems to be not used anywhere
+  bert_learning_rate: 1e-05
+  task_learning_rate: 2e-4
+  ffnn_size: 3000
+  cluster_ffnn_size: 3000
+  #max_segment_len: 128  # passed from taskmodule
+  #max_training_sentences: 11  # passed from taskmodule
+
 trainer:
   min_epochs: 5
   max_epochs: 20
@@ -29,4 +45,5 @@ trainer:
   gradient_clip_algorithm: norm
 
 datamodule:
-  batch_size: 4
+  # the whole setup works only with batch_size=1!
+  batch_size: 1

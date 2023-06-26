@@ -1,6 +1,0 @@
-defaults:
-  - coref_hoi
-
-tokenizer_name_or_path: bert-base-cased
-max_segment_len: 128 #256
-max_training_sentences: 11 #5
