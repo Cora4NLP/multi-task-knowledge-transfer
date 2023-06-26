@@ -1,13 +1,13 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=conll2012_coref dataset.input.base_dataset_kwargs.data_dir=/absolute/path/to/seg_len_384
+# python train.py experiment=conll2012_coref_hoi_bert_base dataset.input.base_dataset_kwargs.data_dir=/absolute/path/to/seg_len_384
 
 defaults:
   - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
   - override /datamodule: default.yaml
-  - override /taskmodule: transformer_token_classification.yaml  # TODO: change this!
-  - override /model: transformer_token_classification.yaml  # TODO: change this!
+  - override /taskmodule: transformer_token_classification.yaml # TODO: change this!
+  - override /model: coref_hoi_bert_base.yaml
   - override /callbacks: default.yaml
   - override /logger: aim.yaml
   - override /trainer: default.yaml
@@ -18,7 +18,7 @@ defaults:
 # name of the run determines folder name in logs
 name: "conll2003/transformer_token_classification"
 
-tags: ["dataset=conll2012", "model=coref_hoi"]
+tags: ["dataset=conll2012", "model=coref_hoi_bert_base"]
 
 seed: 12345
 

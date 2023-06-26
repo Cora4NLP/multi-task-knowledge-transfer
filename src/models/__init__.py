@@ -1,2 +1,3 @@
+from .coref_hoi import CorefHoiModel
 from .multi_model_text_classification import MultiModelTextClassificationModel
 from .multi_model_token_classification import MultiModelTokenClassificationModel

@@ -296,7 +296,7 @@ def _merge_clusters(cluster_emb, cluster_sizes, cluster1_id, cluster2_id, reduce
 
 
 @PyTorchIEModel.register()
-class CorefModel(PyTorchIEModel):
+class CorefHoiModel(PyTorchIEModel):
     def __init__(
         self,
         genres,
