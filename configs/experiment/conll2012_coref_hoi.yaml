@@ -23,9 +23,11 @@ tags: ["dataset=conll2012", "model=coref_hoi"]
 seed: 12345
 
 taskmodule:
-  tokenizer_name_or_path: bert-base-cased
+  # to work data preprocessed by Tatiana
   max_segment_len: 384
-  max_training_sentences: 3
+  # to work with model trained by Tatiana
+  tokenizer_name_or_path: bert-base-cased
+  max_training_sentences: 11
 
 model:
   # taken from bert_base subset
