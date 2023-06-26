@@ -1,5 +1,6 @@
 import logging
 from collections import Iterable
+from typing import Any
 
 import numpy as np
 import torch
@@ -14,6 +15,10 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger()
+
+TRAINING = "train"
+VALIDATION = "val"
+TEST = "test"
 
 
 def bucket_distance(offsets):
@@ -474,8 +479,8 @@ class CorefModel(PyTorchIEModel):
                 task_param.append(to_add)
         return bert_based_param, task_param
 
-    def forward(self, *input):
-        return self.get_predictions_and_loss(*input)
+    def forward(self, **batch):
+        return self.get_predictions_and_loss(**batch)
 
     def get_predictions_and_loss(
         self,
@@ -756,7 +761,7 @@ class CorefModel(PyTorchIEModel):
                 top_span_ends,
                 top_antecedent_idx,
                 top_antecedent_scores,
-            )
+            ), None
 
         # Get gold labels
         top_antecedent_cluster_ids = top_span_cluster_ids[top_antecedent_idx]
@@ -866,7 +871,7 @@ class CorefModel(PyTorchIEModel):
                     logger.info("loss: %.4f" % loss)
         self.update_steps += 1
 
-        return [
+        return (
             candidate_starts,
             candidate_ends,
             candidate_mention_scores,
@@ -874,7 +879,7 @@ class CorefModel(PyTorchIEModel):
             top_span_ends,
             top_antecedent_idx,
             top_antecedent_scores,
-        ], loss
+        ), loss
 
     def _extract_top_spans(
         self, candidate_idx_sorted, candidate_starts, candidate_ends, num_top_spans
@@ -968,3 +973,36 @@ class CorefModel(PyTorchIEModel):
         mention_to_gold = {m: cluster for cluster in gold_clusters for m in cluster}
         evaluator.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
         return predicted_clusters
+
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0):
+        predictions, _ = self(**batch)
+        return predictions
+
+    def step(
+        self,
+        stage: str,
+        batch,
+    ):
+        inputs, targets = batch
+        # check the target content
+        assert targets is not None, "target has to be available for training"
+        assert set(targets) == {"gold_starts", "gold_ends", "gold_mention_cluster_map"}
+
+        _, loss = self(**inputs, **targets)
+
+        # show loss on each step only during training
+        self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def training_step(self, batch, batch_idx: int):  # type: ignore
+        return self.step(stage=TRAINING, batch=batch)
+
+    def validation_step(self, batch, batch_idx: int):  # type: ignore
+        return self.step(stage=VALIDATION, batch=batch)
+
+    def test_step(self, batch, batch_idx: int):  # type: ignore
+        return self.step(stage=TEST, batch=batch)
+
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
