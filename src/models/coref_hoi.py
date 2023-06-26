@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from pytorch_ie.core import PyTorchIEModel
+from torch.optim.lr_scheduler import LambdaLR
 from transformers import BertModel
 
 logging.basicConfig(
@@ -330,6 +331,7 @@ class CorefModel(PyTorchIEModel):
         adam_weight_decay,
         task_learning_rate,
         adam_eps,
+        warmup_ratio,
         num_genres=None,
         **kwargs,
     ):
@@ -368,6 +370,7 @@ class CorefModel(PyTorchIEModel):
         self.adam_weight_decay = adam_weight_decay
         self.task_learning_rate = task_learning_rate
         self.adam_eps = adam_eps
+        self.warmup_ratio = warmup_ratio
 
         # Model
         self.dropout = nn.Dropout(p=dropout_rate)
@@ -1042,4 +1045,27 @@ class CorefModel(PyTorchIEModel):
                 self.get_params()[1], lr=self.task_learning_rate, eps=self.adam_eps, weight_decay=0
             ),
         ]
-        return optimizers
+
+        # Only warm up bert lr
+        total_update_steps = self.trainer.estimated_stepping_batches
+        warmup_steps = int(total_update_steps * self.warmup_ratio)
+
+        def lr_lambda_bert(current_step):
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+            return max(
+                0.0,
+                float(total_update_steps - current_step)
+                / float(max(1, total_update_steps - warmup_steps)),
+            )
+
+        def lr_lambda_task(current_step):
+            return max(
+                0.0, float(total_update_steps - current_step) / float(max(1, total_update_steps))
+            )
+
+        schedulers = [
+            LambdaLR(optimizers[0], lr_lambda_bert),
+            LambdaLR(optimizers[1], lr_lambda_task),
+        ]
+        return optimizers, schedulers
