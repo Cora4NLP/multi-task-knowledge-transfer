@@ -9,7 +9,7 @@ workflow:
 import dataclasses
 import logging
 import random
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, TypedDict
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, TypedDict
 
 import numpy as np
 import torch
@@ -266,14 +266,14 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
             inputs=inputs,
         )
 
-    def tensorize_example_targets(self, doc_key, clusters: List[List[List[int]]]) -> TaskTargets:
+    def tensorize_example_targets(self, doc_key, clusters: Iterable[SpanCluster]) -> TaskTargets:
         # Mentions and clusters
-        # clusters = example["clusters"]
-        self.stored_info["gold"][doc_key] = clusters
-        gold_mentions = sorted(tuple(mention) for mention in flatten(clusters))
+        cluster_list = [[spans for spans in cluster.spans] for cluster in clusters]
+        self.stored_info["gold"][doc_key] = cluster_list
+        gold_mentions = sorted(tuple(mention) for mention in flatten(cluster_list))
         gold_mention_map = {mention: idx for idx, mention in enumerate(gold_mentions)}
         gold_mention_cluster_map = np.zeros(len(gold_mentions))  # 0: no cluster
-        for cluster_id, cluster in enumerate(clusters):
+        for cluster_id, cluster in enumerate(cluster_list):
             for mention in cluster:
                 gold_mention_cluster_map[gold_mention_map[tuple(mention)]] = cluster_id + 1
 
