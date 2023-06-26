@@ -1037,6 +1037,14 @@ class CorefHoiModel(PyTorchIEModel):
         evaluator.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
         return predicted_clusters
 
+    def predict(
+        self,
+        inputs: CorefHoiModelModelInputs,
+        **kwargs,
+    ) -> CorefHoiModelModelBatchOutput:
+        predictions, _ = self(**inputs)
+        return predictions
+
     def predict_step(
         self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int, dataloader_idx: int = 0
     ) -> CorefHoiModelModelBatchOutput:
