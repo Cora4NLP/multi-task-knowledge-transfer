@@ -1047,7 +1047,7 @@ class CorefHoiModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch, batch_idx: int):  # type: ignore
+    def training_step(self, batch, batch_idx: int, optimizer_idx: int):  # type: ignore
         return self.step(stage=TRAINING, batch=batch)
 
     def validation_step(self, batch, batch_idx: int):  # type: ignore
