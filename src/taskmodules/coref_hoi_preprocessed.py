@@ -89,6 +89,41 @@ def list_of_dicts_to_dict_of_lists(
     return dict_of_lists
 
 
+def construct_inputs_from_list_of_dicts(list_of_dicts):
+    as_dict = list_of_dicts_to_dict_of_lists(
+        list_of_dicts=list_of_dicts,
+        keys=[
+            "input_ids",
+            "input_mask",
+            "speaker_ids",
+            "sentence_len",
+            "genre",
+            "sentence_map",
+        ],
+    )
+    return CorefHoiModelModelInputs(
+        input_ids=torch.tensor(as_dict["input_ids"], dtype=torch.long),
+        input_mask=torch.tensor(as_dict["input_mask"], dtype=torch.long),
+        speaker_ids=torch.tensor(as_dict["speaker_ids"], dtype=torch.long),
+        sentence_len=torch.tensor(as_dict["sentence_len"], dtype=torch.long),
+        genre=torch.tensor(as_dict["genre"], dtype=torch.long),
+        sentence_map=torch.tensor(as_dict["sentence_map"], dtype=torch.long),
+    )
+
+
+def construct_targets_from_list_of_dicts(list_of_dicts):
+    as_dict = list_of_dicts_to_dict_of_lists(
+        list_of_dicts, keys=["gold_starts", "gold_ends", "gold_mention_cluster_map"]
+    )
+    return CorefHoiModelModelTargets(
+        gold_starts=torch.tensor(as_dict["gold_starts"], dtype=torch.long),
+        gold_ends=torch.tensor(as_dict["gold_ends"], dtype=torch.long),
+        gold_mention_cluster_map=torch.tensor(
+            as_dict["gold_mention_cluster_map"], dtype=torch.long
+        ),
+    )
+
+
 @TaskModule.register()
 class CorefHoiPreprocessedTaskModule(TaskModuleType):
     # If these attributes are set, the taskmodule is considered as prepared. They should be calculated
@@ -325,24 +360,8 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
         is_training = task_encodings[0].has_targets
 
         if not is_training:
-            inputs_dict = list_of_dicts_to_dict_of_lists(
-                [task_encoding.inputs for task_encoding in task_encodings],
-                keys=[
-                    "input_ids",
-                    "input_mask",
-                    "speaker_ids",
-                    "sentence_len",
-                    "genre",
-                    "sentence_map",
-                ],
-            )
-            model_inputs = CorefHoiModelModelInputs(
-                input_ids=torch.tensor(inputs_dict["input_ids"], dtype=torch.long),
-                input_mask=torch.tensor(inputs_dict["input_mask"], dtype=torch.long),
-                speaker_ids=torch.tensor(inputs_dict["speaker_ids"], dtype=torch.long),
-                sentence_len=torch.tensor(inputs_dict["sentence_len"], dtype=torch.long),
-                genre=torch.tensor(inputs_dict["genre"], dtype=torch.long),
-                sentence_map=torch.tensor(inputs_dict["sentence_map"], dtype=torch.long),
+            model_inputs = construct_inputs_from_list_of_dicts(
+                [task_encoding.inputs for task_encoding in task_encodings]
             )
             return model_inputs, None
 
@@ -360,35 +379,8 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
             all_inputs.append(inputs)
             all_targets.append(targets)
 
-        inputs_dict = list_of_dicts_to_dict_of_lists(
-            all_inputs,
-            keys=[
-                "input_ids",
-                "input_mask",
-                "speaker_ids",
-                "sentence_len",
-                "genre",
-                "sentence_map",
-            ],
-        )
-        model_inputs = CorefHoiModelModelInputs(
-            input_ids=torch.tensor(inputs_dict["input_ids"], dtype=torch.long),
-            input_mask=torch.tensor(inputs_dict["input_mask"], dtype=torch.long),
-            speaker_ids=torch.tensor(inputs_dict["speaker_ids"], dtype=torch.long),
-            sentence_len=torch.tensor(inputs_dict["sentence_len"], dtype=torch.long),
-            genre=torch.tensor(inputs_dict["genre"], dtype=torch.long),
-            sentence_map=torch.tensor(inputs_dict["sentence_map"], dtype=torch.long),
-        )
-        targets_dict = list_of_dicts_to_dict_of_lists(
-            all_targets, keys=["gold_starts", "gold_ends", "gold_mention_cluster_map"]
-        )
-        model_targets = CorefHoiModelModelTargets(
-            gold_starts=torch.tensor(targets_dict["gold_starts"], dtype=torch.long),
-            gold_ends=torch.tensor(targets_dict["gold_ends"], dtype=torch.long),
-            gold_mention_cluster_map=torch.tensor(
-                targets_dict["gold_mention_cluster_map"], dtype=torch.long
-            ),
-        )
+        model_inputs = construct_inputs_from_list_of_dicts(all_inputs)
+        model_targets = construct_targets_from_list_of_dicts(all_targets)
         return model_inputs, model_targets
 
     def unbatch_output(self, model_output: CorefHoiModelModelBatchOutput) -> Sequence[TaskOutput]:

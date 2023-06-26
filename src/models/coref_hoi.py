@@ -303,7 +303,6 @@ class CorefHoiModelModelInputs(TypedDict):
     sentence_len: torch.Tensor
     genre: torch.Tensor
     sentence_map: torch.Tensor
-    # is_training: torch.Tensor
 
 
 class CorefHoiModelModelTargets(TypedDict):
