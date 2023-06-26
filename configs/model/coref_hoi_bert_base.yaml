@@ -2,12 +2,11 @@ defaults:
   - coref_hoi.yaml
 
 # taken from bert_base subset
-num_docs: 2802
+bert_pretrained_name_or_path: bert-base-cased
+#num_docs: 2802  # seems to be not used anywhere
 bert_learning_rate: 1e-05
 task_learning_rate: 2e-4
-max_segment_len: 128
 ffnn_size: 3000
 cluster_ffnn_size: 3000
-max_training_sentences: 11
-#bert_tokenizer_name: bert-base-cased
-bert_pretrained_name_or_path: bert-base-cased
+#max_segment_len: 128  # passed from taskmodule
+#max_training_sentences: 11  # passed from taskmodule

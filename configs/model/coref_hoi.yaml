@@ -2,11 +2,11 @@ _target_: src.models.CorefHoiModel
 
 # Computation limits.
 max_top_antecedents: 50
-max_training_sentences: 5
+#max_training_sentences: 5 # passed from taskmodule
 top_span_ratio: 0.4
 max_num_extracted_spans: 3900
-max_num_speakers: 20
-max_segment_len: 256
+#max_num_speakers: 20  # passed from taskmodule
+#max_segment_len: 256 # passed from taskmodule
 
 # learning
 bert_learning_rate: 1e-5
@@ -17,10 +17,11 @@ false_new_delta: 1.5 # For loss_type = hinge
 adam_eps: 1e-6
 adam_weight_decay: 1e-2
 warmup_ratio: 0.1
-max_grad_norm: 1 # Set 0 to disable clipping
-gradient_accumulation_steps: 1
+#max_grad_norm: 1 # Set 0 to disable clipping  # defined in the experiment and handled by the trainer
+#gradient_accumulation_steps: 1  # handled by the trainer
 
 # Model hyperparameters.
+bert_pretrained_name_or_path: ???
 max_span_width: 30
 coref_depth: 1 # when 1: no higher order (except for cluster_merging)
 higher_order: attended_antecedent # {attended_antecedent, max_antecedent, entity_equalization, span_clustering, cluster_merging}
@@ -40,4 +41,4 @@ easy_cluster_first: false # For cluster_merging
 cluster_dloss: false # cluster_merging
 
 # Other
-genres: ["bc", "bn", "mz", "nw", "pt", "tc", "wb"]
+# genres: ["bc", "bn", "mz", "nw", "pt", "tc", "wb"]  # passed from taskmodule

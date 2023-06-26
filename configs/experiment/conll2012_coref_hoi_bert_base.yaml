@@ -6,7 +6,7 @@
 defaults:
   - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
   - override /datamodule: default.yaml
-  - override /taskmodule: transformer_token_classification.yaml # TODO: change this!
+  - override /taskmodule: coref_hoi_bert_base.yaml
   - override /model: coref_hoi_bert_base.yaml
   - override /callbacks: default.yaml
   - override /logger: aim.yaml
@@ -25,10 +25,8 @@ seed: 12345
 trainer:
   min_epochs: 5
   max_epochs: 20
-  # gradient_clip_val: 0.5
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: norm
 
 datamodule:
-  batch_size: 32
-#model:
-#  # configure learning rate. Default learning rate is set in model constructor (here: TransformerTokenClassificationModel)
-#  learning_rate: 1e-5
+  batch_size: 4
