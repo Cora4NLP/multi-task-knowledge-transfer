@@ -1,7 +1,7 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=conll2012_coref_hoi_bert_base dataset.input.base_dataset_kwargs.data_dir=/absolute/path/to/seg_len_384
+# python src/train.py experiment=conll2012_coref_hoi_bert_base dataset.input.base_dataset_kwargs.data_dir=/absolute/path/to/seg_len_384
 
 defaults:
   - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
@@ -16,9 +16,9 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "conll2003/transformer_token_classification"
+name: "conll2012/coref_hoi_bert_large"
 
-tags: ["dataset=conll2012", "model=coref_hoi_bert_base"]
+tags: ["dataset=conll2012", "model=coref_hoi_bert_large"]
 
 seed: 12345
 
