@@ -114,10 +114,10 @@ def construct_inputs_from_list_of_dicts(list_of_dicts):
         ],
     )
     return CorefHoiModelModelInputs(
-        input_ids=torch.tensor(as_dict["input_ids"], dtype=torch.long),
-        input_mask=torch.tensor(as_dict["input_mask"], dtype=torch.long),
-        speaker_ids=torch.tensor(as_dict["speaker_ids"], dtype=torch.long),
-        sentence_len=torch.tensor(as_dict["sentence_len"], dtype=torch.long),
+        input_ids=torch.tensor(np.stack(as_dict["input_ids"]), dtype=torch.long),
+        input_mask=torch.tensor(np.stack(as_dict["input_mask"]), dtype=torch.long),
+        speaker_ids=torch.tensor(np.stack(as_dict["speaker_ids"]), dtype=torch.long),
+        sentence_len=torch.tensor(np.stack(as_dict["sentence_len"]), dtype=torch.long),
         genre=torch.tensor(as_dict["genre"], dtype=torch.long),
         sentence_map=torch.tensor(as_dict["sentence_map"], dtype=torch.long),
     )
@@ -128,10 +128,10 @@ def construct_targets_from_list_of_dicts(list_of_dicts):
         list_of_dicts, keys=["gold_starts", "gold_ends", "gold_mention_cluster_map"]
     )
     return CorefHoiModelModelTargets(
-        gold_starts=torch.tensor(as_dict["gold_starts"], dtype=torch.long),
-        gold_ends=torch.tensor(as_dict["gold_ends"], dtype=torch.long),
+        gold_starts=torch.tensor(np.stack(as_dict["gold_starts"]), dtype=torch.long),
+        gold_ends=torch.tensor(np.stack(as_dict["gold_ends"]), dtype=torch.long),
         gold_mention_cluster_map=torch.tensor(
-            as_dict["gold_mention_cluster_map"], dtype=torch.long
+            np.stack(as_dict["gold_mention_cluster_map"]), dtype=torch.long
         ),
     )
 
