@@ -326,6 +326,10 @@ class CorefModel(PyTorchIEModel):
         max_top_antecedents,
         mention_loss_coef,
         top_span_ratio,
+        bert_learning_rate,
+        adam_weight_decay,
+        task_learning_rate,
+        adam_eps,
         num_genres=None,
         **kwargs,
     ):
@@ -359,6 +363,11 @@ class CorefModel(PyTorchIEModel):
         self.use_metadata = use_metadata
         self.use_segment_distance = use_segment_distance
         self.use_width_prior = use_width_prior
+
+        self.bert_learning_rate = bert_learning_rate
+        self.adam_weight_decay = adam_weight_decay
+        self.task_learning_rate = task_learning_rate
+        self.adam_eps = adam_eps
 
         # Model
         self.dropout = nn.Dropout(p=dropout_rate)
@@ -1005,4 +1014,32 @@ class CorefModel(PyTorchIEModel):
         return self.step(stage=TEST, batch=batch)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        no_decay = ["bias", "LayerNorm.weight"]
+        bert_param, task_param = self.get_params(named=True)
+        grouped_bert_param = [
+            {
+                "params": [
+                    p
+                    for n, p in bert_param
+                    if not any(no_decay_infix in n for no_decay_infix in no_decay)
+                ],
+                "lr": self.bert_learning_rate,
+                "weight_decay": self.adam_weight_decay,
+            },
+            {
+                "params": [
+                    p
+                    for n, p in bert_param
+                    if any(no_decay_infix in n for no_decay_infix in no_decay)
+                ],
+                "lr": self.bert_learning_rate,
+                "weight_decay": 0.0,
+            },
+        ]
+        optimizers = [
+            torch.optim.AdamW(grouped_bert_param, lr=self.bert_learning_rate, eps=self.adam_eps),
+            torch.optim.Adam(
+                self.get_params()[1], lr=self.task_learning_rate, eps=self.adam_eps, weight_decay=0
+            ),
+        ]
+        return optimizers
