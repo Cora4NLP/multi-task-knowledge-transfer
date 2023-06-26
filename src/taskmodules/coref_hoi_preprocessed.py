@@ -19,9 +19,9 @@ from transformers import AutoTokenizer
 from typing_extensions import TypeAlias
 
 from src.models.coref_hoi import (
-    CorefHoiModelModelBatchOutput,
     CorefHoiModelModelInputs,
     CorefHoiModelModelTargets,
+    CorefHoiModelPrediction,
     CorefHoiModelStepBatchEncoding,
 )
 
@@ -38,12 +38,6 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     subtoken_map: Optional[List[int]] = None
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
-
-
-# TODO: this is not yet correct!
-class TaskOutput(TypedDict, total=False):
-    label: str
-    probability: float
 
 
 class TaskInputs(TypedDict, total=False):
@@ -69,8 +63,9 @@ TaskModuleType: TypeAlias = TaskModule[
     TaskInputs,
     TaskTargets,
     CorefHoiModelStepBatchEncoding,
-    CorefHoiModelModelBatchOutput,
-    TaskOutput,
+    CorefHoiModelPrediction,
+    # this is the same because the model does not allow batching
+    CorefHoiModelPrediction,
 ]
 
 
@@ -383,14 +378,17 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
         model_targets = construct_targets_from_list_of_dicts(all_targets)
         return model_inputs, model_targets
 
-    def unbatch_output(self, model_output: CorefHoiModelModelBatchOutput) -> Sequence[TaskOutput]:
+    def unbatch_output(
+        self, model_output: CorefHoiModelPrediction
+    ) -> Sequence[CorefHoiModelPrediction]:
         """Convert one model output batch to a sequence of taskmodule outputs."""
-        raise NotImplementedError
+        # the model works only with batch_size 1, so we can just return the whole elements
+        return [model_output]
 
     def create_annotations_from_output(
         self,
         task_encodings: TaskEncodingType,
-        task_outputs: TaskOutput,
+        task_outputs: CorefHoiModelPrediction,
     ) -> Iterator[Tuple[str, Label]]:
         """Convert a task output to annotations.
 

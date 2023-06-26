@@ -326,6 +326,13 @@ class CorefHoiModelModelBatchOutput(TypedDict):
     top_antecedent_scores: torch.Tensor
 
 
+# TODO: check the typing of the fields!
+class CorefHoiModelPrediction(TypedDict):
+    spans: List[Tuple[int, int]]
+    antecedents: List[int]
+    clusters: List[Tuple[Tuple[int, int], ...]]
+
+
 @PyTorchIEModel.register()
 class CorefHoiModel(PyTorchIEModel):
     def __init__(
@@ -1041,16 +1048,25 @@ class CorefHoiModel(PyTorchIEModel):
         self,
         inputs: CorefHoiModelModelInputs,
         **kwargs,
-    ) -> CorefHoiModelModelBatchOutput:
-        predictions, _ = self(**inputs)
-        return predictions
+    ) -> CorefHoiModelPrediction:
+        predictions: CorefHoiModelModelBatchOutput = self(**inputs)[0]
+        span_starts = predictions["top_span_starts"]
+        span_ends = predictions["top_span_ends"]
+        clusters, mention_to_cluster_id, antecedents = self.get_predicted_clusters(
+            span_starts=span_starts,
+            span_ends=span_ends,
+            antecedent_idx=predictions["top_antecedent_idx"],
+            antecedent_scores=predictions["top_antecedent_scores"],
+        )
+        spans = [(span_start, span_end) for span_start, span_end in zip(span_starts, span_ends)]
+        return CorefHoiModelPrediction(spans=spans, antecedents=antecedents, clusters=clusters)
 
+    # not used yet (just necessary if the predict method of the pytorch-lightning trainer is used)
     def predict_step(
         self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int, dataloader_idx: int = 0
-    ) -> CorefHoiModelModelBatchOutput:
+    ) -> CorefHoiModelPrediction:
         inputs, _ = batch
-        predictions, _ = self(**inputs)
-        return predictions
+        return self.predict(inputs=inputs)
 
     def step(
         self,
