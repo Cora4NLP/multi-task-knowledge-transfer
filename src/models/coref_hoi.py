@@ -291,104 +291,148 @@ def _merge_clusters(cluster_emb, cluster_sizes, cluster1_id, cluster2_id, reduce
 
 @PyTorchIEModel.register()
 class CorefModel(PyTorchIEModel):
-    def __init__(self, config, num_genres=None, **kwargs):
+    def __init__(
+        self,
+        genres,
+        max_segment_len: int,
+        max_span_width: int,
+        loss_type: str,
+        coref_depth: int,
+        higher_order: str,
+        fine_grained: bool,
+        dropout_rate: float,
+        bert_pretrained_name_or_path: str,
+        use_features: bool,
+        feature_emb_size: int,
+        use_metadata: bool,
+        use_segment_distance: bool,
+        use_width_prior: bool,
+        use_distance_prior: bool,
+        max_training_sentences: int,
+        model_heads,
+        ffnn_size: int,
+        ffnn_depth: int,
+        cluster_ffnn_size: int,
+        cluster_dloss,
+        cluster_reduce,
+        easy_cluster_first,
+        false_new_delta,
+        max_num_extracted_spans,
+        max_top_antecedents,
+        mention_loss_coef,
+        top_span_ratio,
+        num_genres=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.save_hyperparameters()
 
-        self.config = config
+        self.num_genres = num_genres if num_genres else len(genres)
+        self.max_seg_len = max_segment_len
+        self.max_span_width = max_span_width
+        assert loss_type in ["marginalized", "hinge"]
+        if coref_depth > 1 or higher_order == "cluster_merging":
+            assert fine_grained  # Higher-order is in slow fine-grained scoring
 
-        self.num_genres = num_genres if num_genres else len(config["genres"])
-        self.max_seg_len = config["max_segment_len"]
-        self.max_span_width = config["max_span_width"]
-        assert config["loss_type"] in ["marginalized", "hinge"]
-        if config["coref_depth"] > 1 or config["higher_order"] == "cluster_merging":
-            assert config["fine_grained"]  # Higher-order is in slow fine-grained scoring
+        self.max_training_sentences = max_training_sentences
+        self.cluster_dloss = cluster_dloss
+        self.cluster_reduce = cluster_reduce
+        self.coref_depth = coref_depth
+        self.easy_cluster_first = easy_cluster_first
+        self.false_new_delta = false_new_delta
+        self.fine_grained = fine_grained
+        self.higher_order = higher_order
+        self.loss_type = loss_type
+        self.max_num_extracted_spans = max_num_extracted_spans
+        self.max_top_antecedents = max_top_antecedents
+        self.max_training_sentences = max_training_sentences
+        self.mention_loss_coef = mention_loss_coef
+        self.model_heads = model_heads
+        self.top_span_ratio = top_span_ratio
+        self.use_distance_prior = use_distance_prior
+        self.use_features = use_features
+        self.use_metadata = use_metadata
+        self.use_segment_distance = use_segment_distance
+        self.use_width_prior = use_width_prior
 
         # Model
-        self.dropout = nn.Dropout(p=config["dropout_rate"])
-        self.bert = BertModel.from_pretrained(config["bert_pretrained_name_or_path"])
+        self.dropout = nn.Dropout(p=dropout_rate)
+        self.bert = BertModel.from_pretrained(bert_pretrained_name_or_path)
 
+        self.feature_emb_size = feature_emb_size
         self.bert_emb_size = self.bert.config.hidden_size
         self.span_emb_size = self.bert_emb_size * 3
-        if config["use_features"]:
-            self.span_emb_size += config["feature_emb_size"]
+        if use_features:
+            self.span_emb_size += feature_emb_size
         self.pair_emb_size = self.span_emb_size * 3
-        if config["use_metadata"]:
-            self.pair_emb_size += 2 * config["feature_emb_size"]
-        if config["use_features"]:
-            self.pair_emb_size += config["feature_emb_size"]
-        if config["use_segment_distance"]:
-            self.pair_emb_size += config["feature_emb_size"]
+        if use_metadata:
+            self.pair_emb_size += 2 * feature_emb_size
+        if use_features:
+            self.pair_emb_size += feature_emb_size
+        if use_segment_distance:
+            self.pair_emb_size += feature_emb_size
 
-        self.emb_span_width = (
-            self.make_embedding(self.max_span_width) if config["use_features"] else None
-        )
+        self.emb_span_width = self.make_embedding(self.max_span_width) if use_features else None
         self.emb_span_width_prior = (
-            self.make_embedding(self.max_span_width) if config["use_width_prior"] else None
+            self.make_embedding(self.max_span_width) if use_width_prior else None
         )
         self.emb_antecedent_distance_prior = (
-            self.make_embedding(10) if config["use_distance_prior"] else None
+            self.make_embedding(10) if use_distance_prior else None
         )
         self.emb_genre = self.make_embedding(self.num_genres)
-        self.emb_same_speaker = self.make_embedding(2) if config["use_metadata"] else None
+        self.emb_same_speaker = self.make_embedding(2) if use_metadata else None
         self.emb_segment_distance = (
-            self.make_embedding(config["max_training_sentences"])
-            if config["use_segment_distance"]
-            else None
+            self.make_embedding(max_training_sentences) if use_segment_distance else None
         )
         self.emb_top_antecedent_distance = self.make_embedding(10)
         self.emb_cluster_size = (
-            self.make_embedding(10) if config["higher_order"] == "cluster_merging" else None
+            self.make_embedding(10) if higher_order == "cluster_merging" else None
         )
 
         self.mention_token_attn = (
-            self.make_ffnn(self.bert_emb_size, 0, output_size=1) if config["model_heads"] else None
+            self.make_ffnn(self.bert_emb_size, 0, output_size=1) if model_heads else None
         )
         self.span_emb_score_ffnn = self.make_ffnn(
-            self.span_emb_size, [config["ffnn_size"]] * config["ffnn_depth"], output_size=1
+            self.span_emb_size, [ffnn_size] * ffnn_depth, output_size=1
         )
         self.span_width_score_ffnn = (
             self.make_ffnn(
-                config["feature_emb_size"],
-                [config["ffnn_size"]] * config["ffnn_depth"],
+                feature_emb_size,
+                [ffnn_size] * ffnn_depth,
                 output_size=1,
             )
-            if config["use_width_prior"]
+            if use_width_prior
             else None
         )
         self.coarse_bilinear = self.make_ffnn(
             self.span_emb_size, 0, output_size=self.span_emb_size
         )
         self.antecedent_distance_score_ffnn = (
-            self.make_ffnn(config["feature_emb_size"], 0, output_size=1)
-            if config["use_distance_prior"]
-            else None
+            self.make_ffnn(feature_emb_size, 0, output_size=1) if use_distance_prior else None
         )
         self.coref_score_ffnn = (
-            self.make_ffnn(
-                self.pair_emb_size, [config["ffnn_size"]] * config["ffnn_depth"], output_size=1
-            )
-            if config["fine_grained"]
+            self.make_ffnn(self.pair_emb_size, [ffnn_size] * ffnn_depth, output_size=1)
+            if fine_grained
             else None
         )
 
         self.gate_ffnn = (
             self.make_ffnn(2 * self.span_emb_size, 0, output_size=self.span_emb_size)
-            if config["coref_depth"] > 1
+            if coref_depth > 1
             else None
         )
         self.span_attn_ffnn = (
             self.make_ffnn(self.span_emb_size, 0, output_size=1)
-            if config["higher_order"] == "span_clustering"
+            if higher_order == "span_clustering"
             else None
         )
         self.cluster_score_ffnn = (
             self.make_ffnn(
-                3 * self.span_emb_size + config["feature_emb_size"],
-                [config["cluster_ffnn_size"]] * config["ffnn_depth"],
+                3 * self.span_emb_size + feature_emb_size,
+                [cluster_ffnn_size] * ffnn_depth,
                 output_size=1,
             )
-            if config["higher_order"] == "cluster_merging"
+            if higher_order == "cluster_merging"
             else None
         )
 
@@ -396,7 +440,7 @@ class CorefModel(PyTorchIEModel):
         self.debug = True
 
     def make_embedding(self, dict_size, std=0.02):
-        emb = nn.Embedding(dict_size, self.config["feature_emb_size"])
+        emb = nn.Embedding(dict_size, self.feature_emb_size)
         init.normal_(emb.weight, std=std)
         return emb
 
@@ -448,7 +492,6 @@ class CorefModel(PyTorchIEModel):
     ):
         """Model and input are already on the device."""
         device = self.device
-        conf = self.config
 
         do_loss = False
         if gold_mention_cluster_map is not None:
@@ -500,7 +543,7 @@ class CorefModel(PyTorchIEModel):
         # Get span embedding
         span_start_emb, span_end_emb = mention_doc[candidate_starts], mention_doc[candidate_ends]
         candidate_emb_list = [span_start_emb, span_end_emb]
-        if conf["use_features"]:
+        if self.use_features:
             candidate_width_idx = candidate_ends - candidate_starts
             candidate_width_emb = self.emb_span_width(candidate_width_idx)
             candidate_width_emb = self.dropout(candidate_width_emb)
@@ -512,7 +555,7 @@ class CorefModel(PyTorchIEModel):
         candidate_tokens_mask = (candidate_tokens >= torch.unsqueeze(candidate_starts, 1)) & (
             candidate_tokens <= torch.unsqueeze(candidate_ends, 1)
         )
-        if conf["model_heads"]:
+        if self.model_heads:
             token_attn = torch.squeeze(self.mention_token_attn(mention_doc), 1)
         else:
             token_attn = torch.ones(
@@ -528,7 +571,7 @@ class CorefModel(PyTorchIEModel):
 
         # Get span score
         candidate_mention_scores = torch.squeeze(self.span_emb_score_ffnn(candidate_span_emb), 1)
-        if conf["use_width_prior"]:
+        if self.use_width_prior:
             width_score = torch.squeeze(
                 self.span_width_score_ffnn(self.emb_span_width_prior.weight), 1
             )
@@ -543,9 +586,7 @@ class CorefModel(PyTorchIEModel):
             candidate_starts.tolist(),
             candidate_ends.tolist(),
         )
-        num_top_spans = int(
-            min(conf["max_num_extracted_spans"], conf["top_span_ratio"] * num_words)
-        )
+        num_top_spans = int(min(self.max_num_extracted_spans, self.top_span_ratio * num_words))
         selected_idx_cpu = self._extract_top_spans(
             candidate_idx_sorted_by_score, candidate_starts_cpu, candidate_ends_cpu, num_top_spans
         )
@@ -560,7 +601,7 @@ class CorefModel(PyTorchIEModel):
         top_span_mention_scores = candidate_mention_scores[selected_idx]
 
         # Coarse pruning on each mention's antecedents
-        max_top_antecedents = min(num_top_spans, conf["max_top_antecedents"])
+        max_top_antecedents = min(num_top_spans, self.max_top_antecedents)
         top_span_range = torch.arange(0, num_top_spans, device=device)
         antecedent_offsets = torch.unsqueeze(top_span_range, 1) - torch.unsqueeze(
             top_span_range, 0
@@ -574,7 +615,7 @@ class CorefModel(PyTorchIEModel):
         pairwise_coref_scores = torch.matmul(source_span_emb, target_span_emb)
         pairwise_fast_scores = pairwise_mention_score_sum + pairwise_coref_scores
         pairwise_fast_scores += torch.log(antecedent_mask.to(torch.float))
-        if conf["use_distance_prior"]:
+        if self.use_distance_prior:
             distance_score = torch.squeeze(
                 self.antecedent_distance_score_ffnn(
                     self.dropout(self.emb_antecedent_distance_prior.weight)
@@ -593,14 +634,14 @@ class CorefModel(PyTorchIEModel):
         top_antecedent_offsets = batch_select(antecedent_offsets, top_antecedent_idx, device)
 
         # Slow mention ranking
-        if conf["fine_grained"]:
+        if self.fine_grained:
             same_speaker_emb, genre_emb, seg_distance_emb, top_antecedent_distance_emb = (
                 None,
                 None,
                 None,
                 None,
             )
-            if conf["use_metadata"]:
+            if self.use_metadata:
                 top_span_speaker_ids = speaker_ids[top_span_starts]
                 top_antecedent_speaker_id = top_span_speaker_ids[top_antecedent_idx]
                 same_speaker = (
@@ -611,7 +652,7 @@ class CorefModel(PyTorchIEModel):
                 genre_emb = torch.unsqueeze(torch.unsqueeze(genre_emb, 0), 0).repeat(
                     num_top_spans, max_top_antecedents, 1
                 )
-            if conf["use_segment_distance"]:
+            if self.use_segment_distance:
                 num_segs, seg_len = input_ids.shape[0], input_ids.shape[1]
                 token_seg_ids = (
                     torch.arange(0, num_segs, device=device).unsqueeze(1).repeat(1, seg_len)
@@ -623,26 +664,26 @@ class CorefModel(PyTorchIEModel):
                     torch.unsqueeze(top_span_seg_ids, 1) - top_antecedent_seg_ids
                 )
                 top_antecedent_seg_distance = torch.clamp(
-                    top_antecedent_seg_distance, 0, self.config["max_training_sentences"] - 1
+                    top_antecedent_seg_distance, 0, self.max_training_sentences - 1
                 )
                 seg_distance_emb = self.emb_segment_distance(top_antecedent_seg_distance)
-            if conf["use_features"]:  # Antecedent distance
+            if self.use_features:  # Antecedent distance
                 top_antecedent_distance = bucket_distance(top_antecedent_offsets)
                 top_antecedent_distance_emb = self.emb_top_antecedent_distance(
                     top_antecedent_distance
                 )
 
-            for depth in range(conf["coref_depth"]):
+            for depth in range(self.coref_depth):
                 top_antecedent_emb = top_span_emb[
                     top_antecedent_idx
                 ]  # [num top spans, max top antecedents, emb size]
                 feature_list = []
-                if conf["use_metadata"]:  # speaker, genre
+                if self.use_metadata:  # speaker, genre
                     feature_list.append(same_speaker_emb)
                     feature_list.append(genre_emb)
-                if conf["use_segment_distance"]:
+                if self.use_segment_distance:
                     feature_list.append(seg_distance_emb)
-                if conf["use_features"]:  # Antecedent distance
+                if self.use_features:  # Antecedent distance
                     feature_list.append(top_antecedent_distance_emb)
                 feature_emb = torch.cat(feature_list, dim=2)
                 feature_emb = self.dropout(feature_emb)
@@ -653,7 +694,7 @@ class CorefModel(PyTorchIEModel):
                 )
                 top_pairwise_slow_scores = torch.squeeze(self.coref_score_ffnn(pair_emb), 2)
                 top_pairwise_scores = top_pairwise_slow_scores + top_pairwise_fast_scores
-                if conf["higher_order"] == "cluster_merging":
+                if self.higher_order == "cluster_merging":
                     cluster_merging_scores = cluster_merging(
                         top_span_emb,
                         top_antecedent_idx,
@@ -663,20 +704,20 @@ class CorefModel(PyTorchIEModel):
                         None,
                         self.dropout,
                         device=device,
-                        reduce=conf["cluster_reduce"],
-                        easy_cluster_first=conf["easy_cluster_first"],
+                        reduce=self.cluster_reduce,
+                        easy_cluster_first=self.easy_cluster_first,
                     )
                     break
-                elif depth != conf["coref_depth"] - 1:
-                    if conf["higher_order"] == "attended_antecedent":
+                elif depth != self.coref_depth - 1:
+                    if self.higher_order == "attended_antecedent":
                         refined_span_emb = attended_antecedent(
                             top_span_emb, top_antecedent_emb, top_pairwise_scores, device
                         )
-                    elif conf["higher_order"] == "max_antecedent":
+                    elif self.higher_order == "max_antecedent":
                         refined_span_emb = max_antecedent(
                             top_span_emb, top_antecedent_emb, top_pairwise_scores, device
                         )
-                    elif conf["higher_order"] == "entity_equalization":
+                    elif self.higher_order == "entity_equalization":
                         refined_span_emb = entity_equalization(
                             top_span_emb,
                             top_antecedent_emb,
@@ -684,7 +725,7 @@ class CorefModel(PyTorchIEModel):
                             top_pairwise_scores,
                             device,
                         )
-                    elif conf["higher_order"] == "span_clustering":
+                    elif self.higher_order == "span_clustering":
                         refined_span_emb = span_clustering(
                             top_span_emb,
                             top_antecedent_idx,
@@ -702,7 +743,7 @@ class CorefModel(PyTorchIEModel):
             top_pairwise_scores = top_pairwise_fast_scores  # [num top spans, max top antecedents]
 
         if not do_loss:
-            if conf["fine_grained"] and conf["higher_order"] == "cluster_merging":
+            if self.fine_grained and self.higher_order == "cluster_merging":
                 top_pairwise_scores += cluster_merging_scores
             top_antecedent_scores = torch.cat(
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
@@ -734,14 +775,14 @@ class CorefModel(PyTorchIEModel):
         top_antecedent_scores = torch.cat(
             [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
         )
-        if conf["loss_type"] == "marginalized":
+        if self.loss_type == "marginalized":
             log_marginalized_antecedent_scores = torch.logsumexp(
                 top_antecedent_scores + torch.log(top_antecedent_gold_labels.to(torch.float)),
                 dim=1,
             )
             log_norm = torch.logsumexp(top_antecedent_scores, dim=1)
             loss = torch.sum(log_norm - log_marginalized_antecedent_scores)
-        elif conf["loss_type"] == "hinge":
+        elif self.loss_type == "hinge":
             top_antecedent_mask = torch.cat(
                 [
                     torch.ones(num_top_spans, 1, dtype=torch.bool, device=device),
@@ -765,28 +806,27 @@ class CorefModel(PyTorchIEModel):
             mistake_false_new = (highest_antecedent_idx == 0) & torch.logical_not(
                 dummy_antecedent_labels.squeeze()
             )
-            delta = ((3 - conf["false_new_delta"]) / 2) * torch.ones(
+            delta = ((3 - self.false_new_delta) / 2) * torch.ones(
                 num_top_spans, dtype=torch.float, device=device
             )
-            delta -= (1 - conf["false_new_delta"]) * mistake_false_new.to(torch.float)
+            delta -= (1 - self.false_new_delta) * mistake_false_new.to(torch.float)
             delta *= torch.logical_not(highest_antecedent_is_gold).to(torch.float)
             loss = torch.sum(slack_hinge * delta)
 
         # Add mention loss
-        if conf["mention_loss_coef"]:
+        if self.mention_loss_coef:
             gold_mention_scores = top_span_mention_scores[top_span_cluster_ids > 0]
             non_gold_mention_scores = top_span_mention_scores[top_span_cluster_ids == 0]
             loss_mention = (
-                -torch.sum(torch.log(torch.sigmoid(gold_mention_scores)))
-                * conf["mention_loss_coef"]
+                -torch.sum(torch.log(torch.sigmoid(gold_mention_scores))) * self.mention_loss_coef
             )
             loss_mention += (
                 -torch.sum(torch.log(1 - torch.sigmoid(non_gold_mention_scores)))
-                * conf["mention_loss_coef"]
+                * self.mention_loss_coef
             )
             loss += loss_mention
 
-        if conf["higher_order"] == "cluster_merging":
+        if self.higher_order == "cluster_merging":
             top_pairwise_scores += cluster_merging_scores
             top_antecedent_scores = torch.cat(
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
@@ -797,7 +837,7 @@ class CorefModel(PyTorchIEModel):
             )
             log_norm2 = torch.logsumexp(top_antecedent_scores, dim=1)  # [num top spans]
             loss_cm = torch.sum(log_norm2 - log_marginalized_antecedent_scores2)
-            if conf["cluster_dloss"]:
+            if self.cluster_dloss:
                 loss += loss_cm
             else:
                 loss = loss_cm
@@ -815,9 +855,9 @@ class CorefModel(PyTorchIEModel):
                         (top_span_cluster_ids > 0).sum() / num_top_spans,
                     )
                 )
-                if conf["mention_loss_coef"]:
+                if self.mention_loss_coef:
                     logger.info("mention loss: %.4f" % loss_mention)
-                if conf["loss_type"] == "marginalized":
+                if self.loss_type == "marginalized":
                     logger.info(
                         "norm/gold: %.4f/%.4f"
                         % (torch.sum(log_norm), torch.sum(log_marginalized_antecedent_scores))
