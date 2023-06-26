@@ -16,7 +16,7 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     speakers: List[List[str]]
     clusters: List[List[List[int]]]
     sentence_map: List[int]
-    subtoken_map: List[int]
+    subtoken_map: Optional[List[int]] = None
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     # these are not needed:

@@ -1,6 +1,6 @@
 import logging
 from collections import Iterable
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 import numpy as np
 import torch
@@ -9,6 +9,7 @@ import torch.nn.init as init
 from pytorch_ie.core import PyTorchIEModel
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import BertModel
+from typing_extensions import TypeAlias
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -295,11 +296,42 @@ def _merge_clusters(cluster_emb, cluster_sizes, cluster1_id, cluster2_id, reduce
     cluster_sizes[cluster2_id] += cluster_sizes[cluster1_id]
 
 
+class CorefHoiModelModelInputs(TypedDict):
+    input_ids: torch.Tensor
+    input_mask: torch.Tensor
+    speaker_ids: torch.Tensor
+    sentence_len: torch.Tensor
+    genre: torch.Tensor
+    sentence_map: torch.Tensor
+    # is_training: torch.Tensor
+
+
+class CorefHoiModelModelTargets(TypedDict):
+    gold_starts: torch.Tensor
+    gold_ends: torch.Tensor
+    gold_mention_cluster_map: torch.Tensor
+
+
+CorefHoiModelStepBatchEncoding: TypeAlias = Tuple[
+    CorefHoiModelModelInputs, Optional[CorefHoiModelModelTargets]
+]
+
+
+class CorefHoiModelModelBatchOutput(TypedDict):
+    candidate_starts: torch.Tensor
+    candidate_ends: torch.Tensor
+    candidate_mention_scores: torch.Tensor
+    top_span_starts: torch.Tensor
+    top_span_ends: torch.Tensor
+    top_antecedent_idx: torch.Tensor
+    top_antecedent_scores: torch.Tensor
+
+
 @PyTorchIEModel.register()
 class CorefHoiModel(PyTorchIEModel):
     def __init__(
         self,
-        genres,
+        genres: List[str],
         max_segment_len: int,
         max_span_width: int,
         loss_type: str,
@@ -502,11 +534,11 @@ class CorefHoiModel(PyTorchIEModel):
         sentence_len,
         genre,
         sentence_map,
-        is_training,
+        # is_training,
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
-    ):
+    ) -> Tuple[CorefHoiModelModelBatchOutput, Optional[torch.Tensor]]:
         """Model and input are already on the device."""
         device = self.device
 
@@ -766,14 +798,17 @@ class CorefHoiModel(PyTorchIEModel):
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
             )  # [num top spans, max top antecedents + 1]
             return (
-                candidate_starts,
-                candidate_ends,
-                candidate_mention_scores,
-                top_span_starts,
-                top_span_ends,
-                top_antecedent_idx,
-                top_antecedent_scores,
-            ), None
+                CorefHoiModelModelBatchOutput(
+                    candidate_starts=candidate_starts,
+                    candidate_ends=candidate_ends,
+                    candidate_mention_scores=candidate_mention_scores,
+                    top_span_starts=top_span_starts,
+                    top_span_ends=top_span_ends,
+                    top_antecedent_idx=top_antecedent_idx,
+                    top_antecedent_scores=top_antecedent_scores,
+                ),
+                None,
+            )
 
         # Get gold labels
         top_antecedent_cluster_ids = top_span_cluster_ids[top_antecedent_idx]
@@ -884,14 +919,17 @@ class CorefHoiModel(PyTorchIEModel):
         self.update_steps += 1
 
         return (
-            candidate_starts,
-            candidate_ends,
-            candidate_mention_scores,
-            top_span_starts,
-            top_span_ends,
-            top_antecedent_idx,
-            top_antecedent_scores,
-        ), loss
+            CorefHoiModelModelBatchOutput(
+                candidate_starts=candidate_starts,
+                candidate_ends=candidate_ends,
+                candidate_mention_scores=candidate_mention_scores,
+                top_span_starts=top_span_starts,
+                top_span_ends=top_span_ends,
+                top_antecedent_idx=top_antecedent_idx,
+                top_antecedent_scores=top_antecedent_scores,
+            ),
+            loss,
+        )
 
     def _extract_top_spans(
         self, candidate_idx_sorted, candidate_starts, candidate_ends, num_top_spans
@@ -986,14 +1024,17 @@ class CorefHoiModel(PyTorchIEModel):
         evaluator.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
         return predicted_clusters
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0):
-        predictions, _ = self(**batch)
+    def predict_step(
+        self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int, dataloader_idx: int = 0
+    ) -> CorefHoiModelModelBatchOutput:
+        inputs, _ = batch
+        predictions, _ = self(**inputs)
         return predictions
 
     def step(
         self,
         stage: str,
-        batch,
+        batch: CorefHoiModelStepBatchEncoding,
     ):
         inputs, targets = batch
         # check the target content
