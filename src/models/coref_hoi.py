@@ -533,11 +533,20 @@ class CorefHoiModel(PyTorchIEModel):
         sentence_len,
         genre,
         sentence_map,
-        # is_training,
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
     ) -> Tuple[CorefHoiModelModelBatchOutput, Optional[torch.Tensor]]:
+        batch_size = input_ids.shape[0]
+        assert batch_size == 1, "Only support batch size 1 for now"
+        # use just first example in batch
+        input_ids = input_ids[0]
+        input_mask = input_mask[0]
+        speaker_ids = speaker_ids[0]
+        sentence_len = sentence_len[0]
+        genre = genre[0]
+        sentence_map = sentence_map[0]
+
         """Model and input are already on the device."""
         device = self.device
 
@@ -546,11 +555,16 @@ class CorefHoiModel(PyTorchIEModel):
             assert gold_starts is not None
             assert gold_ends is not None
             do_loss = True
+            # use just first example in batch
+            gold_starts = gold_starts[0]
+            gold_ends = gold_ends[0]
+            gold_mention_cluster_map = gold_mention_cluster_map[0]
 
         # Get token emb
-        mention_doc, _ = self.bert(
+        embedded_inputs = self.bert(
             input_ids, attention_mask=input_mask
         )  # [num seg, num max tokens, emb size]
+        mention_doc = embedded_inputs[0]  # [num tokens, emb size]
         input_mask = input_mask.to(torch.bool)
         mention_doc = mention_doc[input_mask]
         speaker_ids = speaker_ids[input_mask]
