@@ -1050,13 +1050,13 @@ class CorefHoiModel(PyTorchIEModel):
         **kwargs,
     ) -> CorefHoiModelPrediction:
         predictions: CorefHoiModelModelBatchOutput = self(**inputs)[0]
-        span_starts = predictions["top_span_starts"]
-        span_ends = predictions["top_span_ends"]
+        span_starts = predictions["top_span_starts"].cpu().tolist()
+        span_ends = predictions["top_span_ends"].cpu().tolist()
         clusters, mention_to_cluster_id, antecedents = self.get_predicted_clusters(
             span_starts=span_starts,
             span_ends=span_ends,
-            antecedent_idx=predictions["top_antecedent_idx"],
-            antecedent_scores=predictions["top_antecedent_scores"],
+            antecedent_idx=predictions["top_antecedent_idx"].cpu().tolist(),
+            antecedent_scores=predictions["top_antecedent_scores"].cpu().tolist(),
         )
         spans = [(span_start, span_end) for span_start, span_end in zip(span_starts, span_ends)]
         return CorefHoiModelPrediction(spans=spans, antecedents=antecedents, clusters=clusters)
