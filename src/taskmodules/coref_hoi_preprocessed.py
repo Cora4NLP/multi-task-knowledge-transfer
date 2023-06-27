@@ -13,7 +13,7 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tupl
 
 import numpy as np
 import torch
-from pytorch_ie.annotations import Label
+from pytorch_ie.annotations import Label, Span
 from pytorch_ie.core import (
     Annotation,
     AnnotationList,
@@ -37,12 +37,16 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class SpanSet(Annotation):
-    spans: Tuple[Tuple[int, int], ...]
+    spans: Tuple[Span, ...]
     score: float = 1.0
 
     def __post_init__(self) -> None:
-        # make spans unique, sort them and convert to tuples to make them hashable
-        object.__setattr__(self, "spans", tuple(sorted(set(tuple(s) for s in self.spans))))
+        # make the referenced spans unique, sort them and convert to tuples to make everything hashable
+        object.__setattr__(
+            self,
+            "spans",
+            tuple(sorted(set(s for s in self.spans), key=lambda s: (s.start, s.end))),
+        )
 
 
 @dataclasses.dataclass
@@ -52,7 +56,8 @@ class Conll2012OntonotesV5PreprocessedDocument(Document):
     speakers: List[List[str]]
     sentence_map: List[int]
     subtoken_map: Optional[List[int]] = None
-    clusters: AnnotationList[SpanSet] = annotation_field(target="tokens")
+    mentions: AnnotationList[Span] = annotation_field(target="tokens")
+    clusters: AnnotationList[SpanSet] = annotation_field(target="mentions")
     id: Optional[str] = None  # doc_key
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
@@ -268,7 +273,9 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
 
     def tensorize_example_targets(self, doc_key, clusters: Iterable[SpanSet]) -> TaskTargets:
         # Mentions and clusters
-        cluster_list = [[spans for spans in cluster.spans] for cluster in clusters]
+        cluster_list = [
+            [(span.start, span.end - 1) for span in cluster.spans] for cluster in clusters
+        ]
         self.stored_info["gold"][doc_key] = cluster_list
         gold_mentions = sorted(tuple(mention) for mention in flatten(cluster_list))
         gold_mention_map = {mention: idx for idx, mention in enumerate(gold_mentions)}
@@ -412,5 +419,8 @@ class CorefHoiPreprocessedTaskModule(TaskModuleType):
         The method has to yield tuples (annotation_layer_name, annotation).
         """
 
-        for spans in task_outputs["clusters"]:
+        for raw_spans in task_outputs["clusters"]:
+            spans = tuple(Span(start=start, end=end + 1) for start, end in raw_spans)
+            for span in spans:
+                yield "mentions", span
             yield "clusters", SpanSet(spans=spans, score=1.0)
