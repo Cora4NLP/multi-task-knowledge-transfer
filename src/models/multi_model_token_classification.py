@@ -8,7 +8,7 @@ from torch.nn import CrossEntropyLoss
 from transformers import BatchEncoding
 from typing_extensions import TypeAlias
 
-from src.models.multi_model_base import TransformerMultiModel
+from src.models.components import TransformerMultiModel
 
 MultiModelTokenClassificationModelBatchEncoding: TypeAlias = BatchEncoding
 MultiModelTokenClassificationModelBatchOutput = Dict[str, Any]
