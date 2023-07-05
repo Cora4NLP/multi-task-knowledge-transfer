@@ -5,13 +5,16 @@ import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
 from torch.nn import CrossEntropyLoss
-from transformers import AutoConfig, AutoModel, BatchEncoding
+from transformers import BatchEncoding
+from typing_extensions import TypeAlias
 
-MultiModelTokenClassificationModelBatchEncoding = BatchEncoding
+from src.models.components import TransformerMultiModel
+
+MultiModelTokenClassificationModelBatchEncoding: TypeAlias = BatchEncoding
 MultiModelTokenClassificationModelBatchOutput = Dict[str, Any]
 
 MultiModelTokenClassificationModelStepBatchEncoding = Tuple[
-    Dict[str, Tensor],
+    MultiModelTokenClassificationModelBatchEncoding,
     Optional[Tensor],
 ]
 
@@ -43,40 +46,19 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self.label_pad_token_id = label_pad_token_id
         self.num_classes = num_classes
 
-        if len(pretrained_models) < 1:
-            raise ValueError("At least one model path must be provided")
-
-        config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
-        if self.is_from_pretrained:
-            self.models = nn.ModuleDict(
-                {model_id: AutoModel.from_config(config=config) for model_id in pretrained_models}
-            )
-        else:
-            self.models = nn.ModuleDict(
-                {
-                    model_id: AutoModel.from_pretrained(
-                        path, config=config, ignore_mismatched_sizes=True
-                    )
-                    for model_id, path in pretrained_models.items()
-                }
-            )
-
-        for model_id in freeze_models or []:
-            self.models[model_id].requires_grad_(False)
-
-        if aggregate == "mean":
-
-            def aggregate_mean(x: Dict[str, Tensor]) -> Tensor:
-                stacked = torch.stack(list(x.values()), dim=-1)
-                aggregated = torch.mean(stacked, dim=-1)
-                return aggregated
-
-            self.aggregate = aggregate_mean
-        else:
-            raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
+        self.base_models = TransformerMultiModel(
+            model_name=model_name,
+            pretrained_models=pretrained_models,
+            load_model_weights=not self.is_from_pretrained,
+            aggregate=aggregate,
+            freeze_models=freeze_models,
+            config_overrides={"num_labels": num_classes},
+        )
 
         self.dropout = nn.Dropout(classifier_dropout)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.classifier = nn.Linear(
+            self.base_models.config.hidden_size, self.base_models.config.num_labels
+        )
 
         self.f1 = nn.ModuleDict(
             {
@@ -87,14 +69,13 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
             }
         )
 
-    def forward(self, input_: MultiModelTokenClassificationModelBatchEncoding) -> MultiModelTokenClassificationModelBatchOutput:  # type: ignore
-        results_per_model = {
-            model_name: model(**input_) for model_name, model in self.models.items()
-        }
-        logits_per_model = {k: v[0] for k, v in results_per_model.items()}
-        aggregated_sequence_output = self.aggregate(logits_per_model)
+    def forward(
+        self, inputs: MultiModelTokenClassificationModelBatchEncoding
+    ) -> MultiModelTokenClassificationModelBatchOutput:
+        # get the sequence logits aggregated over all models
+        logits = self.base_models(**inputs)
 
-        sequence_output = self.dropout(aggregated_sequence_output)
+        sequence_output = self.dropout(logits)
         logits = self.classifier(sequence_output)
 
         # Return a dict with "logits" as key to confirm to the interface of the taskmodule,
