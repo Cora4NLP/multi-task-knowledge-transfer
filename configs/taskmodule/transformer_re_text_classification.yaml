@@ -2,7 +2,6 @@ _target_: pytorch_ie.taskmodules.transformer_re_text_classification.TransformerR
 
 tokenizer_name_or_path: bert-base-uncased
 
-entity_annotation: entities
 relation_annotation: relations
 # Long sequence handling.
 # This will just truncate the input (in means of tokens):
