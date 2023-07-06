@@ -41,18 +41,33 @@ def _remove_annotation_fields(ann: Annotation, exclude_annotation_fields: Set[st
     )
 
 
-class F1MetricForLabeledAnnotations:
+def has_one_of_the_labels(ann: Annotation, label_field: str, labels: Collection[str]) -> bool:
+    return getattr(ann, label_field) in labels
+
+
+def has_this_label(ann: Annotation, label_field: str, label: str) -> bool:
+    return getattr(ann, label_field) == label
+
+
+class F1Metric:
     def __init__(
         self,
         layer: str,
+        label_field: Optional[str] = None,
         labels: Optional[Collection[str]] = None,
-        exclude_labels: Optional[Collection[str]] = None,
         exclude_annotation_fields: Optional[List[str]] = None,
     ):
         self.layer = layer
-        self.exclude_labels = set(exclude_labels or [])
-        self.labels = set(labels or []) - self.exclude_labels
-        assert "MICRO" not in self.labels and "MACRO" not in self.labels
+        self.label_field = label_field
+
+        self.labels = set(labels or [])
+        assert (
+            "MICRO" not in self.labels and "MACRO" not in self.labels
+        ), "labels cannot contain 'MICRO' or 'MACRO' because they are used to capture aggregated metrics"
+        if self.label_field is None:
+            assert (
+                len(self.labels) == 0
+            ), "can not calculate metrics per label without a provided label_field"
 
         self.annotation_mapper: Optional[Callable[[Annotation], Hashable]] = None
         if exclude_annotation_fields is not None:
@@ -78,7 +93,11 @@ class F1MetricForLabeledAnnotations:
             new_counts = eval_counts_for_layer(
                 document=document,
                 layer=self.layer,
-                annotation_filter=lambda ann: ann.label not in self.exclude_labels,
+                annotation_filter=partial(
+                    has_one_of_the_labels, label_field=self.label_field, labels=self.labels
+                )
+                if self.label_field is not None
+                else None,
                 annotation_mapper=self.annotation_mapper,
             )
             self._add_counts(new_counts, label="MICRO")
@@ -86,7 +105,9 @@ class F1MetricForLabeledAnnotations:
                 new_counts = eval_counts_for_layer(
                     document=document,
                     layer=self.layer,
-                    annotation_filter=lambda ann: ann.label == label,
+                    annotation_filter=partial(
+                        has_this_label, label_field=self.label_field, label=label
+                    ),
                     annotation_mapper=self.annotation_mapper,
                 )
                 self._add_counts(new_counts, label=label)
@@ -99,7 +120,8 @@ class F1MetricForLabeledAnnotations:
     def values(self, reset: bool = True, show_as_markdown: bool = False):
 
         res = dict()
-        res["MACRO"] = {"f1": 0.0, "p": 0.0, "r": 0.0}
+        if len(self.labels) > 0:
+            res["MACRO"] = {"f1": 0.0, "p": 0.0, "r": 0.0}
         for label, counts in self.counts.items():
             tp, fp, fn = counts
             if tp == 0:
@@ -120,10 +142,11 @@ class F1MetricForLabeledAnnotations:
         return res
 
 
-def evaluate_document_layer_with_labeled_annotations(
+def evaluate_document_layer(
     path_or_documents: Union[str, List[Document]],
     layer: str,
     document_type: Optional[Type[Document]] = DocumentWithEntitiesRelationsAndLabeledPartitions,
+    label_field: Optional[str] = "label",
     exclude_labels: Optional[List[str]] = None,
     exclude_annotation_fields: Optional[List[str]] = None,
     show_as_markdown: bool = True,
@@ -135,11 +158,18 @@ def evaluate_document_layer_with_labeled_annotations(
         documents = JsonSerializer.read(file_name=path_or_documents, document_type=document_type)
     else:
         documents = path_or_documents
-    labels = set(chain(*[[ann.label for ann in doc[layer]] for doc in documents]))
-    f1metric = F1MetricForLabeledAnnotations(
+    if label_field is not None:
+        labels = set(
+            chain(*[[getattr(ann, label_field) for ann in doc[layer]] for doc in documents])
+        )
+        if exclude_labels is not None:
+            labels = labels - set(exclude_labels)
+    else:
+        labels = None
+    f1metric = F1Metric(
         layer=layer,
+        label_field=label_field,
         labels=labels,
-        exclude_labels=exclude_labels,
         exclude_annotation_fields=exclude_annotation_fields,
     )
     f1metric(documents)
