@@ -1,0 +1,6 @@
+_target_: src.utils.dataset.process_dataset
+input:
+  _target_: datasets.load_dataset
+  path: pie/tacred
+  name: original
+  data_dir: ${oc.env:TACRED_DATA_DIR}
