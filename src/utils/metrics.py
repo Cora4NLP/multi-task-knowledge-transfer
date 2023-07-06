@@ -49,7 +49,7 @@ def has_this_label(ann: Annotation, label_field: str, label: str) -> bool:
     return getattr(ann, label_field) == label
 
 
-class F1MetricForLabeledAnnotations:
+class F1Metric:
     def __init__(
         self,
         layer: str,
@@ -166,7 +166,7 @@ def evaluate_document_layer(
             labels = labels - set(exclude_labels)
     else:
         labels = None
-    f1metric = F1MetricForLabeledAnnotations(
+    f1metric = F1Metric(
         layer=layer,
         label_field=label_field,
         labels=labels,
