@@ -41,7 +41,10 @@ from hydra.utils import get_class
 from omegaconf import DictConfig
 from pytorch_ie import DatasetDict
 from pytorch_ie.core import PyTorchIEModel, TaskModule
-from pytorch_ie.models import TransformerTokenClassificationModel
+from pytorch_ie.models import (
+    TransformerTextClassificationModel,
+    TransformerTokenClassificationModel,
+)
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import Logger
 
@@ -97,18 +100,15 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     elif model_cls == MultiModelTokenClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
+    elif model_cls == TransformerTextClassificationModel:
+        additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
+        additional_model_kwargs["tokenizer_vocab_size"] = len(taskmodule.tokenizer)
     # elif model_cls == pytorch_ie.models.TransformerSpanClassificationModel:
     #     additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     #     max_train_steps = cfg["trainer"]["max_epochs"] * datamodule.num_train
     #     additional_model_kwargs["t_total"] = int(
     #         max_train_steps / float(cfg["datamodule"]["batch_size"])
     #     )
-    # elif model_cls == pytorch_ie.models.TransformerTextClassificationModel:
-    #    additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
-    #    max_train_steps = cfg["trainer"]["max_epochs"] * datamodule.num_train
-    #    additional_model_kwargs["t_total"] = int(
-    #        max_train_steps / float(cfg["datamodule"]["batch_size"])
-    #    )
     # elif model_cls == pytorch_ie.models.TransformerSeq2SeqModel:
     #    pass
     else:
