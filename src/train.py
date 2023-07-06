@@ -50,7 +50,7 @@ from pytorch_lightning.loggers import Logger
 
 from src import utils
 from src.datamodules import PieDataModule
-from src.models import MultiModelTokenClassificationModel
+from src.models import MultiModelTextClassificationModel, MultiModelTokenClassificationModel
 
 log = utils.get_pylogger(__name__)
 
@@ -101,6 +101,9 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     elif model_cls == MultiModelTokenClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     elif model_cls == TransformerTextClassificationModel:
+        additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
+        additional_model_kwargs["tokenizer_vocab_size"] = len(taskmodule.tokenizer)
+    elif model_cls == MultiModelTextClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
         additional_model_kwargs["tokenizer_vocab_size"] = len(taskmodule.tokenizer)
     # elif model_cls == pytorch_ie.models.TransformerSpanClassificationModel:
