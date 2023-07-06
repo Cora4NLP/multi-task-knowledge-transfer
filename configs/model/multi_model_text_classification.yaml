@@ -1,0 +1,3 @@
+_target_: src.models.MultiModelTextClassificationModel
+
+model_name: bert-base-uncased
