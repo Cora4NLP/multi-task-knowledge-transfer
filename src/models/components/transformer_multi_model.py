@@ -57,6 +57,10 @@ class TransformerMultiModel(Module):
         else:
             raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
 
+    def resize_token_embeddings(self, new_num_tokens: int) -> None:
+        for model in self.models.values():
+            model.resize_token_embeddings(new_num_tokens)
+
     def forward(self, **inputs):
         results_per_model = {
             model_name: model(**inputs) for model_name, model in self.models.items()
