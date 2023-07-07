@@ -1,0 +1,21 @@
+# @package _global_
+
+# to execute this experiment run:
+# python src/train.py experiment=conll2012_coref_hoi_bert_large dataset.input.base_dataset_kwargs.data_dir=/absolute/path/to/seg_len_384
+
+defaults:
+  - conll2012_coref_hoi.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "conll2012/coref_hoi_bert_large"
+
+tags: ["dataset=conll2012", "model=coref_hoi_bert_large"]
+
+taskmodule:
+  tokenizer_name_or_path: bert-base-cased
+
+model:
+  bert_pretrained_name_or_path: bert-large-cased

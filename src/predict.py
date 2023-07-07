@@ -42,8 +42,9 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_ie import DatasetDict, Pipeline
 
 from src import utils
-from src.models import MultiModelTokenClassificationModel
+from src.models import CorefHoiModel, MultiModelTokenClassificationModel
 from src.serializer.interface import DocumentSerializer
+from src.taskmodules import CorefHoiPreprocessedTaskModule
 
 log = utils.get_pylogger(__name__)
 

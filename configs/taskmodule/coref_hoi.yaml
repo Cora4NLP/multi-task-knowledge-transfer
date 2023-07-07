@@ -1,0 +1,7 @@
+_target_: src.taskmodules.CorefHoiPreprocessedTaskModule
+
+tokenizer_name_or_path: ???
+genres: ["pt", "bn", "nw", "wb", "tc", "bc", "mz"]
+max_num_speakers: 20
+max_segment_len: 256
+max_training_sentences: 5
