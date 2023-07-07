@@ -50,7 +50,11 @@ from pytorch_lightning.loggers import Logger
 
 from src import utils
 from src.datamodules import PieDataModule
-from src.models import MultiModelTextClassificationModel, MultiModelTokenClassificationModel
+from src.models import (
+    CorefHoiModel,
+    MultiModelTextClassificationModel,
+    MultiModelTokenClassificationModel,
+)
 
 log = utils.get_pylogger(__name__)
 
