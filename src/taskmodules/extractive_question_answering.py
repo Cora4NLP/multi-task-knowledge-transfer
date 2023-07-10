@@ -79,8 +79,8 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
     def __init__(
         self,
         tokenizer_name_or_path: str,
+        max_length: int,
         answer_annotation: str = "answers",
-        tokenizer_kwargs: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -88,7 +88,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
 
         self.answer_annotation = answer_annotation
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
-        self.tokenizer_kwargs = tokenizer_kwargs or {}
+        self.max_length = max_length
 
     def get_answer_layer(self, document: DocumentType) -> AnnotationList[ExtractiveAnswer]:
         return document[self.answer_annotation]
@@ -133,10 +133,8 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             inputs: BatchEncoding = self.tokenizer(
                 context_and_question,
                 padding=False,
-                truncation=False,
-                max_length=None,
-                is_split_into_words=False,
-                # return_offsets_mapping=True,
+                truncation=True,
+                max_length=self.max_length,
             )
             task_encodings.append(
                 TaskEncoding(
@@ -181,7 +179,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         input_features = [task_encoding.inputs for task_encoding in task_encodings]
 
         inputs: BatchEncoding = self.tokenizer.pad(
-            input_features, return_tensors="pt", **self.tokenizer_kwargs
+            input_features, padding="longest", max_length=self.max_length, return_tensors="pt"
         )
 
         if not task_encodings[0].has_targets:
