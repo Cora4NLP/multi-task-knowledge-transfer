@@ -2,6 +2,7 @@ import dataclasses
 import logging
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
+import numpy as np
 import torch
 from pytorch_ie.annotations import Span
 from pytorch_ie.core import (
@@ -71,7 +72,14 @@ _TaskEncoding: TypeAlias = TaskEncoding[
 TaskBatchEncoding: TypeAlias = Tuple[BatchEncoding, Optional[Dict[str, Any]]]
 ModelBatchOutput: TypeAlias = QuestionAnsweringModelOutput
 
-TaskOutput: TypeAlias = Dict[str, Any]
+
+@dataclasses.dataclass
+class TaskOutput:
+    start: int
+    end: int
+    # the logits are not yet used
+    start_logits: np.ndarray
+    end_logits: np.ndarray
 
 
 @TaskModule.register()
@@ -166,12 +174,12 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             raise Exception(
                 f"the answer {answer} does not match the question {task_encoding.metadata['question']}"
             )
-        start_char = answer.start + task_encoding.metadata["context_start"]
-        start_token = task_encoding.inputs.char_to_token(start_char)
-        end_char = answer.end + task_encoding.metadata["context_start"]
+        start_char_idx = answer.start + task_encoding.metadata["context_start"]
+        start_token_idx = task_encoding.inputs.char_to_token(start_char_idx)
+        end_char_idx = answer.end + task_encoding.metadata["context_start"]
         # the end token is inclusive
-        end_token = task_encoding.inputs.char_to_token(end_char - 1)
-        return TargetEncoding(start_token, end_token)
+        end_token = task_encoding.inputs.char_to_token(end_char_idx - 1)
+        return TargetEncoding(start_token_idx, end_token)
 
     def collate(
         self, task_encodings: Sequence[TaskEncoding[DocumentType, InputEncoding, TargetEncoding]]
@@ -198,11 +206,34 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         return inputs, targets
 
     def unbatch_output(self, model_output: ModelBatchOutput) -> Sequence[TaskOutput]:
-        raise NotImplementedError
+        batch_size = len(model_output.start_logits)
+        start_logits = model_output.start_logits.detach().cpu().numpy()
+        end_logits = model_output.end_logits.detach().cpu().numpy()
+        best_start = np.argmax(start_logits, axis=1)
+        best_end = np.argmax(end_logits, axis=1)
+        return [
+            TaskOutput(
+                start=best_start[i],
+                end=best_end[i],
+                start_logits=start_logits[i],
+                end_logits=end_logits[i],
+            )
+            for i in range(batch_size)
+        ]
 
     def create_annotations_from_output(
         self,
         task_encoding: TaskEncoding[DocumentType, InputEncoding, TargetEncoding],
         task_output: TaskOutput,
     ) -> Iterator[Tuple[str, Annotation]]:
-        raise NotImplementedError
+
+        start_char = task_encoding.inputs.token_to_chars(task_output.start)
+        end_char = task_encoding.inputs.token_to_chars(task_output.end)
+        if start_char is not None and end_char is not None:
+            start = start_char.start - task_encoding.metadata["context_start"]
+            end = end_char.end - task_encoding.metadata["context_start"]
+            context = self.get_context(task_encoding.document)
+            if 0 <= start < end <= len(context):
+                yield self.answer_annotation, ExtractiveAnswer(
+                    start=start, end=end, question=task_encoding.metadata["question"]
+                )
