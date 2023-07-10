@@ -58,7 +58,7 @@ def parse_key_file(key_file):
                                         new_file.write(line)
                                         
 
-        except Exception e:
+        except Exception as e:
                 print("You need to set the CLASSPATH environment variable to point to the Stanford parser!")
                 print("Example: export CLASSPATH=/path/to/stanford-parser-full-YYYY-MM-DD/stanford-parser.jar:/path/to/stanford-parser-full-YYYY-MM-DD/stanford-parser-X.X.X-models.jar")
                 print(e)
