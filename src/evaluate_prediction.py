@@ -80,8 +80,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ua_scorer",
-        type=bool,
-        default=False,
+        type=str,
+        default="False",
         help="whether to use the ua-scorer for evaluation",
     )
     parser.add_argument(
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     for f_i, file_name in enumerate(args.serialized_documents):
         logger.info(f"evaluating {file_name} ...")
-        if args.ua_scorer:
+        if args.ua_scorer == "True":
             # file_name is the system output
             metric_values = eval_coref_ua_scorer(args.coref_gold[f_i], file_name)
         else:
