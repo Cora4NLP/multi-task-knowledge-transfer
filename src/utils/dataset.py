@@ -82,7 +82,7 @@ def select(
     if "indices" in kwargs:
         pie_split = dataset[split]
         dataset[split] = Dataset.from_hf_dataset(
-            dataset=pie_split.select(**kwargs), document_type=dataset[split].document_type
+            dataset=pie_split.select(**kwargs), document_type=pie_split.document_type
         )
     else:
         if len(kwargs) > 0:
