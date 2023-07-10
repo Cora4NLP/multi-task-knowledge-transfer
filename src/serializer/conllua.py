@@ -68,8 +68,7 @@ class ConllUaSerializer(DocumentSerializer):
         return lines
 
     @classmethod
-    def get_clusters(cls, mention_predictions: List[dict], cluster_predictions: List[dict]) -> List[List[int]]:
-        clusters = []
+    def get_clusters(cls, mention_predictions: List[dict], cluster_predictions: List[dict]) -> List[List[List[int]]]:
         mention_ids = {}
         for mention in mention_predictions:
             mention_ids[mention["_id"]] = [mention["start"], mention["end"]-1]

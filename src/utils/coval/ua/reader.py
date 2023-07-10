@@ -93,7 +93,7 @@ def get_doc_markables(doc_name, doc_lines, extract_MIN, keep_bridging, word_colu
 
   bridging_pairs = {}
   for anaphora, antecedent in bridging_antecedents.items():
-    if anaphora not in id2markable or not antecedent in id2markable:
+    if anaphora not in id2markable or antecedent not in id2markable:
       print('Skip bridging pair ({}, {}) as markable_id does not exist in identity column!'.format(antecedent,anaphora))
       continue
     bridging_pairs[id2markable[anaphora]] = id2markable[antecedent]
