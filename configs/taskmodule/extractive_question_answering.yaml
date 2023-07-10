@@ -1,0 +1,6 @@
+_target_: src.taskmodules.ExtractiveQuestionAnsweringTaskModule
+
+tokenizer_name_or_path: bert-base-uncased
+tokenizer_kwargs:
+  padding: max_length
+  max_length: 512

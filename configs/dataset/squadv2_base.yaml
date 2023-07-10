@@ -1,0 +1,4 @@
+_target_: src.utils.dataset.process_dataset
+input:
+  _target_: datasets.load_dataset
+  path: pie/squad_v2
