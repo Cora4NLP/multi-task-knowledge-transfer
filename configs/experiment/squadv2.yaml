@@ -20,7 +20,12 @@ name: "dataset+squadv2/task+extractive_question_answering"
 
 tags: ["dataset=squadv2", "task=extractive_question_answering"]
 
-transformer_model: bert-base-uncased
+# metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
+monitor_metric: "val/loss"
+monitor_mode: "min"
+
+# this model was already trained on squad2
+transformer_model: deepset/tinyroberta-squad2 #bert-base-uncased
 
 seed: 12345
 
