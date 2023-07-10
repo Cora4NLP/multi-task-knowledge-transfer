@@ -121,6 +121,21 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         context_field_name = questions._targets[0]
         return getattr(document, context_field_name)
 
+    def encode_context_and_question(
+        self, context: str, question: str
+    ) -> Tuple[BatchEncoding, int]:
+        # TODO: is this the right way to encode the context and question?
+        context_and_question = f"context: {context} question: {question}"
+        context_offset = len("context: ")
+
+        inputs: BatchEncoding = self.tokenizer(
+            context_and_question,
+            padding=False,
+            truncation=True,
+            max_length=self.max_length,
+        )
+        return inputs, context_offset
+
     def encode_input(
         self,
         document: DocumentType,
@@ -135,24 +150,12 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         questions = self.get_question_layer(document)
         task_encodings: List[_TaskEncoding] = []
         for question in questions:
-            # TODO: is this the right way to encode the context and question?
-            context_and_question = f"context: {context} question: {question.text}"
-
-            inputs: BatchEncoding = self.tokenizer(
-                context_and_question,
-                padding=False,
-                truncation=True,
-                max_length=self.max_length,
-            )
+            inputs, context_offset = self.encode_context_and_question(context, question.text)
             task_encodings.append(
                 TaskEncoding(
                     document=document,
                     inputs=inputs,
-                    metadata=dict(
-                        context_start=len("context: "),
-                        context_end=len(f"context: {context}"),
-                        question=question,
-                    ),
+                    metadata=dict(context_offset=context_offset, question=question),
                 )
             )
         return task_encodings
@@ -174,12 +177,12 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             raise Exception(
                 f"the answer {answer} does not match the question {task_encoding.metadata['question']}"
             )
-        start_char_idx = answer.start + task_encoding.metadata["context_start"]
+        start_char_idx = answer.start + task_encoding.metadata["context_offset"]
         start_token_idx = task_encoding.inputs.char_to_token(start_char_idx)
-        end_char_idx = answer.end + task_encoding.metadata["context_start"]
+        end_char_idx = answer.end + task_encoding.metadata["context_offset"]
         # the end token is inclusive
-        end_token = task_encoding.inputs.char_to_token(end_char_idx - 1)
-        return TargetEncoding(start_token_idx, end_token)
+        last_token_idx = task_encoding.inputs.char_to_token(end_char_idx - 1)
+        return TargetEncoding(start_token_idx, last_token_idx)
 
     def collate(
         self, task_encodings: Sequence[TaskEncoding[DocumentType, InputEncoding, TargetEncoding]]
@@ -230,8 +233,8 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         start_char = task_encoding.inputs.token_to_chars(task_output.start)
         end_char = task_encoding.inputs.token_to_chars(task_output.end)
         if start_char is not None and end_char is not None:
-            start = start_char.start - task_encoding.metadata["context_start"]
-            end = end_char.end - task_encoding.metadata["context_start"]
+            start = start_char.start - task_encoding.metadata["context_offset"]
+            end = end_char.end - task_encoding.metadata["context_offset"]
             context = self.get_context(task_encoding.document)
             if 0 <= start < end <= len(context):
                 yield self.answer_annotation, ExtractiveAnswer(
