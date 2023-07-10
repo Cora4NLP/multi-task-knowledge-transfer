@@ -107,7 +107,7 @@ class Mention:
 
 
     """
-    Exluding terminals like comma and paranthesis
+    Excluding terminals like comma and parenthesis
     """
     def is_a_valid_terminal_node(self, tag, pos):
         if len(tag.split()) == 1:
@@ -176,7 +176,7 @@ class Mention:
         elif root.tag[0:2] in ['NP', 'NM']:
             valid_tags = NP_tags
         else:
-            if root.children: ## If none of the first level nodes are either NP or VP, examines their children for valid mention tags
+            if root.children: # If none of the first level nodes are either NP or VP, examines their children for valid mention tags
                 all_tags = []
                 for node in root.children:
                     all_tags.append(node.tag[0:2])

@@ -127,3 +127,5 @@ if __name__ == "__main__":
         logger.info(f"aggregated results (n={len(all_metric_values)}):")
         logger.info(f"\nmean:\n{grouped_metric_values.mean().round(3).to_markdown()}")
         logger.info(f"\nstddev:\n{grouped_metric_values.std().round(3).to_markdown()}")
+    else:
+        logger.info(f"evaluation:\n{all_metric_values[0]}")

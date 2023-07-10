@@ -93,7 +93,7 @@ def get_doc_markables(doc_name, doc_lines, extract_MIN, keep_bridging, word_colu
 
   bridging_pairs = {}
   for anaphora, antecedent in bridging_antecedents.items():
-    if not anaphora in id2markable or not antecedent in id2markable:
+    if anaphora not in id2markable or not antecedent in id2markable:
       print('Skip bridging pair ({}, {}) as markable_id does not exist in identity column!'.format(antecedent,anaphora))
       continue
     bridging_pairs[id2markable[anaphora]] = id2markable[antecedent]
@@ -112,7 +112,7 @@ def process_clusters(clusters, keep_singletons, keep_non_referring,keep_split_an
   processed_non_referrings = []
 
   for cluster_id, (cluster, ref_tag, doc_name, split_cid_list) in clusters.items():
-    #recusively find the split singular cluster
+    #recursively find the split singular cluster
     if split_cid_list and keep_split_antecedent:
       # if using split-antecedent, we shouldn't remove singletons as they might be used by split-antecedents
       assert keep_singletons

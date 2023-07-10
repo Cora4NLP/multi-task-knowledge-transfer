@@ -58,10 +58,10 @@ def parse_key_file(key_file):
                                         new_file.write(line)
                                         
 
-        except:
+        except Exception e:
                 print("You need to set the CLASSPATH environment variable to point to the Stanford parser!")
                 print("Example: export CLASSPATH=/path/to/stanford-parser-full-YYYY-MM-DD/stanford-parser.jar:/path/to/stanford-parser-full-YYYY-MM-DD/stanford-parser-X.X.X-models.jar")
-                print("")
+                print(e)
                 raise
 
 def check_gold_parse_annotation(key_file):

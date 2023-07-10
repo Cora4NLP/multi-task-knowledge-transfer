@@ -160,7 +160,7 @@ def extract_annotated_parse(mention_lines, start_index,
                     open_nodes.append(node)
                     tag_name = []
                 if terminal_nodes:
-                    # skipping words like commas, quotations and parantheses
+                    # skipping words like commas, quotations and parentheses
                     if any(c.isalpha() for c in terminal_nodes) or \
                        any(c.isdigit() for c in terminal_nodes):
                         node = mention.TreeNode(' '.join(terminal_nodes),
@@ -271,7 +271,7 @@ def set_annotated_parse_trees(clusters, key_doc_lines, NP_only, min_span,
 
             m.set_gold_parse(tree)
 
-            ##If the conll file does not have words
+            #If the conll file does not have words
             if not m.words[0]:
                 terminals = []
                 m.gold_parse.get_terminals(terminals)
