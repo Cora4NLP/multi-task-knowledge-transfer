@@ -52,6 +52,7 @@ from src import utils
 from src.datamodules import PieDataModule
 from src.models import (
     CorefHoiModel,
+    ExtractiveQuestionAnsweringModel,
     MultiModelCorefHoiModel,
     MultiModelTextClassificationModel,
     MultiModelTokenClassificationModel,
@@ -139,6 +140,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     elif model_cls == MultiModelTextClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
         additional_model_kwargs["tokenizer_vocab_size"] = len(taskmodule.tokenizer)
+    elif model_cls == ExtractiveQuestionAnsweringModel:
+        pass
     # elif model_cls == pytorch_ie.models.TransformerSpanClassificationModel:
     #     additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     #     max_train_steps = cfg["trainer"]["max_epochs"] * datamodule.num_train
