@@ -4,7 +4,7 @@
 # python train.py experiment=squadv2
 
 defaults:
-  - override /dataset: squadv2_base.yaml
+  - override /dataset: squadv2_prepared.yaml
   - override /datamodule: default.yaml
   - override /taskmodule: extractive_question_answering.yaml
   - override /model: extractive_question_answering.yaml
