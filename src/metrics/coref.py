@@ -18,6 +18,15 @@ from src.utils.coval.eval.evaluator import (
 )
 from src.utils.coval.ua.reader import get_coref_infos
 
+AVAILABLE_METRICS = {
+    "lea": lea,
+    "muc": muc,
+    "bcub": b_cubed,
+    "ceafe": ceafe,
+    "ceafm": ceafm,
+    "blanc": [blancc, blancn],
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,18 +86,8 @@ class CorefMetrics(DocumentMetric):
         only_split_antecedent: bool = False,
         evaluate_discourse_deixis: bool = False,
         show_as_markdown: bool = False,
+        metrics: List[str] = ["lea", "muc", "bcub", "ceafe", "ceafm", "blanc"],
     ):
-        metric_dict = {
-            "lea": lea,
-            "muc": muc,
-            "bcub": b_cubed,
-            "ceafe": ceafe,
-            "ceafm": ceafm,
-            "blanc": [blancc, blancn],
-        }
-        self.metrics = [(k, metric_dict[k]) for k in metric_dict]
-        # TA: pass these as parameters (too many?)
-        # or create a new config for coreference evaluation
         self.keep_singletons = keep_singletons
         self.keep_split_antecedent = keep_split_antecedent
         self.use_MIN = use_MIN
@@ -98,6 +97,8 @@ class CorefMetrics(DocumentMetric):
         self.evaluate_discourse_deixis = evaluate_discourse_deixis
 
         self.show_as_markdown = show_as_markdown
+
+        self.metrics = {k: AVAILABLE_METRICS[k] for k in metrics}
 
         self.reset()
 
@@ -124,7 +125,7 @@ class CorefMetrics(DocumentMetric):
         )
 
         metrics_dict = {}
-        for name, metric in self.metrics:
+        for name, metric in self.metrics.items():
             recall, precision, f1 = evaluate_documents(
                 doc_coref_infos, metric, beta=1, only_split_antecedent=self.only_split_antecedent
             )
