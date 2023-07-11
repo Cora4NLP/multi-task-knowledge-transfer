@@ -2,6 +2,7 @@ import logging
 from typing import Any, List
 
 import pandas as pd
+from pytorch_ie.core import Document
 
 from src.metrics.interface import DocumentMetric
 from src.taskmodules.coref_hoi_preprocessed import Conll2012OntonotesV5PreprocessedDocument
@@ -30,9 +31,12 @@ AVAILABLE_METRICS = {
 logger = logging.getLogger(__name__)
 
 
-def convert_doc_to_conllua_lines(
-    document: Conll2012OntonotesV5PreprocessedDocument, use_predictions: bool
-) -> List[str]:
+def convert_doc_to_conllua_lines(document: Document, use_predictions: bool) -> List[str]:
+    if not isinstance(document, Conll2012OntonotesV5PreprocessedDocument):
+        raise ValueError(
+            f"document must be of type Conll2012OntonotesV5PreprocessedDocument to convert to conllua, "
+            f"but it is of type {type(document)}"
+        )
 
     cluster_annotations = document.clusters.predictions if use_predictions else document.clusters
 
@@ -106,7 +110,7 @@ class CorefMetrics(DocumentMetric):
         self.gold_lines = []
         self.sys_lines = []
 
-    def _update(self, document: Conll2012OntonotesV5PreprocessedDocument) -> None:
+    def _update(self, document: Document) -> None:
         self.gold_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=False))
         self.sys_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=True))
 
