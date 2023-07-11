@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def convert_doc_to_conllua_lines(document: Document, use_predictions: bool) -> List[str]:
     if not isinstance(document, Conll2012OntonotesV5PreprocessedDocument):
-        raise ValueError(
+        raise TypeError(
             f"document must be of type Conll2012OntonotesV5PreprocessedDocument to convert to conllua, "
             f"but it is of type {type(document)}"
         )
