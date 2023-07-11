@@ -84,7 +84,8 @@ repos:
           - --skip=logs/**,data/**,*.ipynb
           # ignore
           #  - "hist": this is a plotext function
-          - --ignore-words-list=hist
+          #  - "ser": part of the extension for the StanfordParser
+          - --ignore-words-list=hist,ser
 
   # jupyter notebook cell output clearing
   - repo: https://github.com/kynan/nbstripout
