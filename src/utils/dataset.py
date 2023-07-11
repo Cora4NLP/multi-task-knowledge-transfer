@@ -106,10 +106,10 @@ def select(
         if step is not None:
             range_args = range_args + [step]
         kwargs["indices"] = range(*range_args)
+    pie_split = dataset[split]
     if "indices" in kwargs:
-        pie_split = dataset[split]
         dataset[split] = Dataset.from_hf_dataset(
-            dataset=pie_split.select(**kwargs), document_type=pie_split.document_type
+            dataset=pie_split.select(**kwargs), document_type=dataset[split].document_type
         )
     else:
         if len(kwargs) > 0:
