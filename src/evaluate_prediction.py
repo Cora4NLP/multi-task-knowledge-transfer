@@ -110,7 +110,9 @@ if __name__ == "__main__":
                 document_type=args.document_type,
             )
             if args.preprocess_documents is not None:
-                documents = [args.preprocess_documents(document=document) for document in documents]
+                documents = [
+                    args.preprocess_documents(document=document) for document in documents
+                ]
 
             metric_values = evaluate_document_layer(
                 path_or_documents=documents,
