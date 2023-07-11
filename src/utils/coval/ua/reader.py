@@ -291,11 +291,15 @@ def get_markable_assignments(clusters):
     return markable_cluster_ids
 
 
-def get_all_docs(path):
+def get_all_docs(path_or_lines):
     all_docs = {}
     doc_lines = []
     doc_name = None
-    for line in open(path):
+    if isinstance(path_or_lines, str):
+        lines = open(path_or_lines)
+    else:
+        lines = path_or_lines
+    for line in lines:
         line = line.strip()
         if line.startswith("# newdoc"):
             if doc_name and doc_lines:
