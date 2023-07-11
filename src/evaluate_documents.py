@@ -33,7 +33,7 @@ root = pyrootutils.setup_root(
 # https://github.com/ashleve/pyrootutils
 # ------------------------------------------------------------------------------------ #
 
-from typing import Tuple
+from typing import Any, Tuple
 
 import hydra
 import pytorch_lightning as pl
@@ -41,6 +41,7 @@ from omegaconf import DictConfig
 from pytorch_ie import DatasetDict
 
 from src import utils
+from src.metrics.interface import DocumentMetric
 
 log = utils.get_pylogger(__name__)
 
@@ -69,7 +70,7 @@ def evaluate_documents(cfg: DictConfig) -> Tuple[dict, dict]:
 
     # Init pytorch-ie taskmodule
     log.info(f"Instantiating metric <{cfg.metric._target_}>")
-    metric = hydra.utils.instantiate(cfg.metric, _convert_="partial")
+    metric: DocumentMetric = hydra.utils.instantiate(cfg.metric, _convert_="partial")
 
     # Init lightning loggers
     loggers = utils.instantiate_dict_entries(cfg, "logger")
@@ -87,7 +88,7 @@ def evaluate_documents(cfg: DictConfig) -> Tuple[dict, dict]:
         for logger in loggers:
             logger.log_hyperparams(cfg)
 
-    documents = list(dataset[cfg["split"]])
+    documents = dataset[cfg["split"]]
     metric(documents)
 
     metric_dict = metric.values()
@@ -98,7 +99,7 @@ def evaluate_documents(cfg: DictConfig) -> Tuple[dict, dict]:
 @hydra.main(
     version_base="1.2", config_path=str(root / "configs"), config_name="evaluate_documents.yaml"
 )
-def main(cfg: DictConfig) -> None:
+def main(cfg: DictConfig) -> Any:
     metric_dict, _ = evaluate_documents(cfg)
     return metric_dict
 

@@ -8,11 +8,13 @@ from pytorch_ie.core import Document
 class DocumentMetric(ABC):
     """This defines the interface for a document metric."""
 
-    def reset(self):
+    def reset(self) -> None:
         """Any reset logic that needs to be performed before the metric is called again."""
         pass
 
-    def __call__(self, document: Union[List[Document], Document]) -> None:
+    def __call__(
+        self, document: Union[List[Document], Document, Dataset, IterableDataset]
+    ) -> None:
         if isinstance(document, (list, Dataset, IterableDataset)):
             for doc in document:
                 self(doc)
