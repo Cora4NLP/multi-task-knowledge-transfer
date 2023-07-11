@@ -5,11 +5,9 @@ from typing import Dict, List, Sequence, Type, TypeVar
 
 from pytorch_ie.core import Document
 
-from src.serializer.preprocess_conllua import get_document, get_all_docs, get_tokenizer
-
 from src.serializer.interface import DocumentSerializer
+from src.serializer.preprocess_conllua import get_all_docs, get_document, get_tokenizer
 from src.utils import get_pylogger
-
 
 log = get_pylogger(__name__)
 
@@ -38,19 +36,23 @@ class ConllUaSerializer(DocumentSerializer):
         pred_clusters = [tuple(tuple(m) for m in cluster) for cluster in doc_as_dict["clusters"]]
 
         lines = []
-        lines.append("# global.columns = ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC IDENTITY BRIDGING DISCOURSE_DEIXIS REFERENCE NOM_SEM")
-        lines.append("# newdoc id = " + doc_as_dict['doc_key'])
+        lines.append(
+            "# global.columns = ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC IDENTITY BRIDGING DISCOURSE_DEIXIS REFERENCE NOM_SEM"
+        )
+        lines.append("# newdoc id = " + doc_as_dict["doc_key"])
         markable_id = 1
         entity_id = 1
 
-        coref_strs = [""]*len(doc_as_dict['tokens'])
+        coref_strs = [""] * len(doc_as_dict["tokens"])
 
         for clus in pred_clusters:
-            for (start,end) in clus:
-                start = doc_as_dict['subtoken_map'][start]
-                end = doc_as_dict['subtoken_map'][end]
+            for (start, end) in clus:
+                start = doc_as_dict["subtoken_map"][start]
+                end = doc_as_dict["subtoken_map"][end]
 
-                coref_strs[start] += "(EntityID={}|MarkableID=markable_{}".format(entity_id, markable_id)
+                coref_strs[start] += "(EntityID={}|MarkableID=markable_{}".format(
+                    entity_id, markable_id
+                )
                 markable_id += 1
                 if start == end:
                     coref_strs[end] += ")"
@@ -59,19 +61,23 @@ class ConllUaSerializer(DocumentSerializer):
 
             entity_id += 1
 
-        for _id, token in enumerate(doc_as_dict['tokens']):
+        for _id, token in enumerate(doc_as_dict["tokens"]):
             if coref_strs[_id] == "":
                 coref_strs[_id] = "_"
-            sentence = "{}  {}  _  _  _  _  _  _  _  _  {}  _  _  _  _".format(_id, token, coref_strs[_id])
+            sentence = "{}  {}  _  _  _  _  _  _  _  _  {}  _  _  _  _".format(
+                _id, token, coref_strs[_id]
+            )
             lines.append(sentence)
 
         return lines
 
     @classmethod
-    def get_clusters(cls, mention_predictions: List[dict], cluster_predictions: List[dict]) -> List[List[List[int]]]:
+    def get_clusters(
+        cls, mention_predictions: List[dict], cluster_predictions: List[dict]
+    ) -> List[List[List[int]]]:
         mention_ids = {}
         for mention in mention_predictions:
-            mention_ids[mention["_id"]] = [mention["start"], mention["end"]-1]
+            mention_ids[mention["_id"]] = [mention["start"], mention["end"] - 1]
         clusters = []
         for el in cluster_predictions:
             cluster_mentions = []
@@ -80,7 +86,6 @@ class ConllUaSerializer(DocumentSerializer):
             clusters.append(cluster_mentions)
 
         return clusters
-
 
     @classmethod
     def dump(cls, documents: Sequence[Document], path: str, **kwargs) -> Dict[str, str]:
@@ -92,11 +97,21 @@ class ConllUaSerializer(DocumentSerializer):
         conllua_docs = []
         for doc in documents:
             orig_doc = doc.asdict()
-            clusters = cls.get_clusters(orig_doc["mentions"]["predictions"], orig_doc["clusters"]["predictions"])
-            conll_doc_as_dict = {"doc_key":orig_doc["id"], "tokens":orig_doc["tokens"],\
-            "sentences":orig_doc["sentences"], "speakers":[], "constituents":[], "ner":[],\
-            "clusters":clusters, "sentence_map":orig_doc["sentence_map"],\
-            "subtoken_map":orig_doc["subtoken_map"], "pronouns":[]}
+            clusters = cls.get_clusters(
+                orig_doc["mentions"]["predictions"], orig_doc["clusters"]["predictions"]
+            )
+            conll_doc_as_dict = {
+                "doc_key": orig_doc["id"],
+                "tokens": orig_doc["tokens"],
+                "sentences": orig_doc["sentences"],
+                "speakers": [],
+                "constituents": [],
+                "ner": [],
+                "clusters": clusters,
+                "sentence_map": orig_doc["sentence_map"],
+                "subtoken_map": orig_doc["subtoken_map"],
+                "pronouns": [],
+            }
             conllua_docs += cls.convert_json_to_ua(conll_doc_as_dict) + ["\n"]
         with open(realpath, "w") as f:
             for doc in conllua_docs:
@@ -104,7 +119,7 @@ class ConllUaSerializer(DocumentSerializer):
 
         return {"path": realpath}
 
-    @classmethod # reading jsonlines
+    @classmethod  # reading jsonlines
     def read(cls, file_name: str, document_type: Type[D]) -> List[D]:
         documents = []
         if as_json_lines(str(file_name)):
@@ -119,13 +134,15 @@ class ConllUaSerializer(DocumentSerializer):
                 documents.append(document_type.fromdict(json_dict))
         return documents
 
-    @classmethod # reading jsonlines
-    def read_conllua2dict(cls, file_name: str, document_type: Type[D], segment_size=384) -> List[D]:
+    @classmethod  # reading jsonlines
+    def read_conllua2dict(
+        cls, file_name: str, document_type: Type[D], segment_size=384
+    ) -> List[D]:
         documents = []
         key_docs, key_doc_sents = get_all_docs(file_name)
         tokenizer = get_tokenizer("bert-base-cased")
 
         for doc in key_doc_sents:
-            document = get_document(doc, key_docs[doc], 'english', segment_size, tokenizer)
+            document = get_document(doc, key_docs[doc], "english", segment_size, tokenizer)
             documents.append(document_type.fromdict(document))
         return documents

@@ -1,20 +1,25 @@
 # based on https://github.com/juntaoy/codi-crac2022_scripts/blob/main/preprocess.py
-import json
-import os
-from os import walk, makedirs
-from os.path import isfile, join
 import collections
-from collections import deque
-import sys
+import json
 import logging
-import re
-import numpy as np
+import os
 import random
+import re
+import sys
+from collections import deque
+from os import makedirs, walk
+from os.path import isfile, join
+
+import numpy as np
 from transformers import BertTokenizer
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=logging.INFO,
+)
 logger = logging.getLogger(__name__)
+
 
 def flatten(lst):
     return [item for sublist in lst for item in sublist]
@@ -27,9 +32,10 @@ def get_tokenizer(bert_tokenizer_name):
 def skip_doc(doc_key):
     return False
 
+
 def normalize_word(word, language):
     if language == "arabic":
-        word = word[:word.find("#")]
+        word = word[: word.find("#")]
     if word == "/." or word == "/?":
         return word[1:]
     else:
@@ -37,7 +43,9 @@ def normalize_word(word, language):
 
 
 def get_sentence_map(segments, sentence_end):
-    assert len(sentence_end) == sum([len(seg) - 2 for seg in segments])  # of subtokens in all segments
+    assert len(sentence_end) == sum(
+        [len(seg) - 2 for seg in segments]
+    )  # of subtokens in all segments
     sent_map = []
     sent_idx, subtok_idx = 0, 0
     for segment in segments:
@@ -51,7 +59,17 @@ def get_sentence_map(segments, sentence_end):
 
 
 class Markable:
-    def __init__(self, doc_name, start, end, MIN, is_referring, words,is_split_antecedent=False,split_antecedent_members=set()):
+    def __init__(
+        self,
+        doc_name,
+        start,
+        end,
+        MIN,
+        is_referring,
+        words,
+        is_split_antecedent=False,
+        split_antecedent_members=set(),
+    ):
         self.doc_name = doc_name
         self.start = start
         self.end = end
@@ -68,21 +86,27 @@ class Markable:
                 return self.split_antecedent_members == other.split_antecedent_members
             # MIN is only set for the key markables
             elif self.MIN:
-                return (self.doc_name == other.doc_name
-                        and other.start >= self.start
-                        and other.start <= self.MIN[0]
-                        and other.end <= self.end
-                        and other.end >= self.MIN[1])
+                return (
+                    self.doc_name == other.doc_name
+                    and other.start >= self.start
+                    and other.start <= self.MIN[0]
+                    and other.end <= self.end
+                    and other.end >= self.MIN[1]
+                )
             elif other.MIN:
-                return (self.doc_name == other.doc_name
-                        and self.start >= other.start
-                        and self.start <= other.MIN[0]
-                        and self.end <= other.end
-                        and self.end >= other.MIN[1])
+                return (
+                    self.doc_name == other.doc_name
+                    and self.start >= other.start
+                    and self.start <= other.MIN[0]
+                    and self.end <= other.end
+                    and self.end >= other.MIN[1]
+                )
             else:
-                return (self.doc_name == other.doc_name
-                        and self.start == other.start
-                        and self.end == other.end)
+                return (
+                    self.doc_name == other.doc_name
+                    and self.start == other.start
+                    and self.end == other.end
+                )
         return NotImplemented
 
     def __neq__(self, other):
@@ -96,17 +120,18 @@ class Markable:
         return hash(frozenset((self.start, self.end)))
 
     def __short_str__(self):
-        return ('({},{})'.format(self.start,self.end))
+        return "({},{})".format(self.start, self.end)
 
     def __str__(self):
         if self.is_split_antecedent:
             return str([cl[0].__short_str__() for cl in self.split_antecedent_members])
         return self.__short_str__()
-            # ('DOC: %s SPAN: (%d, %d) String: %r MIN: %s Referring tag: %s'
-            #	 % (
-            #		 self.doc_name, self.start, self.end, ' '.join(self.words),
-            #		 '(%d, %d)' % self.MIN if self.MIN else '',
-            #		 self.is_referring))
+        # ('DOC: %s SPAN: (%d, %d) String: %r MIN: %s Referring tag: %s'
+        # 	 % (
+        # 		 self.doc_name, self.start, self.end, ' '.join(self.words),
+        # 		 '(%d, %d)' % self.MIN if self.MIN else '',
+        # 		 self.is_referring))
+
 
 class DocumentState(object):
     def __init__(self, key):
@@ -131,18 +156,20 @@ class DocumentState(object):
 
         # Doc-level attributes
         self.pronouns = []
-        self.clusters = collections.defaultdict(list)  # {cluster_id: [(first_subtok_idx, last_subtok_idx) for each mention]}
+        self.clusters = collections.defaultdict(
+            list
+        )  # {cluster_id: [(first_subtok_idx, last_subtok_idx) for each mention]}
         self.coref_stacks = collections.defaultdict(list)
 
     def finalize(self):
-        """ Extract clusters; fill other info e.g. speakers, pronouns """
+        """Extract clusters; fill other info e.g. speakers, pronouns."""
         # Populate speakers from info
         subtoken_idx = 0
         for seg_info in self.segment_info:
             speakers = []
             for i, subtoken_info in enumerate(seg_info):
                 if i == 0 or i == len(seg_info) - 1:
-                    speakers.append('[SPL]')
+                    speakers.append("[SPL]")
                 elif subtoken_info is not None:  # First subtoken of each word
                     speakers.append(subtoken_info[9])
                     # if subtoken_info[4] == 'PRP':  # Uncomment if needed
@@ -157,14 +184,16 @@ class DocumentState(object):
         subtokens_info = flatten(self.segment_info)
         while first_subtoken_idx < len(subtokens_info):
             subtoken_info = subtokens_info[first_subtoken_idx]
-            coref = subtoken_info[-2] if subtoken_info is not None else '-'
-            if coref != '-':
+            coref = subtoken_info[-2] if subtoken_info is not None else "-"
+            if coref != "-":
                 last_subtoken_idx = first_subtoken_idx + subtoken_info[-1] - 1
-                for part in coref.split('|'):
-                    if part[0] == '(':
-                        if part[-1] == ')':
+                for part in coref.split("|"):
+                    if part[0] == "(":
+                        if part[-1] == ")":
                             cluster_id = int(part[1:-1])
-                            self.clusters[cluster_id].append((first_subtoken_idx, last_subtoken_idx))
+                            self.clusters[cluster_id].append(
+                                (first_subtoken_idx, last_subtoken_idx)
+                            )
                         else:
                             cluster_id = int(part[1:])
                             self.coref_stacks[cluster_id].append(first_subtoken_idx)
@@ -212,10 +241,11 @@ class DocumentState(object):
             "constituents": [],
             "ner": [],
             "clusters": merged_clusters,
-            'sentence_map': sentence_map,
+            "sentence_map": sentence_map,
             "subtoken_map": subtoken_map,
-            'pronouns': self.pronouns
+            "pronouns": self.pronouns,
         }
+
 
 class UADocumentState(DocumentState):
     def __init__(self, key):
@@ -240,18 +270,20 @@ class UADocumentState(DocumentState):
 
         # Doc-level attributes
         self.pronouns = []
-        self.clusters = collections.defaultdict(list)  # {cluster_id: [(first_subtok_idx, last_subtok_idx) for each mention]}
-        self.coref_stacks = []#collections.defaultdict(list)
+        self.clusters = collections.defaultdict(
+            list
+        )  # {cluster_id: [(first_subtok_idx, last_subtok_idx) for each mention]}
+        self.coref_stacks = []  # collections.defaultdict(list)
 
     def finalize(self):
-        """ Extract clusters; fill other info e.g. speakers, pronouns """
+        """Extract clusters; fill other info e.g. speakers, pronouns."""
         # Populate speakers from info
         subtoken_idx = 0
         for seg_info in self.segment_info:
             speakers = []
             for i, subtoken_info in enumerate(seg_info):
                 if i == 0 or i == len(seg_info) - 1:
-                    speakers.append('[SPL]')
+                    speakers.append("[SPL]")
                 elif subtoken_info is not None:  # First subtoken of each word
                     speakers.append(subtoken_info[9])
                     # if subtoken_info[4] == 'PRP':  # Uncomment if needed
@@ -266,21 +298,21 @@ class UADocumentState(DocumentState):
         subtokens_info = flatten(self.segment_info)
         while first_subtoken_idx < len(subtokens_info):
             subtoken_info = subtokens_info[first_subtoken_idx]
-            coref = subtoken_info[10] if subtoken_info is not None else '-'
-            if coref != '-' and coref != '' and coref != '_':
+            coref = subtoken_info[10] if subtoken_info is not None else "-"
+            if coref != "-" and coref != "" and coref != "_":
                 last_subtoken_idx = first_subtoken_idx + subtoken_info[-1] - 1
 
-                parts = coref.split('(')
+                parts = coref.split("(")
                 if len(parts[0]):
-                    #the close bracket
+                    # the close bracket
                     for _ in range(len(parts[0])):
                         cluster_id, start = self.coref_stacks.pop()
                         self.clusters[cluster_id].append((start, last_subtoken_idx))
                 for part in parts[1:]:
-#                     print(coref)
+                    #                     print(coref)
                     entity = part.split("|")[0].split("=")[1].split("-")[0]
                     cluster_id = int(entity)
-                    if part[-1] == ')':
+                    if part[-1] == ")":
                         self.clusters[cluster_id].append((first_subtoken_idx, last_subtoken_idx))
                     else:
                         self.coref_stacks.append((cluster_id, first_subtoken_idx))
@@ -325,51 +357,74 @@ class UADocumentState(DocumentState):
             "constituents": [],
             "ner": [],
             "clusters": merged_clusters,
-            'sentence_map': sentence_map,
+            "sentence_map": sentence_map,
             "subtoken_map": subtoken_map,
-            'pronouns': self.pronouns
+            "pronouns": self.pronouns,
         }
 
-def split_into_segments(document_state: DocumentState, max_seg_len, constraints1, constraints2, tokenizer):
-    """ Split into segments.
-        Add subtokens, subtoken_map, info for each segment; add CLS, SEP in the segment subtokens
-        Input document_state: tokens, subtokens, token_end, sentence_end, utterance_end, subtoken_map, info
+
+def split_into_segments(
+    document_state: DocumentState, max_seg_len, constraints1, constraints2, tokenizer
+):
+    """Split into segments.
+
+    Add subtokens, subtoken_map, info for each segment; add CLS, SEP in the segment subtokens Input
+    document_state: tokens, subtokens, token_end, sentence_end, utterance_end, subtoken_map, info
     """
     curr_idx = 0  # Index for subtokens
     prev_token_idx = 0
     while curr_idx < len(document_state.subtokens):
         # Try to split at a sentence end point
-        end_idx = min(curr_idx + max_seg_len - 1 - 2, len(document_state.subtokens) - 1)  # Inclusive
+        end_idx = min(
+            curr_idx + max_seg_len - 1 - 2, len(document_state.subtokens) - 1
+        )  # Inclusive
         while end_idx >= curr_idx and not constraints1[end_idx]:
             end_idx -= 1
         if end_idx < curr_idx:
-            logger.info(f'{document_state.doc_key}: no sentence end found; split at token end')
+            logger.info(f"{document_state.doc_key}: no sentence end found; split at token end")
             # If no sentence end point, try to split at token end point
             end_idx = min(curr_idx + max_seg_len - 1 - 2, len(document_state.subtokens) - 1)
             while end_idx >= curr_idx and not constraints2[end_idx]:
                 end_idx -= 1
             if end_idx < curr_idx:
-                logger.error('Cannot split valid segment: no sentence end or token end')
+                logger.error("Cannot split valid segment: no sentence end or token end")
 
-        segment = [tokenizer.cls_token] + document_state.subtokens[curr_idx: end_idx + 1] + [tokenizer.sep_token]
+        segment = (
+            [tokenizer.cls_token]
+            + document_state.subtokens[curr_idx : end_idx + 1]
+            + [tokenizer.sep_token]
+        )
         document_state.segments.append(segment)
 
-        subtoken_map = document_state.subtoken_map[curr_idx: end_idx + 1]
-        document_state.segment_subtoken_map.append([prev_token_idx] + subtoken_map + [subtoken_map[-1]])
+        subtoken_map = document_state.subtoken_map[curr_idx : end_idx + 1]
+        document_state.segment_subtoken_map.append(
+            [prev_token_idx] + subtoken_map + [subtoken_map[-1]]
+        )
 
-        document_state.segment_info.append([None] + document_state.info[curr_idx: end_idx + 1] + [None])
+        document_state.segment_info.append(
+            [None] + document_state.info[curr_idx : end_idx + 1] + [None]
+        )
 
         curr_idx = end_idx + 1
         prev_token_idx = subtoken_map[-1]
 
 
-def get_doc_markables(doc_name, doc_lines, extract_MIN, keep_bridging, word_column=1, markable_column=10, bridging_column=11, print_debug=False):
+def get_doc_markables(
+    doc_name,
+    doc_lines,
+    extract_MIN,
+    keep_bridging,
+    word_column=1,
+    markable_column=10,
+    bridging_column=11,
+    print_debug=False,
+):
     markables_cluster = {}
     markables_start = {}
     markables_end = {}
     markables_MIN = {}
     markables_coref_tag = {}
-    markables_split = {} # set_id: [markable_id_1, markable_id_2 ...]
+    markables_split = {}  # set_id: [markable_id_1, markable_id_2 ...]
     bridging_antecedents = {}
     all_words = []
     stack = []
@@ -377,23 +432,25 @@ def get_doc_markables(doc_name, doc_lines, extract_MIN, keep_bridging, word_colu
         columns = line.split()
         all_words.append(columns[word_column])
 
-        if columns[markable_column] != '_':
+        if columns[markable_column] != "_":
             markable_annotations = columns[markable_column].split("(")
             if markable_annotations[0]:
-                #the close bracket
+                # the close bracket
                 for _ in range(len(markable_annotations[0])):
                     markable_id = stack.pop()
                     markables_end[markable_id] = word_index
 
             for markable_annotation in markable_annotations[1:]:
-                if markable_annotation.endswith(')'):
+                if markable_annotation.endswith(")"):
                     single_word = True
                     markable_annotation = markable_annotation[:-1]
                 else:
                     single_word = False
-                markable_info = {p[:p.find('=')]:p[p.find('=')+1:] for p in markable_annotation.split('|')}
-                markable_id = markable_info['MarkableID']
-                cluster_id = markable_info['EntityID']
+                markable_info = {
+                    p[: p.find("=")]: p[p.find("=") + 1 :] for p in markable_annotation.split("|")
+                }
+                markable_id = markable_info["MarkableID"]
+                cluster_id = markable_info["EntityID"]
                 markables_cluster[markable_id] = cluster_id
                 markables_start[markable_id] = word_index
                 if single_word:
@@ -402,60 +459,75 @@ def get_doc_markables(doc_name, doc_lines, extract_MIN, keep_bridging, word_colu
                     stack.append(markable_id)
 
                 markables_MIN[markable_id] = None
-                if extract_MIN and 'Min' in markable_info:
-                    MIN_Span = markable_info['Min'].split(',')
+                if extract_MIN and "Min" in markable_info:
+                    MIN_Span = markable_info["Min"].split(",")
                     if len(MIN_Span) == 2:
                         MIN_start = int(MIN_Span[0]) - 1
                         MIN_end = int(MIN_Span[1]) - 1
                     else:
                         MIN_start = int(MIN_Span[0]) - 1
                         MIN_end = MIN_start
-                    markables_MIN[markable_id] = (MIN_start,MIN_end)
+                    markables_MIN[markable_id] = (MIN_start, MIN_end)
 
-                markables_coref_tag[markable_id] = 'referring'
-                if cluster_id.endswith('-Pseudo'):
-                    markables_coref_tag[markable_id] = 'non_referring'
+                markables_coref_tag[markable_id] = "referring"
+                if cluster_id.endswith("-Pseudo"):
+                    markables_coref_tag[markable_id] = "non_referring"
 
-                if 'ElementOf' in markable_info:
-                    element_of = markable_info['ElementOf'].split(',') # for markable participate in multiple plural using , split the element_of, e.g. ElementOf=1,2
+                if "ElementOf" in markable_info:
+                    element_of = markable_info["ElementOf"].split(
+                        ","
+                    )  # for markable participate in multiple plural using , split the element_of, e.g. ElementOf=1,2
                     for ele_of in element_of:
                         if ele_of not in markables_split:
                             markables_split[ele_of] = []
                         markables_split[ele_of].append(markable_id)
-        if keep_bridging and columns[bridging_column] != '_':
+        if keep_bridging and columns[bridging_column] != "_":
             bridging_annotations = columns[bridging_column].split("(")
             for bridging_annotation in bridging_annotations[1:]:
-                if bridging_annotation.endswith(')'):
+                if bridging_annotation.endswith(")"):
                     bridging_annotation = bridging_annotation[:-1]
-                bridging_info = {p[:p.find('=')]:p[p.find('=')+1:] for p in bridging_annotation.split('|')}
-                bridging_antecedents[bridging_info['MarkableID']] = bridging_info['MentionAnchor']
-
-
-
+                bridging_info = {
+                    p[: p.find("=")]: p[p.find("=") + 1 :] for p in bridging_annotation.split("|")
+                }
+                bridging_antecedents[bridging_info["MarkableID"]] = bridging_info["MentionAnchor"]
 
     clusters = {}
     id2markable = {}
     for markable_id in markables_cluster:
         m = Markable(
-                doc_name, markables_start[markable_id],
-                markables_end[markable_id], markables_MIN[markable_id],
-                markables_coref_tag[markable_id],
-                all_words[markables_start[markable_id]:
-                        markables_end[markable_id] + 1])
+            doc_name,
+            markables_start[markable_id],
+            markables_end[markable_id],
+            markables_MIN[markable_id],
+            markables_coref_tag[markable_id],
+            all_words[markables_start[markable_id] : markables_end[markable_id] + 1],
+        )
         id2markable[markable_id] = m
         if markables_cluster[markable_id] not in clusters:
             clusters[markables_cluster[markable_id]] = (
-                    [], markables_coref_tag[markable_id],doc_name,[markables_cluster[mid] for mid in markables_split.get(markables_cluster[markable_id],[])])
+                [],
+                markables_coref_tag[markable_id],
+                doc_name,
+                [
+                    markables_cluster[mid]
+                    for mid in markables_split.get(markables_cluster[markable_id], [])
+                ],
+            )
         clusters[markables_cluster[markable_id]][0].append(m)
 
     bridging_pairs = {}
     for anaphora, antecedent in bridging_antecedents.items():
         if anaphora not in id2markable or antecedent not in id2markable:
-            print('Skip bridging pair ({}, {}) as markable_id does not exist in identity column!'.format(antecedent,anaphora))
+            print(
+                "Skip bridging pair ({}, {}) as markable_id does not exist in identity column!".format(
+                    antecedent, anaphora
+                )
+            )
             continue
         bridging_pairs[id2markable[anaphora]] = id2markable[antecedent]
 
     return clusters, bridging_pairs
+
 
 def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_antecedent):
     removed_non_referring = 0
@@ -464,7 +536,7 @@ def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_a
     processed_non_referrings = []
 
     for cluster_id, (cluster, ref_tag, doc_name, split_cid_list) in clusters.items():
-        #recursively find the split singular cluster
+        # recursively find the split singular cluster
         if split_cid_list and keep_split_antecedent:
             # if using split-antecedent, we shouldn't remove singletons as they might be used by split-antecedents
             assert keep_singletons
@@ -474,25 +546,28 @@ def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_a
             while queue:
                 curr = queue.popleft()
                 curr_cl, curr_ref_tag, doc_name, curr_cid_list = clusters[curr]
-                #non_referring shouldn't be used as split-antecedents
+                # non_referring shouldn't be used as split-antecedents
                 # if curr_ref_tag != 'referring':
-                #	 print(curr_ref_tag, doc_name, curr_cid_list)
+                # 	 print(curr_ref_tag, doc_name, curr_cid_list)
                 if curr_cid_list:
                     for c in curr_cid_list:
                         queue.append(c)
                 else:
                     split_clusters.add(tuple(curr_cl))
             split_m = Markable(
-                doc_name, -1,
-                -1, None,
-                'referring',
-                '',
+                doc_name,
+                -1,
+                -1,
+                None,
+                "referring",
+                "",
                 is_split_antecedent=True,
-                split_antecedent_members=split_clusters)
+                split_antecedent_members=split_clusters,
+            )
 
-            cluster.append(split_m) #add the split_antecedents
+            cluster.append(split_m)  # add the split_antecedents
 
-        if ref_tag == 'non_referring':
+        if ref_tag == "non_referring":
             if keep_non_referring:
                 processed_non_referrings.append(cluster[0])
             else:
@@ -506,13 +581,13 @@ def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_a
         processed_clusters.append(cluster)
 
     if keep_split_antecedent:
-        #step 2 merge equivalent split-antecedents clusters
+        # step 2 merge equivalent split-antecedents clusters
         merged_clusters = []
         for cl in processed_clusters:
             existing = None
             for m in cl:
                 if m.is_split_antecedent:
-                #only do this for split-antecedents
+                    # only do this for split-antecedents
                     for c2 in merged_clusters:
                         if m in c2:
                             existing = c2
@@ -525,8 +600,8 @@ def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_a
     else:
         merged_clusters = processed_clusters
 
-    return (merged_clusters, processed_non_referrings,
-            removed_non_referring, removed_singletons)
+    return (merged_clusters, processed_non_referrings, removed_non_referring, removed_singletons)
+
 
 def get_all_docs(path):
     all_doc_sents = {}
@@ -537,17 +612,17 @@ def get_all_docs(path):
     doc_name = None
     for line in open(path):
         line = line.strip()
-        if line.startswith('# newdoc'):
+        if line.startswith("# newdoc"):
             if doc_name and doc_lines:
                 all_docs[doc_name] = doc_lines
                 all_doc_sents[doc_name] = sentences
                 doc_lines = []
                 sentences = []
             cur_spk = "_"
-            doc_name = line[len('# newdoc id = '):]
+            doc_name = line[len("# newdoc id = ") :]
         elif "# speaker = " in line:
-            cur_spk = line[len('# speaker = '):]
-        elif line.startswith('#'):
+            cur_spk = line[len("# speaker = ") :]
+        elif line.startswith("#"):
             continue
         elif len(line) == 0:
             sentences.append(sentence)
@@ -566,6 +641,7 @@ def get_all_docs(path):
         all_doc_sents[doc_name] = sentences
     return all_docs, all_doc_sents
 
+
 def get_markable_assignments(clusters):
     markable_cluster_ids = {}
     for cluster_id, cluster in enumerate(clusters):
@@ -573,14 +649,15 @@ def get_markable_assignments(clusters):
             markable_cluster_ids[m] = cluster_id
     return markable_cluster_ids
 
+
 def get_document(doc_key, doc_lines, language, seg_len, tokenizer):
-    """ Process raw input to finalized documents """
+    """Process raw input to finalized documents."""
     document_state = UADocumentState(doc_key)
     word_idx = -1
 
     # Build up documents
     for line in doc_lines:
-#         print(line)
+        #         print(line)
         row = line.split()  # Columns for each token
         if len(row) == 0:
             document_state.sentence_end[-1] = True
@@ -598,7 +675,7 @@ def get_document(doc_key, doc_lines, language, seg_len, tokenizer):
                 document_state.subtoken_map.append(word_idx)
 
     # Split documents
-    constraits1 = document_state.sentence_end if language != 'arabic' else document_state.token_end
+    constraits1 = document_state.sentence_end if language != "arabic" else document_state.token_end
     split_into_segments(document_state, seg_len, constraits1, document_state.token_end, tokenizer)
     document = document_state.finalize()
     return document
