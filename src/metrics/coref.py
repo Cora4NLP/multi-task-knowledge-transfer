@@ -37,7 +37,26 @@ def get_clusters(
     return clusters
 
 
-def convert_json_to_ua(doc_as_dict: Dict) -> List[str]:
+def convert_doc_to_conllua_lines(document: Document, use_predictions: bool) -> List[str]:
+    predictions_or_annotations = "predictions" if use_predictions else "annotations"
+    orig_doc = document.asdict()
+    clusters = get_clusters(
+        orig_doc["mentions"][predictions_or_annotations],
+        orig_doc["clusters"][predictions_or_annotations],
+    )
+    doc_as_dict = {
+        "doc_key": orig_doc["id"],
+        "tokens": orig_doc["tokens"],
+        "sentences": orig_doc["sentences"],
+        "speakers": [],
+        "constituents": [],
+        "ner": [],
+        "clusters": clusters,
+        "sentence_map": orig_doc["sentence_map"],
+        "subtoken_map": orig_doc["subtoken_map"],
+        "pronouns": [],
+    }
+
     pred_clusters = [tuple(tuple(m) for m in cluster) for cluster in doc_as_dict["clusters"]]
 
     lines = []
@@ -75,31 +94,6 @@ def convert_json_to_ua(doc_as_dict: Dict) -> List[str]:
         lines.append(sentence)
 
     return lines
-
-
-def convert_doc_to_ua_lines(document: Document, use_predictions: bool) -> List[str]:
-    predictions_or_annotations = "predictions" if use_predictions else "annotations"
-    # conllua_docs = []
-    # for doc in documents:
-    orig_doc = document.asdict()
-    clusters = get_clusters(
-        orig_doc["mentions"][predictions_or_annotations],
-        orig_doc["clusters"][predictions_or_annotations],
-    )
-    conll_doc_as_dict = {
-        "doc_key": orig_doc["id"],
-        "tokens": orig_doc["tokens"],
-        "sentences": orig_doc["sentences"],
-        "speakers": [],
-        "constituents": [],
-        "ner": [],
-        "clusters": clusters,
-        "sentence_map": orig_doc["sentence_map"],
-        "subtoken_map": orig_doc["subtoken_map"],
-        "pronouns": [],
-    }
-    return convert_json_to_ua(conll_doc_as_dict) + ["\n"]
-    # return conllua_docs
 
 
 class CorefMetrics(DocumentMetric):
@@ -142,8 +136,8 @@ class CorefMetrics(DocumentMetric):
         self.sys_lines = []
 
     def _update(self, document: Document) -> None:
-        self.gold_lines.extend(convert_doc_to_ua_lines(document, use_predictions=False))
-        self.sys_lines.extend(convert_doc_to_ua_lines(document, use_predictions=True))
+        self.gold_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=False))
+        self.sys_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=True))
 
     def _values(self) -> Any:
 
