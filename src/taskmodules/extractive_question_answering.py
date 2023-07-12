@@ -181,9 +181,11 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         last_token_idx = task_encoding.inputs.char_to_token(answer.end - 1, sequence_index=1)
         if start_token_idx is None or last_token_idx is None:
             logger.warning(
-                f"could not determine the start / last token index for the answer {answer} in "
-                f"question {task_encoding.metadata['question']}. Skip the example."
+                "Skip the example, because the start or last token index for the answer could not be determined in "
+                "the context. This may happen because it is out of the max input length of the model."
             )
+            logger.warning(f'\tAnswer: "{answer}" [{answer.start}, {answer.end})')
+            logger.warning(f'\tContext: "{task_encoding.document.context}"')
             return None
         return TargetEncoding(start_token_idx, last_token_idx)
 
