@@ -1,2 +1,0 @@
-_target_: src.serializer.ConllUaSerializer
-path: ${prediction_save_dir}/documents.conllua

@@ -3,7 +3,7 @@
 defaults:
   - _self_
   - dataset: from_serialized_documents
-  - metric: coref.yaml
+  - metric: f1.yaml
   - paths: default.yaml
   - extras: default.yaml
   - hydra: default.yaml
