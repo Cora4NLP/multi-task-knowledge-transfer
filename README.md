@@ -72,6 +72,17 @@ You can override any parameter from command line like this
 python train.py trainer.max_epochs=20 datamodule.batch_size=64
 ```
 
+Start multiple runs at once (multirun):
+
+```bash
+python src/train.py seed=42,43 --multirun
+```
+
+Notes:
+
+- this will execute two experiments (one after the other), one for each seed
+- the results will be aggregated and stored in `logs/multirun/`, see the last logging output for the exact path
+
 ## Development
 
 ```bash
