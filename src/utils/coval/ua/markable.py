@@ -1,3 +1,6 @@
+# This code was taken from here: https://github.com/juntaoy/universal-anaphora-scorer/blob/main/coval/ua/markable.py
+
+
 class Markable:
     def __init__(
         self,

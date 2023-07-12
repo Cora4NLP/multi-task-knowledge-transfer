@@ -1,10 +1,11 @@
-from collections import deque
-from os import walk
-from os.path import isfile, join
-
-from src.utils.coval.ua import markable
+# This code is taken from here: https://github.com/juntaoy/universal-anaphora-scorer/blob/main/coval/conll/reader.py
 
 __author__ = "ns-moosavi; juntaoy"
+
+
+from collections import deque
+
+from src.utils.coval.ua.markable import Markable
 
 
 def get_doc_markables(
@@ -92,7 +93,7 @@ def get_doc_markables(
     clusters = {}
     id2markable = {}
     for markable_id in markables_cluster:
-        m = markable.Markable(
+        m = Markable(
             doc_name,
             markables_start[markable_id],
             markables_end[markable_id],
@@ -156,7 +157,7 @@ def process_clusters(clusters, keep_singletons, keep_non_referring, keep_split_a
                         queue.append(c)
                 else:
                     split_clusters.add(tuple(curr_cl))
-            split_m = markable.Markable(
+            split_m = Markable(
                 doc_name,
                 -1,
                 -1,

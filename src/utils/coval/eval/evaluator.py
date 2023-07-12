@@ -1,3 +1,5 @@
+# This code is taken from here: https://github.com/juntaoy/universal-anaphora-scorer/blob/main/coval/eval/evaluator.py.
+
 """Some parts are borrowed from https://github.com/clarkkev/deep-
 coref/blob/master/evaluation.py."""
 from collections import defaultdict
@@ -5,7 +7,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from src.utils.coval.ua import markable
+from src.utils.coval.ua.markable import Markable
 
 
 def f1(p_num, p_den, r_num, r_den, beta=1):
@@ -402,7 +404,7 @@ def b_cubed(clusters, mention_to_gold, split_antecedent_to_gold={}):
 
 
 def is_split_antecedent(m):
-    return isinstance(m, markable.Markable) and m.is_split_antecedent
+    return isinstance(m, Markable) and m.is_split_antecedent
 
 
 def muc(
