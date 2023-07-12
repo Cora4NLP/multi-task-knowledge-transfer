@@ -167,6 +167,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
                 f"The answers layer is expected to have not more than one answer, but it has "
                 f"{len(answers)} answers. We take just the first one."
             )
+        # if there are no answers, we return a dummy target encoding
         if len(answers) == 0:
             return TargetEncoding(0, 0)
         answer = answers[0]
@@ -174,11 +175,16 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             raise Exception(
                 f"the answer {answer} does not match the question {task_encoding.metadata['question']}"
             )
-        # start_char_idx = answer.start + task_encoding.metadata["context_offset"]
+        # the context is in the second sequence, so set sequence_index=1
         start_token_idx = task_encoding.inputs.char_to_token(answer.start, sequence_index=1)
-        # end_char_idx = answer.end + task_encoding.metadata["context_offset"]
         # the end token is inclusive
         last_token_idx = task_encoding.inputs.char_to_token(answer.end - 1, sequence_index=1)
+        if start_token_idx is None or last_token_idx is None:
+            logger.warning(
+                f"could not determine the start / last token index for the answer {answer} in "
+                f"question {task_encoding.metadata['question']}. Skip the example."
+            )
+            return None
         return TargetEncoding(start_token_idx, last_token_idx)
 
     def collate(
