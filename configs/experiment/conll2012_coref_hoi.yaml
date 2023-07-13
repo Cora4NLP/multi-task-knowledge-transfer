@@ -9,7 +9,7 @@ defaults:
   - override /taskmodule: coref_hoi.yaml
   - override /model: coref_hoi.yaml
   - override /callbacks: default.yaml
-  - override /logger: aim.yaml
+  - override /logger: wandb.yaml
   - override /trainer: default.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
