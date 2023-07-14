@@ -1,0 +1,46 @@
+_target_: src.models.MultiModelCorefHoiModel
+
+model_name: bert-base-cased
+
+# Computation limits.
+max_top_antecedents: 50
+#max_training_sentences: 5 # passed from taskmodule
+top_span_ratio: 0.4
+max_num_extracted_spans: 3900
+#max_num_speakers: 20  # passed from taskmodule
+#max_segment_len: 256 # passed from taskmodule
+
+# learning
+bert_learning_rate: 1e-5
+task_learning_rate: 2e-4
+loss_type: marginalized # {marginalized, hinge}
+mention_loss_coef: 0
+false_new_delta: 1.5 # For loss_type = hinge
+adam_eps: 1e-6
+adam_weight_decay: 1e-2
+warmup_ratio: 0.1
+#max_grad_norm: 1 # Set 0 to disable clipping  # defined in the experiment and handled by the trainer
+#gradient_accumulation_steps: 1  # handled by the trainer
+
+# Model hyperparameters.
+bert_pretrained_name_or_path: bert-base-cased
+max_span_width: 30
+coref_depth: 1 # when 1: no higher order (except for cluster_merging)
+higher_order: attended_antecedent # {attended_antecedent, max_antecedent, entity_equalization, span_clustering, cluster_merging}
+fine_grained: true
+dropout_rate: 0.3
+use_features: true
+feature_emb_size: 20
+use_metadata: true
+use_segment_distance: true
+model_heads: true
+use_width_prior: true # For mention score
+use_distance_prior: true # For mention-ranking score
+ffnn_depth: 1
+cluster_ffnn_size: 1000 # For cluster_merging
+cluster_reduce: mean # For cluster_merging
+easy_cluster_first: false # For cluster_merging
+cluster_dloss: false # cluster_merging
+
+# Other
+# genres: ["bc", "bn", "mz", "nw", "pt", "tc", "wb"]  # passed from taskmodule
