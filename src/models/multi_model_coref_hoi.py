@@ -6,12 +6,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-from torch import Tensor, nn
 from pytorch_ie.core import PyTorchIEModel
-from torch.optim.lr_scheduler import LambdaLR
 from torch.nn import CrossEntropyLoss
-from transformers import BatchEncoding
-from transformers import BertModel
+from torch.optim.lr_scheduler import LambdaLR
+from transformers import BatchEncoding, BertModel
 from typing_extensions import TypeAlias
 
 from src.models.components import TransformerMultiModel
@@ -337,6 +335,7 @@ class MultiModelCorefHoiPrediction(TypedDict):
     antecedents: List[int]
     clusters: List[Tuple[Tuple[int, int], ...]]
 
+
 @PyTorchIEModel.register()
 class MultiModelCorefHoiModel(PyTorchIEModel):
     def __init__(
@@ -390,7 +389,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
-            #config_overrides={"num_labels": num_classes},
+            # config_overrides={"num_labels": num_classes},
         )
 
         self.num_genres = num_genres if num_genres else len(genres)
@@ -510,7 +509,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
         self.update_steps = 0  # Internal use for debug
         self.debug = True
-        
+
     def make_embedding(self, dict_size, std=0.02):
         emb = nn.Embedding(dict_size, self.feature_emb_size)
         init.normal_(emb.weight, std=std)
@@ -548,7 +547,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
     def forward(self, **batch):
         return self.get_predictions_and_loss(**batch)
-        
+
     def get_predictions_and_loss(
         self,
         input_ids,
@@ -584,19 +583,19 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             gold_ends = gold_ends[0]
             gold_mention_cluster_map = gold_mention_cluster_map[0]
 
-        ## Get token emb
-        embedded_inputs = self.bert(
-            input_ids, attention_mask=input_mask
-        )[0]  # [num seg, num max tokens, emb size]
-        
+        # get token emb
+        embedded_inputs = self.bert(input_ids, attention_mask=input_mask)[
+            0
+        ]  # [num seg, num max tokens, emb size]
+
         # get the sequence logits aggregated over all models
         model_inputs = {"input_ids": input_ids, "attention_mask": input_mask}
-        extra_inputs = self.base_models(**model_inputs) # [seg length, num tokens, emb size]
-        extra_inputs.requires_grad_() # otherweise we get "RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn"
+        extra_inputs = self.base_models(**model_inputs)  # [seg length, num tokens, emb size]
+        extra_inputs.requires_grad_()  # otherwise we get "RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn"
         stacked_embedded_inputs = torch.stack([embedded_inputs, extra_inputs], dim=-1)
         embedded_inputs = torch.mean(stacked_embedded_inputs, dim=-1)
 
-        input_mask = input_mask.to(torch.bool) # [seg length, num tokens]
+        input_mask = input_mask.to(torch.bool)  # [seg length, num tokens]
         mention_doc = embedded_inputs[input_mask]
         speaker_ids = speaker_ids[input_mask]
         num_words = mention_doc.shape[0]
@@ -973,7 +972,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             ),
             loss,
         )
-        
+
     def _extract_top_spans(
         self, candidate_idx_sorted, candidate_starts, candidate_ends, num_top_spans
     ):
@@ -1082,8 +1081,9 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             antecedent_scores=predictions["top_antecedent_scores"].cpu().tolist(),
         )
         spans = [(span_start, span_end) for span_start, span_end in zip(span_starts, span_ends)]
-        return MultiModelCorefHoiPrediction(spans=spans, antecedents=antecedents, clusters=clusters)        
-        
+        return MultiModelCorefHoiPrediction(
+            spans=spans, antecedents=antecedents, clusters=clusters
+        )
 
     def step(
         self,
@@ -1110,7 +1110,6 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
     def test_step(self, batch: MultiModelCorefHoiStepBatchEncoding, batch_idx: int):  # type: ignore
         return self.step(stage=TEST, batch=batch)
-
 
     def configure_optimizers(self):
         no_decay = ["bias", "LayerNorm.weight"]
@@ -1165,4 +1164,3 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             LambdaLR(optimizers[1], lr_lambda_task),
         ]
         return optimizers, schedulers
-
