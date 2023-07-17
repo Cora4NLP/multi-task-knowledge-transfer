@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple, Union
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan, Span
 
 from src.document.types import (
+    DocumentWithEntitiesRelationsAndSentences,
     TextDocumentWithEntitiesAndRelations,
     TextDocumentWithLabeledEntitiesAndRelations,
     TokenDocumentWithEntitiesAndRelations,
@@ -66,4 +67,46 @@ def token_based_document_with_entities_and_relations_to_text_based(
         )
     new_doc.entities.extend(entity_map.values())
     new_doc.relations.extend(relations)
+    return new_doc
+
+
+def token_based_document_with_entities_and_sentences_to_text_based(
+    doc: TokenDocumentWithEntitiesAndRelations,
+    token_field: str = "tokens",
+    entity_layer: str = "entities",
+    sentences_layer: str = "sentences",
+    token_separator: str = " ",
+) -> DocumentWithEntitiesRelationsAndSentences:
+    start = 0
+    token_offsets: List[Tuple[int, int]] = []
+    tokens = getattr(doc, token_field)
+    for token in tokens:
+        end = start + len(token)
+        token_offsets.append((start, end))
+        # we add the separator after each token
+        start = end + len(token_separator)
+
+    text = token_separator.join([token for token in tokens])
+
+    entity_map: Dict[Tuple[int, int], LabeledSpan] = {}
+
+    for entity in doc[entity_layer]:
+        char_start = token_offsets[entity.start][0]
+        char_end = token_offsets[entity.end - 1][1]
+        char_offset_entity = LabeledSpan(start=char_start, end=char_end, label=entity.label)
+        entity_map[(entity.start, entity.end)] = char_offset_entity
+
+    sentence_map: Dict[Tuple[int, int], Span] = {}
+    for sentence in doc[sentences_layer]:
+        char_start = token_offsets[sentence.start][0]
+        char_end = token_offsets[sentence.end - 1][1]
+        char_offset_sentence = Span(start=char_start, end=char_end)
+        sentence_map[(sentence.start, sentence.end)] = char_offset_sentence
+
+    new_doc = DocumentWithEntitiesRelationsAndSentences(
+        text=text, id=doc.id, metadata=deepcopy(doc.metadata) if hasattr(doc, "metadata") else {}
+    )
+    new_doc.entities.extend(entity_map.values())
+    new_doc.sentences.extend(sentence_map.values())
+
     return new_doc
