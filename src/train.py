@@ -52,6 +52,7 @@ from src import utils
 from src.datamodules import PieDataModule
 from src.models import (
     CorefHoiModel,
+    MultiModelCorefHoiModel,
     MultiModelTextClassificationModel,
     MultiModelTokenClassificationModel,
 )
@@ -105,6 +106,10 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     elif model_cls == MultiModelTokenClassificationModel:
         additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     elif model_cls == CorefHoiModel:
+        additional_model_kwargs["genres"] = taskmodule.genres
+        additional_model_kwargs["max_segment_len"] = taskmodule.max_segment_len
+        additional_model_kwargs["max_training_sentences"] = taskmodule.max_training_sentences
+    elif model_cls == MultiModelCorefHoiModel:
         additional_model_kwargs["genres"] = taskmodule.genres
         additional_model_kwargs["max_segment_len"] = taskmodule.max_segment_len
         additional_model_kwargs["max_training_sentences"] = taskmodule.max_training_sentences
