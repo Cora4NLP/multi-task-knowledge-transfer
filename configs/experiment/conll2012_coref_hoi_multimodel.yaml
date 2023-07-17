@@ -52,7 +52,7 @@ taskmodule:
   # to work with data preprocessed by Tatiana
   max_segment_len: 384
   # to work with model trained by Tatiana
-  tokenizer_name_or_path: bert-base-cased
+  tokenizer_name_or_path: ${transformer_model}
   max_training_sentences: 11
 
 model:
