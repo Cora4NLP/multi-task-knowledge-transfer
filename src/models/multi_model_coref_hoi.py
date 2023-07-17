@@ -7,9 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from pytorch_ie.core import PyTorchIEModel
-from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import LambdaLR
-from transformers import BatchEncoding, BertModel
 from typing_extensions import TypeAlias
 
 from src.models.components import TransformerMultiModel
