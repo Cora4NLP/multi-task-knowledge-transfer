@@ -1,0 +1,6 @@
+_target_: src.utils.dataset.process_dataset
+input:
+  _target_: datasets.load_dataset
+  path: pie/conll2012_ontonotesv5
+  name: english_v12
+  data_dir: ${oc.env:CONLL2012_ONTONOTESV5_DATA_DIR}

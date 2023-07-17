@@ -91,6 +91,13 @@ class DocumentWithEntitiesRelationsAndLabeledPartitions(_Metadata, TextBasedDocu
 
 
 @dataclasses.dataclass
+class DocumentWithEntitiesRelationsAndSentences(_Metadata, TextBasedDocument):
+
+    entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
+    sentences: AnnotationList[Span] = annotation_field(target="text")
+
+
+@dataclasses.dataclass
 class BratDocument(_Metadata, TextBasedDocument):
     """Possible input class for TransformerRETextClassificationTaskModule."""
 
