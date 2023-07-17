@@ -23,7 +23,6 @@ warmup_ratio: 0.1
 #gradient_accumulation_steps: 1  # handled by the trainer
 
 # Model hyperparameters.
-bert_pretrained_name_or_path: bert-base-cased
 max_span_width: 30
 coref_depth: 1 # when 1: no higher order (except for cluster_merging)
 higher_order: attended_antecedent # {attended_antecedent, max_antecedent, entity_equalization, span_clustering, cluster_merging}

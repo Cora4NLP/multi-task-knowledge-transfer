@@ -350,7 +350,6 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         higher_order: str,
         fine_grained: bool,
         dropout_rate: float,
-        bert_pretrained_name_or_path: str,
         use_features: bool,
         feature_emb_size: int,
         use_metadata: bool,
@@ -428,10 +427,9 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
         # Model
         self.dropout = nn.Dropout(p=dropout_rate)
-        self.bert = BertModel.from_pretrained(bert_pretrained_name_or_path)
 
         self.feature_emb_size = feature_emb_size
-        self.bert_emb_size = self.bert.config.hidden_size
+        self.bert_emb_size = self.base_models.config.hidden_size
         self.span_emb_size = self.bert_emb_size * 3
         if use_features:
             self.span_emb_size += feature_emb_size
@@ -537,7 +535,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
     def get_params(self, named=False):
         bert_based_param, task_param = [], []
         for name, param in self.named_parameters():
-            if name.startswith("bert"):
+            if name.startswith("base_models"):
                 to_add = (name, param) if named else param
                 bert_based_param.append(to_add)
             else:
@@ -584,16 +582,10 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             gold_mention_cluster_map = gold_mention_cluster_map[0]
 
         # get token emb
-        embedded_inputs = self.bert(input_ids, attention_mask=input_mask)[
-            0
-        ]  # [num seg, num max tokens, emb size]
 
         # get the sequence logits aggregated over all models
         model_inputs = {"input_ids": input_ids, "attention_mask": input_mask}
-        extra_inputs = self.base_models(**model_inputs)  # [seg length, num tokens, emb size]
-        extra_inputs.requires_grad_()  # otherwise we get "RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn"
-        stacked_embedded_inputs = torch.stack([embedded_inputs, extra_inputs], dim=-1)
-        embedded_inputs = torch.mean(stacked_embedded_inputs, dim=-1)
+        embedded_inputs = self.base_models(**model_inputs)  # [seg length, num tokens, emb size]
 
         input_mask = input_mask.to(torch.bool)  # [seg length, num tokens]
         mention_doc = embedded_inputs[input_mask]
