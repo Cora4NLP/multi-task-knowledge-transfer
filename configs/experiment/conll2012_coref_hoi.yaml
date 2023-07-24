@@ -23,8 +23,8 @@ tags: ["dataset=conll2012", "model=coref_hoi"]
 seed: 12345
 
 # metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
-monitor_metric: "val/loss"
-monitor_mode: "min"
+monitor_metric: "val/f1"
+monitor_mode: "max"
 
 taskmodule:
   # to work data preprocessed by Tatiana
