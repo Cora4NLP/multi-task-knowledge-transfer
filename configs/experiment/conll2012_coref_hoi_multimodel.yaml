@@ -45,8 +45,8 @@ seed: 12345
 transformer_model: bert-base-cased
 
 # metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
-monitor_metric: "val/loss"
-monitor_mode: "min"
+monitor_metric: "val/f1"
+monitor_mode: "max"
 
 taskmodule:
   # to work with data preprocessed by Tatiana
