@@ -15,6 +15,7 @@ from typing_extensions import TypeAlias
 
 from src.models.components import TransformerMultiModel
 
+
 def f1_score(p_num, p_den, r_num, r_den, beta=1):
     p = 0 if p_den == 0 else p_num / float(p_den)
     r = 0 if r_den == 0 else r_num / float(r_den)
@@ -449,6 +450,7 @@ class CorefHoiModelPrediction(TypedDict):
     antecedents: List[int]
     clusters: List[Tuple[Tuple[int, int], ...]]
 
+
 class MultiModelCorefHoiInputs(TypedDict):
     input_ids: torch.Tensor
     input_mask: torch.Tensor
@@ -491,7 +493,9 @@ class CorefHoiF1(nn.Module):
         self.reset()
 
     def reset(self):
-        self.evaluators = [CorefHoiEvaluator(m) for m in (muc_simplified, b_cubed_simplified, ceafe_simplified)]
+        self.evaluators = [
+            CorefHoiEvaluator(m) for m in (muc_simplified, b_cubed_simplified, ceafe_simplified)
+        ]
 
     def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
         for e in self.evaluators:
@@ -520,4 +524,3 @@ class CorefHoiF1(nn.Module):
         gold_clusters, mention_to_gold = targets
         self.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
         return self.compute(reset=False)
-
