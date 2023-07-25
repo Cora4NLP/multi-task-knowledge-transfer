@@ -1,34 +1,36 @@
+import logging
+from collections.abc import Iterable
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+from pytorch_ie.core import PyTorchIEModel
+from torch.optim.lr_scheduler import LambdaLR
+
+from src.metrics.coref import CorefHoiF1
+from src.models.components import TransformerMultiModel
 from src.models.components.coref import (
-    TEST,
-    TRAINING,
-    VALIDATION,
-    BertModel,
-    CorefHoiF1,
-    Dict,
-    Iterable,
-    LambdaLR,
-    List,
-    MultiModelCorefHoiBatchOutput,
-    MultiModelCorefHoiInputs,
-    MultiModelCorefHoiPrediction,
-    MultiModelCorefHoiStepBatchEncoding,
-    Optional,
-    PyTorchIEModel,
-    TransformerMultiModel,
-    Tuple,
+    CorefHoiModelBatchOutput,
+    CorefHoiModelInputs,
+    CorefHoiModelPrediction,
+    CorefHoiModelStepBatchEncoding,
     attended_antecedent,
     batch_select,
     bucket_distance,
     cluster_merging,
     entity_equalization,
-    init,
-    logger,
     max_antecedent,
-    nn,
-    np,
     span_clustering,
-    torch,
 )
+
+TRAINING = "train"
+VALIDATION = "val"
+TEST = "test"
+
+
+logger = logging.getLogger()
 
 
 @PyTorchIEModel.register()
@@ -256,7 +258,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
-    ) -> Tuple[MultiModelCorefHoiBatchOutput, Optional[torch.Tensor]]:
+    ) -> Tuple[CorefHoiModelBatchOutput, Optional[torch.Tensor]]:
         batch_size = input_ids.shape[0]
         assert batch_size == 1, "Only support batch size 1 for now"
         # use just first example in batch
@@ -532,7 +534,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
             )  # [num top spans, max top antecedents + 1]
             return (
-                MultiModelCorefHoiBatchOutput(
+                CorefHoiModelBatchOutput(
                     candidate_starts=candidate_starts,
                     candidate_ends=candidate_ends,
                     candidate_mention_scores=candidate_mention_scores,
@@ -652,7 +654,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
                     logger.info("loss: %.4f" % loss)
         self.update_steps += 1
         return (
-            MultiModelCorefHoiBatchOutput(
+            CorefHoiModelBatchOutput(
                 candidate_starts=candidate_starts,
                 candidate_ends=candidate_ends,
                 candidate_mention_scores=candidate_mention_scores,
@@ -759,10 +761,10 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
     def predict(
         self,
-        inputs: MultiModelCorefHoiInputs,
+        inputs: CorefHoiModelInputs,
         **kwargs,
-    ) -> MultiModelCorefHoiPrediction:
-        predictions: MultiModelCorefHoiBatchOutput = self(**inputs)[0]
+    ) -> CorefHoiModelPrediction:
+        predictions: CorefHoiModelBatchOutput = self(**inputs)[0]
         span_starts = predictions["top_span_starts"].cpu().tolist()
         span_ends = predictions["top_span_ends"].cpu().tolist()
         clusters, mention_to_cluster_id, antecedents = self.get_predicted_clusters(
@@ -772,14 +774,12 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             antecedent_scores=predictions["top_antecedent_scores"].cpu().tolist(),
         )
         spans = [(span_start, span_end) for span_start, span_end in zip(span_starts, span_ends)]
-        return MultiModelCorefHoiPrediction(
-            spans=spans, antecedents=antecedents, clusters=clusters
-        )
+        return CorefHoiModelPrediction(spans=spans, antecedents=antecedents, clusters=clusters)
 
     def step(
         self,
         stage: str,
-        batch: MultiModelCorefHoiStepBatchEncoding,
+        batch: CorefHoiModelStepBatchEncoding,
     ):
         inputs, targets = batch
         # check the target content
@@ -826,13 +826,13 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch: MultiModelCorefHoiStepBatchEncoding, batch_idx: int, optimizer_idx: int):  # type: ignore
+    def training_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int, optimizer_idx: int):  # type: ignore
         return self.step(stage=TRAINING, batch=batch)
 
-    def validation_step(self, batch: MultiModelCorefHoiStepBatchEncoding, batch_idx: int):  # type: ignore
+    def validation_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):  # type: ignore
         return self.step(stage=VALIDATION, batch=batch)
 
-    def test_step(self, batch: MultiModelCorefHoiStepBatchEncoding, batch_idx: int):  # type: ignore
+    def test_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):  # type: ignore
         return self.step(stage=TEST, batch=batch)
 
     def training_epoch_end(self, training_step_outputs):

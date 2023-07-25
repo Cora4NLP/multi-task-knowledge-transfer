@@ -1,33 +1,36 @@
+import logging
+from collections.abc import Iterable
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+from pytorch_ie.core import PyTorchIEModel
+from torch.optim.lr_scheduler import LambdaLR
+from transformers import BertModel
+
+from src.metrics.coref import CorefHoiF1
 from src.models.components.coref import (
-    TEST,
-    TRAINING,
-    VALIDATION,
-    BertModel,
-    CorefHoiF1,
     CorefHoiModelBatchOutput,
     CorefHoiModelInputs,
     CorefHoiModelPrediction,
     CorefHoiModelStepBatchEncoding,
-    Dict,
-    Iterable,
-    LambdaLR,
-    List,
-    Optional,
-    PyTorchIEModel,
-    Tuple,
     attended_antecedent,
     batch_select,
     bucket_distance,
     cluster_merging,
     entity_equalization,
-    init,
-    logger,
     max_antecedent,
-    nn,
-    np,
     span_clustering,
-    torch,
 )
+
+TRAINING = "train"
+VALIDATION = "val"
+TEST = "test"
+
+
+logger = logging.getLogger()
 
 
 @PyTorchIEModel.register()

@@ -3,18 +3,22 @@
 # Some parts are borrowed from https://github.com/clarkkev/deep-coref/blob/master/evaluation.py.
 
 import logging
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any, List
 
 import numpy as np
 import pandas as pd
 from pytorch_ie.core import Document
 from scipy.optimize import linear_sum_assignment
+from scipy.optimize import linear_sum_assignment as linear_assignment
+from torch import nn
 
 from src.metrics.interface import DocumentMetric
 from src.taskmodules.coref_hoi_preprocessed import Conll2012OntonotesV5PreprocessedDocument
 from src.utils.coval.ua.markable import Markable
 from src.utils.coval.ua.reader import get_coref_infos
+
+logger = logging.getLogger(__name__)
 
 
 def f1(p_num, p_den, r_num, r_den, beta=1):
@@ -604,8 +608,6 @@ AVAILABLE_METRICS = {
     "blanc": [blancc, blancn],
 }
 
-logger = logging.getLogger(__name__)
-
 
 def convert_doc_to_conllua_lines(document: Document, use_predictions: bool) -> List[str]:
     if not isinstance(document, Conll2012OntonotesV5PreprocessedDocument):
@@ -718,3 +720,150 @@ class CorefMetrics(DocumentMetric):
             logger.info(f"evaluation:\n{pd.DataFrame(metrics_dict).T.to_markdown()}")
 
         return metrics_dict
+
+
+class CorefHoiEvaluator(object):
+    def __init__(self, metric, beta=1):
+        self.p_num = 0
+        self.p_den = 0
+        self.r_num = 0
+        self.r_den = 0
+        self.metric = metric
+        self.beta = beta
+
+    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
+        if self.metric == ceafe_simplified:
+            pn, pd, rn, rd = self.metric(predicted, gold)
+        else:
+            pn, pd = self.metric(predicted, mention_to_gold)
+            rn, rd = self.metric(gold, mention_to_predicted)
+        self.p_num += pn
+        self.p_den += pd
+        self.r_num += rn
+        self.r_den += rd
+
+    def get_f1(self):
+        return f1(self.p_num, self.p_den, self.r_num, self.r_den, beta=self.beta)
+
+    def get_recall(self):
+        return 0 if self.r_num == 0 else self.r_num / float(self.r_den)
+
+    def get_precision(self):
+        return 0 if self.p_num == 0 else self.p_num / float(self.p_den)
+
+    def get_prf(self):
+        return self.get_precision(), self.get_recall(), self.get_f1()
+
+    def get_counts(self):
+        return self.p_num, self.p_den, self.r_num, self.r_den
+
+
+def b_cubed_simplified(clusters, mention_to_gold):
+    num, dem = 0, 0
+    for c in clusters:
+        if len(c) == 1:
+            continue
+
+        gold_counts = Counter()
+        correct = 0
+        for m in c:
+            if m in mention_to_gold:
+                gold_counts[tuple(mention_to_gold[m])] += 1
+        for c2, count in gold_counts.items():
+            if len(c2) != 1:
+                correct += count * count
+
+        num += correct / float(len(c))
+        dem += len(c)
+    return num, dem
+
+
+def muc_simplified(clusters, mention_to_gold):
+    tp, p = 0, 0
+    for c in clusters:
+        p += len(c) - 1
+        tp += len(c)
+        linked = set()
+        for m in c:
+            if m in mention_to_gold:
+                linked.add(mention_to_gold[m])
+            else:
+                tp -= 1
+        tp -= len(linked)
+    return tp, p
+
+
+def phi4_simplified(c1, c2):
+    return 2 * len([m for m in c1 if m in c2]) / float(len(c1) + len(c2))
+
+
+def ceafe_simplified(clusters, gold_clusters):
+    clusters = [c for c in clusters if len(c) != 1]
+    scores = np.zeros((len(gold_clusters), len(clusters)))
+    for i in range(len(gold_clusters)):
+        for j in range(len(clusters)):
+            scores[i, j] = phi4_simplified(gold_clusters[i], clusters[j])
+    matching = linear_assignment(-scores)
+    matching = np.transpose(np.asarray(matching))
+    similarity = sum(scores[matching[:, 0], matching[:, 1]])
+    return similarity, len(clusters), similarity, len(gold_clusters)
+
+
+def lea_simplified(clusters, mention_to_gold):
+    num, dem = 0, 0
+
+    for c in clusters:
+        if len(c) == 1:
+            continue
+
+        common_links = 0
+        all_links = len(c) * (len(c) - 1) / 2.0
+        for i, m in enumerate(c):
+            if m in mention_to_gold:
+                for m2 in c[i + 1 :]:
+                    if m2 in mention_to_gold and mention_to_gold[m] == mention_to_gold[m2]:
+                        common_links += 1
+
+        num += len(c) * common_links / float(all_links)
+        dem += len(c)
+
+    return num, dem
+
+
+class CorefHoiF1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self.evaluators = [
+            CorefHoiEvaluator(m) for m in (muc_simplified, b_cubed_simplified, ceafe_simplified)
+        ]
+
+    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
+        for e in self.evaluators:
+            e.update(predicted, gold, mention_to_predicted, mention_to_gold)
+
+    def get_f1(self):
+        return sum(e.get_f1() for e in self.evaluators) / len(self.evaluators)
+
+    def get_recall(self):
+        return sum(e.get_recall() for e in self.evaluators) / len(self.evaluators)
+
+    def get_precision(self):
+        return sum(e.get_precision() for e in self.evaluators) / len(self.evaluators)
+
+    def get_prf(self):
+        return self.get_precision(), self.get_recall(), self.get_f1()
+
+    def compute(self, reset=True):
+        result = self.get_f1()
+        if reset:
+            self.reset()
+        return result
+
+    def forward(self, predictions, targets):
+        predicted_clusters, mention_to_predicted = predictions
+        gold_clusters, mention_to_gold = targets
+        self.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
+        return self.compute(reset=False)
