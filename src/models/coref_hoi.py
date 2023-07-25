@@ -413,7 +413,7 @@ def _merge_clusters(cluster_emb, cluster_sizes, cluster1_id, cluster2_id, reduce
     cluster_sizes[cluster2_id] += cluster_sizes[cluster1_id]
 
 
-class CorefHoiModelModelInputs(TypedDict):
+class CorefHoiModelInputs(TypedDict):
     input_ids: torch.Tensor
     input_mask: torch.Tensor
     speaker_ids: torch.Tensor
@@ -422,18 +422,18 @@ class CorefHoiModelModelInputs(TypedDict):
     sentence_map: torch.Tensor
 
 
-class CorefHoiModelModelTargets(TypedDict):
+class CorefHoiModelTargets(TypedDict):
     gold_starts: torch.Tensor
     gold_ends: torch.Tensor
     gold_mention_cluster_map: torch.Tensor
 
 
 CorefHoiModelStepBatchEncoding: TypeAlias = Tuple[
-    CorefHoiModelModelInputs, Optional[CorefHoiModelModelTargets]
+    CorefHoiModelInputs, Optional[CorefHoiModelTargets]
 ]
 
 
-class CorefHoiModelModelBatchOutput(TypedDict):
+class CorefHoiModelBatchOutput(TypedDict):
     candidate_starts: torch.Tensor
     candidate_ends: torch.Tensor
     candidate_mention_scores: torch.Tensor
@@ -700,7 +700,7 @@ class CorefHoiModel(PyTorchIEModel):
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
-    ) -> Tuple[CorefHoiModelModelBatchOutput, Optional[torch.Tensor]]:
+    ) -> Tuple[CorefHoiModelBatchOutput, Optional[torch.Tensor]]:
         batch_size = input_ids.shape[0]
         assert batch_size == 1, "Only support batch size 1 for now"
         # use just first example in batch
@@ -975,7 +975,7 @@ class CorefHoiModel(PyTorchIEModel):
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
             )  # [num top spans, max top antecedents + 1]
             return (
-                CorefHoiModelModelBatchOutput(
+                CorefHoiModelBatchOutput(
                     candidate_starts=candidate_starts,
                     candidate_ends=candidate_ends,
                     candidate_mention_scores=candidate_mention_scores,
@@ -1096,7 +1096,7 @@ class CorefHoiModel(PyTorchIEModel):
         self.update_steps += 1
 
         return (
-            CorefHoiModelModelBatchOutput(
+            CorefHoiModelBatchOutput(
                 candidate_starts=candidate_starts,
                 candidate_ends=candidate_ends,
                 candidate_mention_scores=candidate_mention_scores,
@@ -1189,10 +1189,10 @@ class CorefHoiModel(PyTorchIEModel):
 
     def predict(
         self,
-        inputs: CorefHoiModelModelInputs,
+        inputs: CorefHoiModelInputs,
         **kwargs,
     ) -> CorefHoiModelPrediction:
-        predictions: CorefHoiModelModelBatchOutput = self(**inputs)[0]
+        predictions: CorefHoiModelBatchOutput = self(**inputs)[0]
         span_starts = predictions["top_span_starts"].cpu().tolist()
         span_ends = predictions["top_span_ends"].cpu().tolist()
         clusters, mention_to_cluster_id, antecedents = self.get_predicted_clusters(
