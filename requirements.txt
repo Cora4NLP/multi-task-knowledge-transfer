@@ -33,4 +33,5 @@ pudb            # debugger
 asciidag        # to print the document annotation graph on the console
 tabulate        # show statistics as markdown
 plotext         # show statistics as plots
+scipy           # linear_assignment for computing ceafe (coreference evaluation)
 # huggingface-hub>=0.13  # interaction with HF hub

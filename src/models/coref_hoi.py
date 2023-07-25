@@ -20,27 +20,6 @@ def f1_score(p_num, p_den, r_num, r_den, beta=1):
     return 0 if p + r == 0 else (1 + beta * beta) * p * r / (beta * beta * p + r)
 
 
-class CorefEvaluator(object):
-    def __init__(self):
-        self.evaluators = [Evaluator(m) for m in (muc, b_cubed, ceafe)]
-
-    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
-        for e in self.evaluators:
-            e.update(predicted, gold, mention_to_predicted, mention_to_gold)
-
-    def get_f1(self):
-        return sum(e.get_f1() for e in self.evaluators) / len(self.evaluators)
-
-    def get_recall(self):
-        return sum(e.get_recall() for e in self.evaluators) / len(self.evaluators)
-
-    def get_precision(self):
-        return sum(e.get_precision() for e in self.evaluators) / len(self.evaluators)
-
-    def get_prf(self):
-        return self.get_precision(), self.get_recall(), self.get_f1()
-
-
 class Evaluator(object):
     def __init__(self, metric, beta=1):
         self.p_num = 0
@@ -75,13 +54,6 @@ class Evaluator(object):
 
     def get_counts(self):
         return self.p_num, self.p_den, self.r_num, self.r_den
-
-
-def evaluate_documents(documents, metric, beta=1):
-    evaluator = Evaluator(metric, beta=beta)
-    for document in documents:
-        evaluator.update(document)
-    return evaluator.get_precision(), evaluator.get_recall(), evaluator.get_f1()
 
 
 def b_cubed(clusters, mention_to_gold):
@@ -471,7 +443,6 @@ class CorefHoiModelModelBatchOutput(TypedDict):
     top_antecedent_scores: torch.Tensor
 
 
-# TODO: check the typing of the fields!
 class CorefHoiModelPrediction(TypedDict):
     spans: List[Tuple[int, int]]
     antecedents: List[int]
@@ -479,12 +450,40 @@ class CorefHoiModelPrediction(TypedDict):
 
 
 class CorefHoiF1(nn.Module):
-    def __init__(self, evaluator):
+    def __init__(self):
         super().__init__()
-        self.evaluator = evaluator
+        self.reset()
 
-    def forward(self):
-        return self.evaluator.get_f1()
+    def reset(self):
+        self.evaluators = [Evaluator(m) for m in (muc, b_cubed, ceafe)]
+
+    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
+        for e in self.evaluators:
+            e.update(predicted, gold, mention_to_predicted, mention_to_gold)
+
+    def get_f1(self):
+        return sum(e.get_f1() for e in self.evaluators) / len(self.evaluators)
+
+    def get_recall(self):
+        return sum(e.get_recall() for e in self.evaluators) / len(self.evaluators)
+
+    def get_precision(self):
+        return sum(e.get_precision() for e in self.evaluators) / len(self.evaluators)
+
+    def get_prf(self):
+        return self.get_precision(), self.get_recall(), self.get_f1()
+
+    def compute(self, reset=True):
+        result = self.get_f1()
+        if reset:
+            self.reset()
+        return result
+
+    def forward(self, predictions, targets):
+        predicted_clusters, mention_to_predicted = predictions
+        gold_clusters, mention_to_gold = targets
+        self.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
+        return self.compute(reset=False)
 
 
 @PyTorchIEModel.register()
@@ -648,13 +647,8 @@ class CorefHoiModel(PyTorchIEModel):
         self.update_steps = 0  # Internal use for debug
         self.debug = True
 
-        self.evaluator = CorefEvaluator()
-
         self.f1 = nn.ModuleDict(
-            {
-                f"stage_{stage}": CorefHoiF1(self.evaluator)
-                for stage in [TRAINING, VALIDATION, TEST]
-            }
+            {f"stage_{stage}": CorefHoiF1() for stage in [TRAINING, VALIDATION, TEST]}
         )
 
     def make_embedding(self, dict_size, std=0.02):
@@ -1193,21 +1187,6 @@ class CorefHoiModel(PyTorchIEModel):
         predicted_clusters = [tuple(c) for c in predicted_clusters]
         return predicted_clusters, mention_to_cluster_id, predicted_antecedents
 
-    def update_evaluator(
-        self, span_starts, span_ends, antecedent_idx, antecedent_scores, gold_clusters, evaluator
-    ):
-        predicted_clusters, mention_to_cluster_id, _ = self.get_predicted_clusters(
-            span_starts, span_ends, antecedent_idx, antecedent_scores
-        )
-        mention_to_predicted = {
-            m: predicted_clusters[cluster_idx] for m, cluster_idx in mention_to_cluster_id.items()
-        }
-        gold_clusters = [tuple(tuple(m) for m in cluster) for cluster in gold_clusters]
-        mention_to_gold = {m: cluster for cluster in gold_clusters for m in cluster}
-
-        evaluator.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
-        return predicted_clusters
-
     def predict(
         self,
         inputs: CorefHoiModelModelInputs,
@@ -1255,24 +1234,29 @@ class CorefHoiModel(PyTorchIEModel):
                     targets["gold_ends"][0].cpu().detach().numpy().tolist()[mention_idx],
                 ]
             )
-        gold_clusters = []
+        gold_cluster_list = []
         for cluster in cluster2mentions:
-            gold_clusters.append(cluster2mentions[cluster])
+            gold_cluster_list.append(cluster2mentions[cluster])
+        gold_clusters = [tuple(tuple(m) for m in cluster) for cluster in gold_cluster_list]
+        mention_to_gold = {m: cluster for cluster in gold_clusters for m in cluster}
 
-        predicted_clusters = self.update_evaluator(
-            batch_predictions["top_span_starts"].cpu().detach().numpy(),
-            batch_predictions["top_span_ends"].cpu().detach().numpy(),
-            batch_predictions["top_antecedent_idx"].cpu().detach().numpy(),
-            batch_predictions["top_antecedent_scores"].cpu().detach().numpy(),
-            gold_clusters,
-            self.evaluator,
+        span_starts = batch_predictions["top_span_starts"].cpu().detach().numpy()
+        span_ends = batch_predictions["top_span_ends"].cpu().detach().numpy()
+        antecedent_idx = batch_predictions["top_antecedent_idx"].cpu().detach().numpy()
+        antecedent_scores = batch_predictions["top_antecedent_scores"].cpu().detach().numpy()
+        predicted_clusters, mention_to_cluster_id, _ = self.get_predicted_clusters(
+            span_starts, span_ends, antecedent_idx, antecedent_scores
         )
+        mention_to_predicted = {
+            m: predicted_clusters[cluster_idx] for m, cluster_idx in mention_to_cluster_id.items()
+        }
 
-        f1 = self.f1[f"stage_{stage}"]
-        f1_result = f1()
-        self.log(f"{stage}/f1", f1_result, on_step=False, on_epoch=True, prog_bar=True)
+        predictions_tuple = (predicted_clusters, mention_to_predicted)
+        targets_tuple = (gold_clusters, mention_to_gold)
+        f1_value = self.f1[f"stage_{stage}"](predictions_tuple, targets_tuple)
 
         # show loss on each step only during training
+        self.log(f"{stage}/f1", f1_value, on_step=True, on_epoch=False, prog_bar=True)
         self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
 
         return loss
@@ -1285,6 +1269,19 @@ class CorefHoiModel(PyTorchIEModel):
 
     def test_step(self, batch, batch_idx: int):  # type: ignore
         return self.step(stage=TEST, batch=batch)
+
+    def training_epoch_end(self, training_step_outputs):
+        self.epoch_end(training_step_outputs, stage=TRAINING)
+
+    def validation_epoch_end(self, validation_step_outputs):
+        self.epoch_end(validation_step_outputs, stage=VALIDATION)
+
+    def test_epoch_end(self, test_step_outputs):
+        self.epoch_end(test_step_outputs, stage=TEST)
+
+    def epoch_end(self, step_outputs, stage):
+        f1_value = self.f1[f"stage_{stage}"].compute(reset=True)
+        self.log(f"{stage}/f1", f1_value, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         no_decay = ["bias", "LayerNorm.weight"]
