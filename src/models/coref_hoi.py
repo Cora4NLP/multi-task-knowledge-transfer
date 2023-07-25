@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from collections.abc import Iterable
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
@@ -7,9 +8,125 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from pytorch_ie.core import PyTorchIEModel
+from scipy.optimize import linear_sum_assignment as linear_assignment
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import BertModel
 from typing_extensions import TypeAlias
+
+
+def f1_score(p_num, p_den, r_num, r_den, beta=1):
+    p = 0 if p_den == 0 else p_num / float(p_den)
+    r = 0 if r_den == 0 else r_num / float(r_den)
+    return 0 if p + r == 0 else (1 + beta * beta) * p * r / (beta * beta * p + r)
+
+
+class Evaluator(object):
+    def __init__(self, metric, beta=1):
+        self.p_num = 0
+        self.p_den = 0
+        self.r_num = 0
+        self.r_den = 0
+        self.metric = metric
+        self.beta = beta
+
+    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
+        if self.metric == ceafe:
+            pn, pd, rn, rd = self.metric(predicted, gold)
+        else:
+            pn, pd = self.metric(predicted, mention_to_gold)
+            rn, rd = self.metric(gold, mention_to_predicted)
+        self.p_num += pn
+        self.p_den += pd
+        self.r_num += rn
+        self.r_den += rd
+
+    def get_f1(self):
+        return f1_score(self.p_num, self.p_den, self.r_num, self.r_den, beta=self.beta)
+
+    def get_recall(self):
+        return 0 if self.r_num == 0 else self.r_num / float(self.r_den)
+
+    def get_precision(self):
+        return 0 if self.p_num == 0 else self.p_num / float(self.p_den)
+
+    def get_prf(self):
+        return self.get_precision(), self.get_recall(), self.get_f1()
+
+    def get_counts(self):
+        return self.p_num, self.p_den, self.r_num, self.r_den
+
+
+def b_cubed(clusters, mention_to_gold):
+    num, dem = 0, 0
+    for c in clusters:
+        if len(c) == 1:
+            continue
+
+        gold_counts = Counter()
+        correct = 0
+        for m in c:
+            if m in mention_to_gold:
+                gold_counts[tuple(mention_to_gold[m])] += 1
+        for c2, count in gold_counts.items():
+            if len(c2) != 1:
+                correct += count * count
+
+        num += correct / float(len(c))
+        dem += len(c)
+    return num, dem
+
+
+def muc(clusters, mention_to_gold):
+    tp, p = 0, 0
+    for c in clusters:
+        p += len(c) - 1
+        tp += len(c)
+        linked = set()
+        for m in c:
+            if m in mention_to_gold:
+                linked.add(mention_to_gold[m])
+            else:
+                tp -= 1
+        tp -= len(linked)
+    return tp, p
+
+
+def phi4(c1, c2):
+    return 2 * len([m for m in c1 if m in c2]) / float(len(c1) + len(c2))
+
+
+def ceafe(clusters, gold_clusters):
+    clusters = [c for c in clusters if len(c) != 1]
+    scores = np.zeros((len(gold_clusters), len(clusters)))
+    for i in range(len(gold_clusters)):
+        for j in range(len(clusters)):
+            scores[i, j] = phi4(gold_clusters[i], clusters[j])
+    matching = linear_assignment(-scores)
+    matching = np.transpose(np.asarray(matching))
+    similarity = sum(scores[matching[:, 0], matching[:, 1]])
+    return similarity, len(clusters), similarity, len(gold_clusters)
+
+
+def lea(clusters, mention_to_gold):
+    num, dem = 0, 0
+
+    for c in clusters:
+        if len(c) == 1:
+            continue
+
+        common_links = 0
+        all_links = len(c) * (len(c) - 1) / 2.0
+        for i, m in enumerate(c):
+            if m in mention_to_gold:
+                for m2 in c[i + 1 :]:
+                    if m2 in mention_to_gold and mention_to_gold[m] == mention_to_gold[m2]:
+                        common_links += 1
+
+        num += len(c) * common_links / float(all_links)
+        dem += len(c)
+
+    return num, dem
+
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -296,7 +413,7 @@ def _merge_clusters(cluster_emb, cluster_sizes, cluster1_id, cluster2_id, reduce
     cluster_sizes[cluster2_id] += cluster_sizes[cluster1_id]
 
 
-class CorefHoiModelModelInputs(TypedDict):
+class CorefHoiModelInputs(TypedDict):
     input_ids: torch.Tensor
     input_mask: torch.Tensor
     speaker_ids: torch.Tensor
@@ -305,18 +422,18 @@ class CorefHoiModelModelInputs(TypedDict):
     sentence_map: torch.Tensor
 
 
-class CorefHoiModelModelTargets(TypedDict):
+class CorefHoiModelTargets(TypedDict):
     gold_starts: torch.Tensor
     gold_ends: torch.Tensor
     gold_mention_cluster_map: torch.Tensor
 
 
 CorefHoiModelStepBatchEncoding: TypeAlias = Tuple[
-    CorefHoiModelModelInputs, Optional[CorefHoiModelModelTargets]
+    CorefHoiModelInputs, Optional[CorefHoiModelTargets]
 ]
 
 
-class CorefHoiModelModelBatchOutput(TypedDict):
+class CorefHoiModelBatchOutput(TypedDict):
     candidate_starts: torch.Tensor
     candidate_ends: torch.Tensor
     candidate_mention_scores: torch.Tensor
@@ -326,11 +443,47 @@ class CorefHoiModelModelBatchOutput(TypedDict):
     top_antecedent_scores: torch.Tensor
 
 
-# TODO: check the typing of the fields!
 class CorefHoiModelPrediction(TypedDict):
     spans: List[Tuple[int, int]]
     antecedents: List[int]
     clusters: List[Tuple[Tuple[int, int], ...]]
+
+
+class CorefHoiF1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self.evaluators = [Evaluator(m) for m in (muc, b_cubed, ceafe)]
+
+    def update(self, predicted, gold, mention_to_predicted, mention_to_gold):
+        for e in self.evaluators:
+            e.update(predicted, gold, mention_to_predicted, mention_to_gold)
+
+    def get_f1(self):
+        return sum(e.get_f1() for e in self.evaluators) / len(self.evaluators)
+
+    def get_recall(self):
+        return sum(e.get_recall() for e in self.evaluators) / len(self.evaluators)
+
+    def get_precision(self):
+        return sum(e.get_precision() for e in self.evaluators) / len(self.evaluators)
+
+    def get_prf(self):
+        return self.get_precision(), self.get_recall(), self.get_f1()
+
+    def compute(self, reset=True):
+        result = self.get_f1()
+        if reset:
+            self.reset()
+        return result
+
+    def forward(self, predictions, targets):
+        predicted_clusters, mention_to_predicted = predictions
+        gold_clusters, mention_to_gold = targets
+        self.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
+        return self.compute(reset=False)
 
 
 @PyTorchIEModel.register()
@@ -494,6 +647,10 @@ class CorefHoiModel(PyTorchIEModel):
         self.update_steps = 0  # Internal use for debug
         self.debug = True
 
+        self.f1 = nn.ModuleDict(
+            {f"stage_{stage}": CorefHoiF1() for stage in [TRAINING, VALIDATION, TEST]}
+        )
+
     def make_embedding(self, dict_size, std=0.02):
         emb = nn.Embedding(dict_size, self.feature_emb_size)
         init.normal_(emb.weight, std=std)
@@ -543,7 +700,7 @@ class CorefHoiModel(PyTorchIEModel):
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
-    ) -> Tuple[CorefHoiModelModelBatchOutput, Optional[torch.Tensor]]:
+    ) -> Tuple[CorefHoiModelBatchOutput, Optional[torch.Tensor]]:
         batch_size = input_ids.shape[0]
         assert batch_size == 1, "Only support batch size 1 for now"
         # use just first example in batch
@@ -818,7 +975,7 @@ class CorefHoiModel(PyTorchIEModel):
                 [torch.zeros(num_top_spans, 1, device=device), top_pairwise_scores], dim=1
             )  # [num top spans, max top antecedents + 1]
             return (
-                CorefHoiModelModelBatchOutput(
+                CorefHoiModelBatchOutput(
                     candidate_starts=candidate_starts,
                     candidate_ends=candidate_ends,
                     candidate_mention_scores=candidate_mention_scores,
@@ -939,7 +1096,7 @@ class CorefHoiModel(PyTorchIEModel):
         self.update_steps += 1
 
         return (
-            CorefHoiModelModelBatchOutput(
+            CorefHoiModelBatchOutput(
                 candidate_starts=candidate_starts,
                 candidate_ends=candidate_ends,
                 candidate_mention_scores=candidate_mention_scores,
@@ -1030,26 +1187,12 @@ class CorefHoiModel(PyTorchIEModel):
         predicted_clusters = [tuple(c) for c in predicted_clusters]
         return predicted_clusters, mention_to_cluster_id, predicted_antecedents
 
-    def update_evaluator(
-        self, span_starts, span_ends, antecedent_idx, antecedent_scores, gold_clusters, evaluator
-    ):
-        predicted_clusters, mention_to_cluster_id, _ = self.get_predicted_clusters(
-            span_starts, span_ends, antecedent_idx, antecedent_scores
-        )
-        mention_to_predicted = {
-            m: predicted_clusters[cluster_idx] for m, cluster_idx in mention_to_cluster_id.items()
-        }
-        gold_clusters = [tuple(tuple(m) for m in cluster) for cluster in gold_clusters]
-        mention_to_gold = {m: cluster for cluster in gold_clusters for m in cluster}
-        evaluator.update(predicted_clusters, gold_clusters, mention_to_predicted, mention_to_gold)
-        return predicted_clusters
-
     def predict(
         self,
-        inputs: CorefHoiModelModelInputs,
+        inputs: CorefHoiModelInputs,
         **kwargs,
     ) -> CorefHoiModelPrediction:
-        predictions: CorefHoiModelModelBatchOutput = self(**inputs)[0]
+        predictions: CorefHoiModelBatchOutput = self(**inputs)[0]
         span_starts = predictions["top_span_starts"].cpu().tolist()
         span_ends = predictions["top_span_ends"].cpu().tolist()
         clusters, mention_to_cluster_id, antecedents = self.get_predicted_clusters(
@@ -1078,9 +1221,42 @@ class CorefHoiModel(PyTorchIEModel):
         assert targets is not None, "target has to be available for training"
         assert set(targets) == {"gold_starts", "gold_ends", "gold_mention_cluster_map"}
 
-        _, loss = self(**inputs, **targets)
+        batch_predictions, loss = self(**inputs, **targets)
+        cluster2mentions: Dict[int, List[List[int]]] = dict()
+        for mention_idx, m_cluster in enumerate(
+            targets["gold_mention_cluster_map"][0].cpu().detach().numpy().tolist()
+        ):
+            if not (m_cluster in cluster2mentions):
+                cluster2mentions[m_cluster] = []
+            cluster2mentions[m_cluster].append(
+                [
+                    targets["gold_starts"][0].cpu().detach().numpy().tolist()[mention_idx],
+                    targets["gold_ends"][0].cpu().detach().numpy().tolist()[mention_idx],
+                ]
+            )
+        gold_cluster_list = []
+        for cluster in cluster2mentions:
+            gold_cluster_list.append(cluster2mentions[cluster])
+        gold_clusters = [tuple(tuple(m) for m in cluster) for cluster in gold_cluster_list]
+        mention_to_gold = {m: cluster for cluster in gold_clusters for m in cluster}
+
+        span_starts = batch_predictions["top_span_starts"].cpu().detach().numpy()
+        span_ends = batch_predictions["top_span_ends"].cpu().detach().numpy()
+        antecedent_idx = batch_predictions["top_antecedent_idx"].cpu().detach().numpy()
+        antecedent_scores = batch_predictions["top_antecedent_scores"].cpu().detach().numpy()
+        predicted_clusters, mention_to_cluster_id, _ = self.get_predicted_clusters(
+            span_starts, span_ends, antecedent_idx, antecedent_scores
+        )
+        mention_to_predicted = {
+            m: predicted_clusters[cluster_idx] for m, cluster_idx in mention_to_cluster_id.items()
+        }
+
+        predictions_tuple = (predicted_clusters, mention_to_predicted)
+        targets_tuple = (gold_clusters, mention_to_gold)
+        f1_value = self.f1[f"stage_{stage}"](predictions_tuple, targets_tuple)
 
         # show loss on each step only during training
+        self.log(f"{stage}/f1", f1_value, on_step=True, on_epoch=False, prog_bar=True)
         self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
 
         return loss
@@ -1093,6 +1269,19 @@ class CorefHoiModel(PyTorchIEModel):
 
     def test_step(self, batch, batch_idx: int):  # type: ignore
         return self.step(stage=TEST, batch=batch)
+
+    def training_epoch_end(self, training_step_outputs):
+        self.epoch_end(training_step_outputs, stage=TRAINING)
+
+    def validation_epoch_end(self, validation_step_outputs):
+        self.epoch_end(validation_step_outputs, stage=VALIDATION)
+
+    def test_epoch_end(self, test_step_outputs):
+        self.epoch_end(test_step_outputs, stage=TEST)
+
+    def epoch_end(self, step_outputs, stage):
+        f1_value = self.f1[f"stage_{stage}"].compute(reset=True)
+        self.log(f"{stage}/f1", f1_value, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         no_decay = ["bias", "LayerNorm.weight"]

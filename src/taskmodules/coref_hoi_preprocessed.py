@@ -26,10 +26,10 @@ from transformers import AutoTokenizer
 from typing_extensions import TypeAlias
 
 from src.models.coref_hoi import (
-    CorefHoiModelModelInputs,
-    CorefHoiModelModelTargets,
+    CorefHoiModelInputs,
     CorefHoiModelPrediction,
     CorefHoiModelStepBatchEncoding,
+    CorefHoiModelTargets,
 )
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ def construct_inputs_from_list_of_dicts(list_of_dicts):
             "sentence_map",
         ],
     )
-    return CorefHoiModelModelInputs(
+    return CorefHoiModelInputs(
         input_ids=torch.tensor(np.stack(as_dict["input_ids"]), dtype=torch.long),
         input_mask=torch.tensor(np.stack(as_dict["input_mask"]), dtype=torch.long),
         speaker_ids=torch.tensor(np.stack(as_dict["speaker_ids"]), dtype=torch.long),
@@ -132,7 +132,7 @@ def construct_targets_from_list_of_dicts(list_of_dicts):
     as_dict = list_of_dicts_to_dict_of_lists(
         list_of_dicts, keys=["gold_starts", "gold_ends", "gold_mention_cluster_map"]
     )
-    return CorefHoiModelModelTargets(
+    return CorefHoiModelTargets(
         gold_starts=torch.tensor(np.stack(as_dict["gold_starts"]), dtype=torch.long),
         gold_ends=torch.tensor(np.stack(as_dict["gold_ends"]), dtype=torch.long),
         gold_mention_cluster_map=torch.tensor(
