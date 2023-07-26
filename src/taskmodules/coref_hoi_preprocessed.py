@@ -25,7 +25,7 @@ from pytorch_ie.core import (
 from transformers import AutoTokenizer
 from typing_extensions import TypeAlias
 
-from src.models.coref_hoi import (
+from src.models.components.coref import (
     CorefHoiModelInputs,
     CorefHoiModelPrediction,
     CorefHoiModelStepBatchEncoding,
