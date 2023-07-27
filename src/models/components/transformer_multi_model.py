@@ -11,6 +11,12 @@ def aggregate_mean(x: Dict[str, torch.Tensor]) -> torch.Tensor:
     return aggregated
 
 
+def aggregate_sum(x: Dict[str, torch.Tensor]) -> torch.Tensor:
+    stacked = torch.stack(list(x.values()), dim=-1)
+    aggregated = torch.sum(stacked, dim=-1)
+    return aggregated
+
+
 class TransformerMultiModel(Module):
     def __init__(
         self,
@@ -54,6 +60,8 @@ class TransformerMultiModel(Module):
 
         if aggregate == "mean":
             self.aggregate = aggregate_mean
+        elif aggregate == "sum":
+            self.aggregate = aggregate_sum
         else:
             raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
 
