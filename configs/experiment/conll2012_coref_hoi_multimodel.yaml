@@ -62,7 +62,7 @@ model:
   task_learning_rate: 2e-4
   ffnn_size: 3000
   cluster_ffnn_size: 3000
-  aggregate: sum # sum, mean
+  aggregate: mean # mean, sum
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
