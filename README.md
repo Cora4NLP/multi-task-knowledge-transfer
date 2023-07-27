@@ -90,6 +90,7 @@ Notes:
 ### Model evaluation
 
 This will evaluate the model on the test set of the chosen dataset using the *metrics implemented within the model*.
+See [config/dataset/](configs/dataset/) for available datasets.
 
 **Have a look into the [evaluate.yaml](configs/evaluate.yaml) config to see all available options.**
 
@@ -103,8 +104,9 @@ Notes:
 
 ### Inference
 
-This will run inference on the given dataset and split. The result documents including the predicted annotations
-will be stored in the `predicitons/` directory (exact location will be printed to the console).
+This will run inference on the given dataset and split. See [config/dataset/](configs/dataset/) for available datasets.
+The result documents including the predicted annotations will be stored in the `predictions/` directory (exact
+location will be printed to the console).
 
 **Have a look into the [predict.yaml](configs/predict.yaml) config to see all available options.**
 
