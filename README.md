@@ -89,7 +89,7 @@ Notes:
 
 ### Model evaluation
 
-This will evaluate the model on the test set of the chosen dataset using the **metrics implemented within the model**.
+This will evaluate the model on the test set of the chosen dataset using the *metrics implemented within the model*.
 
 **Have a look into the [evaluate.yaml](configs/evaluate.yaml) config to see all available options.**
 
@@ -118,8 +118,8 @@ Notes:
 
 ### Evaluate Serialized Documents
 
-This will evaluate serialized documents including predicted annotations (see [Inference](#Inference)) using a
-document metric. See [config/metric/](configs/metric/) for available metrics.
+This will evaluate serialized documents including predicted annotations (see [Inference](#inference)) using a
+*document metric*. See [config/metric/](configs/metric/) for available metrics.
 
 **Have a look into the [evaluate_documents.yaml](configs/evaluate_documents.yaml) config to see all available options**
 
