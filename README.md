@@ -17,7 +17,7 @@ What it does
 
 ## 🚀  Quickstart
 
-Setup environment
+### Environment Setup
 
 ```bash
 # clone project
@@ -43,6 +43,10 @@ bash setup_symlinks.sh $HOME/experiments/multi-task-knowledge-transfer
 cp .env.example .env
 # 2. edit the .env file for your needs!
 ```
+
+### Model Training
+
+**Have a look into the [train config](configs/train.yaml) to see all available options.**
 
 Train model with default configuration
 
@@ -82,6 +86,46 @@ Notes:
 
 - this will execute two experiments (one after the other), one for each seed
 - the results will be aggregated and stored in `logs/multirun/`, see the last logging output for the exact path
+
+### Model evaluation
+
+This will evaluate the model on the test set of the chosen dataset using the **metrics implemented within the model**.
+
+**Have a look into the [evaluate.yaml](configs/evaluate.yaml) config to see all available options.**
+
+```bash
+python src/evaluate.py dataset=conll2003 model_name_or_path=pie/example-ner-spanclf-conll03
+```
+
+Notes:
+
+- add the command line parameter `trainer=gpu` to run on GPU
+
+### Inference
+
+This will run inference on the given dataset and split. The result documents including the predicted annotations
+will be stored in the `predicitons/` directory (exact location will be printed to the console).
+
+**Have a look into the [predict.yaml](configs/predict.yaml) config to see all available options.**
+
+```bash
+python src/predict.py dataset=conll2003 model_name_or_path=pie/example-ner-spanclf-conll03
+```
+
+Notes:
+
+- add the command line parameter `+pipeline.device=0` to run the inference on GPU 0
+
+### Evaluate Serialized Documents
+
+This will evaluate serialized documents including predicted annotations (see [Inference](#Inference)) using a
+document metric. See [config/metric/](configs/metric/) for available metrics.
+
+**Have a look into the [evaluate_documents.yaml](configs/evaluate_documents.yaml) config to see all available options**
+
+```bash
+python src/evaluate_documents.yaml document_path=PATH/TO/INFERENCE/OUTPUT metric=f1 metric.layer=entities
+```
 
 ## Development
 
