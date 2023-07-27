@@ -46,7 +46,7 @@ cp .env.example .env
 
 ### Model Training
 
-**Have a look into the [train config](configs/train.yaml) to see all available options.**
+**Have a look into the [train.yaml](configs/train.yaml) config to see all available options.**
 
 Train model with default configuration
 
