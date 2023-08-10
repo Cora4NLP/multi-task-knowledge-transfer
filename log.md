@@ -25,6 +25,9 @@ meaning full way, e.g.
     | MACRO    | 0.347 | 0.343 | 0.354 |
     | MICRO    | 0.497 | 0.499 | 0.494 |
   - outcome: the code works
+```
+
+IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the markdown is formatted correctly.
 
 ## 2023-08-01
 
@@ -42,25 +45,11 @@ meaning full way, e.g.
       - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/coref_hoi/2023-08-01_15-21-06`
       - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/coref_hoi/2023-08-01_18-03-12`
   - metric values:
-    - seed1:
-      - train/f1: 0.6743
-      - train/loss_epoch: 108.65867
-      - trainer/global_step: 56039
-      - val/f1: 0.62805
-      - val/loss: 168.90128
-    - seed2:
-      - train/f1: 0.67679
-      - train/loss_epoch: 106.27162
-      - trainer/global_step: 56039
-      - val/f1: 0.63836
-      - val/loss: 163.24571
-    - seed3:
-      - train/f1: 0.67741
-      - train/loss_epoch: 108.46097
-      - trainer/global_step: 56039
-      - val/f1: 0.63788
-      - val/loss: 177.8839
-
+    |       | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 | val/loss |
+    | :---- | -------: | ---------------: | ------------------: | ------: | -------: |
+    | seed1 |   0.6743 |          108.659 |               56039 | 0.62805 |  168.901 |
+    | seed2 |  0.67679 |          106.272 |               56039 | 0.63836 |  163.246 |
+    | seed3 |  0.67741 |          108.461 |               56039 | 0.63788 |  177.884 |
 
 ### Coreference Resolution: BERT, Re-TACRED and NER (Re-TACRED and NER frozen, sum aggregation)
 
@@ -70,11 +59,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_12-33-45`
   - metric values:
-      - train/f1: 0.45232
-      - train/loss_epoch: 4449.93262
-      - trainer/global_step: 56039
-      - val/f1: 0.46102
-      - val/loss: 4397.88574
+    |      | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 | val/loss |
+    | ---: | -------: | ---------------: | ------------------: | ------: | -------: |
+    | run1 |  0.45232 |          4449.93 |               56039 | 0.46102 |  4397.89 |
 
 ### Coreference Resolution: BERT, Re-TACRED and NER (all trainable, sum aggregation)
 
@@ -84,12 +71,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_12-31-28`
   - metric values:
-    - seed1:
-      - train/f1: 0.5
-      - train/loss_epoch: 1855.579
-      - trainer/global_step: 56039
-      - val/f1: 0.552
-      - val/loss: 1533.741
+    |      | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss |
+    | ---: | -------: | ---------------: | ------------------: | -----: | -------: |
+    | run1 |     0.50 |         1855.579 |               56039 |  0.552 | 1533.741 |
 
 ### Coreference Resolution: BERT, Re-TACRED and NER (Re-TACRED and NER frozen, mean aggregation)
 
@@ -99,11 +83,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_10-22-22`
   - metric values:
-      - train/f1: 0.47
-      - train/loss_epoch: 523.931
-      - trainer/global_step: 56039
-      - val/f1: 0.396
-      - val/loss: 698.734
+    |      | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss |
+    | ---: | -------: | ---------------: | ------------------: | -----: | -------: |
+    | run1 |     0.47 |          523.931 |               56039 |  0.396 |  698.734 |
 
 ### Coreference Resolution: BERT, Re-TACRED and NER (all trainable, mean aggregation)
 
@@ -113,11 +95,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_10-43-45`
   - metric values:
-      - train/f1: 0.521
-      - train/loss_epoch: 207.861
-      - trainer/global_step: 56039
-      - val/f1: 0.555
-      - val/loss: 203.024
+    |      | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss |
+    | ---: | -------: | ---------------: | ------------------: | -----: | -------: |
+    | run1 |    0.521 |          207.861 |               56039 |  0.555 |  203.024 |
 
 ### Coreference Resolution: BERT and NER (all trainable, mean aggregation)
 
@@ -128,11 +108,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_11-10-27`
   - metric values:
-      - train/f1: 0.538
-      - train/loss_epoch: 503.12421
-      - trainer/global_step: 56039
-      - val/f1: 0.59018
-      - val/loss: 481.17889
+    |      | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 |  val/loss |
+    | ---: | -------: | ---------------: | ------------------: | ------: | --------: |
+    | run1 |    0.538 |        503.12421 |               56039 | 0.59018 | 481.17889 |
 
 ### Coreference Resolution: BERT and NER (NER frozen, mean aggregation)
 
@@ -143,12 +121,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_11-12-31`
   - metric values:
-      - train/f1: 0.52739
-      - train/loss_epoch: 583.81372
-      - trainer/global_step: 56039
-      - val/f1: 0.59065
-      - val/loss: 574.26263
-
+    |      | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 |  val/loss |
+    | ---: | -------: | ---------------: | ------------------: | ------: | --------: |
+    | run1 |  0.52739 |        583.81372 |               56039 | 0.59065 | 574.26263 |
 
 ### Coreference Resolution: BERT and Re-TACRED (all trainable, mean aggregation)
 
@@ -159,11 +134,9 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-01_12-26-13`
   - metric values:
-      - train/f1: 0.59548
-      - train/loss_epoch: 88.57339
-      - trainer/global_step: 56039
-      - val/f1: 0.62288
-      - val/loss: 88.99255
+    |      | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 | val/loss |
+    | ---: | -------: | ---------------: | ------------------: | ------: | -------: |
+    | run1 |  0.59548 |         88.57339 |               56039 | 0.62288 | 88.99255 |
 
 ### Coreference Resolution: BERT and Re-TACRED (Re-TACRED frozen, mean aggregation)
 
@@ -174,11 +147,6 @@ meaning full way, e.g.
   - artefacts
     - model location: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-02_19-39-02`
   - metric values:
-      - train/f1: 0.47011
-      - train/loss_epoch: 515.68866
-      - trainer/global_step:
-      - val/f1: 0.56734
-      - val/loss: 433.13028
-```
-
-IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the markdown is formatted correctly.
+    |      | train/f1 | train/loss_epoch | trainer/global_step |  val/f1 |  val/loss |
+    | ---: | -------: | ---------------: | ------------------: | ------: | --------: |
+    | run1 |  0.47011 |        515.68866 |               56039 | 0.56734 | 433.13028 |
