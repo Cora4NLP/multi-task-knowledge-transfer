@@ -68,6 +68,7 @@ model:
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+    bert-base-cased: "bert-base-cased"
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
 
