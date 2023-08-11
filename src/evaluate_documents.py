@@ -39,9 +39,9 @@ import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig
 from pytorch_ie import DatasetDict
+from pytorch_ie.core import DocumentMetric
 
 from src import utils
-from src.metrics.interface import DocumentMetric
 
 log = utils.get_pylogger(__name__)
 
@@ -52,10 +52,8 @@ def evaluate_documents(cfg: DictConfig) -> Tuple[dict, dict]:
 
     This method is wrapped in optional @task_wrapper decorator which applies extra utilities
     before and after the call.
-
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
-
     Returns:
         Tuple[dict, dict]: Dict with metrics and dict with all instantiated objects.
     """
@@ -88,10 +86,13 @@ def evaluate_documents(cfg: DictConfig) -> Tuple[dict, dict]:
         for logger in loggers:
             logger.log_hyperparams(cfg)
 
-    documents = dataset[cfg["split"]]
-    metric(documents)
+    splits = cfg.get("splits", None)
+    if splits is None:
+        documents = dataset
+    else:
+        documents = type(dataset)({k: v for k, v in dataset.items() if k in splits})
 
-    metric_dict = metric.values()
+    metric_dict = metric(documents)
 
     return metric_dict, object_dict
 
