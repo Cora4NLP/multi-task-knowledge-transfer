@@ -8,7 +8,7 @@ defaults:
   - extras: default.yaml
   - hydra: default.yaml
 
-pipeline_type: "evaluate_predictions"
+pipeline_type: "document_evaluation"
 
 print_config: True
 ignore_warnings: True
