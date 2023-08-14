@@ -5,4 +5,4 @@ defaults:
 
 convert_documents:
   function: src.document.conversion.token_based_document_with_entities_and_sentences_to_text_based
-  result_type: src.document.types.DocumentWithEntitiesRelationsAndSentences
+  result_document_type: src.document.types.DocumentWithEntitiesRelationsAndSentences
