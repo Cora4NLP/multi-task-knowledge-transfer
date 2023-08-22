@@ -1,4 +1,4 @@
-_target_: src.utils.dataset.process_dataset
+_target_: src.utils.execute_pipeline
 input:
   _target_: datasets.load_dataset
   path: pie/squad_v2
