@@ -1,6 +1,6 @@
-_target_: src.utils.dataset.process_dataset
+_target_: src.utils.execute_pipeline
 input:
-  _target_: datasets.load_dataset
+  _target_: pytorch_ie.DatasetDict.load_dataset
   path: dataset_builders/pie/conll2012_ontonotesv5_preprocessed
   base_dataset_kwargs:
     data_dir: ${oc.env:CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR}/english.384.bert-base-cased
