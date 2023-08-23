@@ -64,7 +64,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
 
             self.classifier = nn.Linear(
                 num_models * self.base_models.config.hidden_size,
-                self.base_models.config.num_labels
+                self.base_models.config.num_labels,
             )
         else:
             self.classifier = nn.Linear(
