@@ -31,9 +31,10 @@ class ExtractiveAnswer(Span):
     question: Question
 
     def __str__(self) -> str:
-        if self.question.targets is None:
+        if self.targets is None:
             return ""
-        return str(self.question.target[self.start : self.end])
+        context = self.targets[0]
+        return str(context[self.start : self.end])
 
 
 @dataclasses.dataclass
@@ -41,16 +42,16 @@ class ExtractiveQADocument(TextBasedDocument):
     """A PIE document with annotations for SQuAD v2.0."""
 
     title: Optional[str] = None
-    questions: AnnotationList[Question] = annotation_field(target="context")
-    answers: AnnotationList[ExtractiveAnswer] = annotation_field(target="questions")
+    questions: AnnotationList[Question] = annotation_field()
+    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["text", "questions"])
 
 
 # @dataclasses.dataclass
 # class TokenizedExtractiveQADocument(TokenBasedDocument):
 #    """A tokenized PIE document with annotations for extractive question answering."""
 #
-#    questions: AnnotationList[Question] = annotation_field(target="tokens")
-#    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["questions", "tokens"])
+#    questions: AnnotationList[Question] = annotation_field()
+#    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["tokens", "questions"])
 
 
 DocumentType: TypeAlias = ExtractiveQADocument
@@ -103,22 +104,22 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
 
     def get_question_layer(self, document: DocumentType) -> AnnotationList[Question]:
         answers = self.get_answer_layer(document)
-        if len(answers._targets) != 1:
+        if len(answers._targets) != 2:
             raise Exception(
-                f"the answers layer is expected to target exactly one questions layer, but it has "
+                f"the answers layer is expected to target exactly two layers: text and questions, but it has "
                 f"the following targets: {answers._targets}"
             )
-        question_layer_name = answers._targets[0]
+        question_layer_name = answers._targets[1]
         return document[question_layer_name]
 
     def get_context(self, document: DocumentType) -> str:
-        questions = self.get_question_layer(document)
-        if len(questions._targets) != 1:
+        answers = self.get_answer_layer(document)
+        if len(answers._targets) != 2:
             raise Exception(
-                f"the questions layer is expected to target exactly one context layer, but it has "
-                f"the following targets: {questions._targets}"
+                f"the answers layer is expected to target exactly two layers: text and questions, but it has "
+                f"the following targets: {answers._targets}"
             )
-        context_field_name = questions._targets[0]
+        context_field_name = answers._targets[0]
         return getattr(document, context_field_name)
 
     def encode_context_and_question(self, context: str, question: str) -> BatchEncoding:

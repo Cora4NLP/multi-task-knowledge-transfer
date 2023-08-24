@@ -25,9 +25,10 @@ class ExtractiveAnswer(Span):
     question: Question
 
     def __str__(self) -> str:
-        if self.question.target is None:
+        if self.targets is None:
             return ""
-        return str(self.question.target[self.start : self.end])
+        context = self.targets[0]
+        return str(context[self.start : self.end])
 
 
 @dataclasses.dataclass
@@ -35,8 +36,8 @@ class SquadV2Document(TextBasedDocument):
     """A PIE document with annotations for SQuAD v2.0."""
 
     title: Optional[str] = None
-    questions: AnnotationList[Question] = annotation_field(target="text")
-    answers: AnnotationList[ExtractiveAnswer] = annotation_field(target="questions")
+    questions: AnnotationList[Question] = annotation_field()
+    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["text", "questions"])
 
 
 def example_to_document(
