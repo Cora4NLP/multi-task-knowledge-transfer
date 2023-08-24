@@ -35,11 +35,13 @@ class AttentionBasedAggregator(Module):
         n_models: int,
         hidden_size: int = 128,
         query_idx: Union[int, str] = 0,
+        mode: str = "token2token",
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
         # the input dictionary. If an int is provided, it is the index of the model *values* in the input dictionary.
         self.query_idx = query_idx
+        self.mode = mode
         self.hidden_size = hidden_size
         self.n_models = n_models
         # we need only one query (just for the target model embeddings)
@@ -56,19 +58,53 @@ class AttentionBasedAggregator(Module):
         query_key = (
             self.query_idx if isinstance(self.query_idx, str) else list(x.keys())[self.query_idx]
         )
-
-        # (batch_size, num_tokens, hidden_size)
-        query = self.query(x[query_key])
-        # (batch_size, num_tokens, num_models, num_models)
-        keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
-        # (batch_size, num_tokens, num_models, output_size)
+        # (batch_size, num_tokens, output_size, num_models)
         values = torch.stack([k(v) for k, v in zip(self.values, x.values())], dim=-1)
+
+        # use token embeddings of the target model as query and the token embeddings of all models as keys
+        if self.mode == "token2token":
+            # (batch_size, num_tokens, hidden_size)
+            query = self.query(x[query_key])
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+
+        # use token embeddings of the target model as query and the cls embeddings of all models as keys
+        elif self.mode == "token2cls":
+            # (batch_size, num_tokens, hidden_size)
+            query = self.query(x[query_key])
+            # (batch_size, hidden_size, num_models)
+            keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
+
+        # use the cls embedding of the target model as query and the token embeddings of all models as keys
+        elif self.mode == "cls2token":
+            # (batch_size, hidden_size)
+            query_cls = self.query(x[query_key][:, 0, :])
+            # (batch_size, num_tokens, hidden_size)
+            query = query_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1)
+            # (batch_size, hidden_size, num_models)
+            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+
+        # use the cls embedding of the target model as query and the cls embeddings of all models as keys
+        elif self.mode == "cls2cls":
+            # (batch_size, hidden_size)
+            query_cls = self.query(x[query_key][:, 0, :])
+            # (batch_size, num_tokens, hidden_size)
+            query = query_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1)
+            # (batch_size, hidden_size, num_models)
+            keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
+
+        else:
+            raise ValueError(f"Unknown attention mode: {self.mode}")
 
         # flatten (combine batch dim and token dim) to calculate attention weights
         # (batch_size x num_tokens, 1, hidden_size)
-        query_flat = query.view(-1, 1, self.hidden_size)
+        query_flat = query.reshape(-1, 1, self.hidden_size)
         # (batch_size x num_tokens, hidden_size, num_models)
-        keys_flat = keys.view(-1, self.hidden_size, self.n_models)
+        keys_flat = keys.reshape(-1, self.hidden_size, self.n_models)
         # (batch_size x num_tokens, 1, num_models)
         scores_flat = torch.bmm(query_flat, keys_flat)
         attention_flat = torch.softmax(scores_flat, dim=-1)
