@@ -56,20 +56,9 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         )
 
         self.dropout = nn.Dropout(classifier_dropout)
-
-        if aggregate == "concat":
-            num_models = len(pretrained_models)
-            if freeze_models:
-                num_models += len(freeze_models)
-
-            self.classifier = nn.Linear(
-                num_models * self.base_models.config.hidden_size,
-                self.base_models.config.num_labels,
-            )
-        else:
-            self.classifier = nn.Linear(
-                self.base_models.config.hidden_size, self.base_models.config.num_labels
-            )
+        self.classifier = nn.Linear(
+            self.base_models.config.hidden_size, self.base_models.config.num_labels
+        )
 
         self.f1 = nn.ModuleDict(
             {
