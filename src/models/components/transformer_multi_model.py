@@ -28,19 +28,21 @@ def aggregate_sum(x: Dict[str, torch.Tensor]) -> torch.Tensor:
     return aggregated
 
 
-class AttentionBasedAggregator(Module):
-    def __init__(self, input_size: int):
+class SelfAttentionBasedAggregator(Module):
+    def __init__(self, input_size: int, n_models: int):
         super().__init__()
-        self.linear = torch.nn.Linear(input_size, 1)
+        self.linear = torch.nn.Linear(input_size, n_models)
 
     def forward(self, x: Dict[str, torch.Tensor]) -> torch.Tensor:
-        # (batch_size, num_tokens, num_models, hidden_size)
-        stacked = torch.stack(list(x.values()), dim=-2)
-        # (batch_size, num_tokens, num_models)
-        scores = self.linear(stacked).squeeze(-1)
+        # (batch_size, num_tokens, hidden_size, num_models)
+        stacked = torch.stack(list(x.values()), dim=-1)
+        # (batch_size, num_tokens, num_models, num_models)
+        scores = self.linear(stacked.transpose(-1, -2))
+        # TODO: is dim=-1 correct here? Or should it be dim=-2?
         attention = torch.softmax(scores, dim=-1)
-        # (batch_size, num_tokens, hidden_size)
-        aggregated = torch.matmul(stacked.transpose(-1, -2), attention.unsqueeze(-1)).squeeze(-1)
+        # (batch_size, num_tokens, hidden_size, num_models)
+        weighted = torch.matmul(stacked, attention)
+        aggregated = weighted.sum(dim=-1)
         return aggregated
 
 
@@ -93,8 +95,10 @@ class TransformerMultiModel(Module):
             self.aggregate = ConcatAggregator(
                 input_size=self.config.hidden_size, num_models=len(self.models)
             )
-        elif aggregate == "attention":
-            self.aggregate = AttentionBasedAggregator(input_size=self.config.hidden_size)
+        elif aggregate == "self_attention":
+            self.aggregate = SelfAttentionBasedAggregator(
+                input_size=self.config.hidden_size, n_models=len(self.models)
+            )
         else:
             raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
 
