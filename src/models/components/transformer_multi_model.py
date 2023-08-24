@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torch.nn import Module, ModuleDict
-from torch.nn.functional import scaled_dot_product_attention
 from transformers import AutoConfig, AutoModel
 
 
@@ -144,7 +143,7 @@ class TransformerMultiModel(Module):
             self.aggregate = aggregate_mean
         elif aggregate_type == "sum":
             self.aggregate = aggregate_sum
-        elif aggregate == "concat":
+        elif aggregate_type == "concat":
             self.aggregate = ConcatAggregator(
                 input_size=self.config.hidden_size, num_models=len(self.models)
             )
