@@ -31,7 +31,7 @@ model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
+    bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
-    bert-base-cased: "bert-base-cased"

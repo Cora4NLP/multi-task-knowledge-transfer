@@ -5,5 +5,5 @@ defaults:
 
 model:
   pretrained_models:
-    bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
     bert-base-cased: "bert-base-cased"
+    bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
