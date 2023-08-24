@@ -60,6 +60,7 @@ class AttentionBasedAggregator(Module):
         )
         # (batch_size, num_tokens, output_size, num_models)
         values = torch.stack([k(v) for k, v in zip(self.values, x.values())], dim=-1)
+        batch_size, num_tokens = values.shape[:2]
 
         # use token embeddings of the target model as query and the token embeddings of all models as keys
         if self.mode == "token2token":
@@ -83,7 +84,7 @@ class AttentionBasedAggregator(Module):
             query_cls = self.query(x[query_key][:, 0, :])
             # (batch_size, num_tokens, hidden_size)
             query = query_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1)
-            # (batch_size, hidden_size, num_models)
+            # (batch_size, num_tokens, hidden_size, num_models)
             keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
 
         # use the cls embedding of the target model as query and the cls embeddings of all models as keys
@@ -96,6 +97,35 @@ class AttentionBasedAggregator(Module):
             keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
             # (batch_size, num_tokens, hidden_size, num_models)
             keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
+
+        # use a (learned) constant query and the token embeddings of all models as keys
+        elif self.mode == "constant2token":
+            # passing a tensor of zeros is fine because we still have the bias of the linear layer
+            # (hidden_size,)
+            query_constant = self.query(torch.zeros(self.query.in_features, device=values.device))
+            # (batch_size, num_tokens, hidden_size)
+            query = (
+                query_constant.unsqueeze(dim=0).unsqueeze(dim=0).expand(batch_size, num_tokens, -1)
+            )
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+
+        # use token embeddings of the target model as query and (learned) constant keys
+        elif self.mode == "token2constant":
+            # (batch_size, num_tokens, hidden_size)
+            query = self.query(x[query_key])
+            # passing a tensor of zeros is fine because we still have the bias of the linear layer
+            # (hidden_size, num_models)
+            keys_constant = torch.stack(
+                [key(torch.zeros(key.in_features, device=values.device)) for key in self.keys],
+                dim=-1,
+            )
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = (
+                keys_constant.unsqueeze(dim=0)
+                .unsqueeze(dim=0)
+                .expand(batch_size, num_tokens, -1, -1)
+            )
 
         else:
             raise ValueError(f"Unknown attention mode: {self.mode}")
@@ -110,7 +140,6 @@ class AttentionBasedAggregator(Module):
         attention_flat = torch.softmax(scores_flat, dim=-1)
 
         # unflatten
-        batch_size, num_tokens = values.shape[:2]
         # (batch_size, num_tokens, 1, num_models)
         attention = attention_flat.view(batch_size, num_tokens, 1, self.n_models)
 
