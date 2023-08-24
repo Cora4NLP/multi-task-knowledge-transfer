@@ -5,6 +5,16 @@ from torch.nn import Module, ModuleDict
 from transformers import AutoConfig, AutoModel
 
 
+class ConcatAggregator(Module):
+    def __init__(self, input_size: int, num_models: int):
+        super().__init__()
+        self.linear = torch.nn.Linear(num_models * input_size, input_size)
+
+    def forward(self, x: Dict[str, torch.Tensor]) -> torch.Tensor:
+        stacked = torch.cat(list(x.values()), dim=-1)
+        return self.linear(stacked)
+
+
 def aggregate_mean(x: Dict[str, torch.Tensor]) -> torch.Tensor:
     stacked = torch.stack(list(x.values()), dim=-1)
     aggregated = torch.mean(stacked, dim=-1)
@@ -62,6 +72,10 @@ class TransformerMultiModel(Module):
             self.aggregate = aggregate_mean
         elif aggregate == "sum":
             self.aggregate = aggregate_sum
+        elif aggregate == "concat":
+            self.aggregate = ConcatAggregator(
+                input_size=self.config.hidden_size, num_models=len(self.models)
+            )
         else:
             raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
 
