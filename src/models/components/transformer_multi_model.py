@@ -36,12 +36,15 @@ class AttentionBasedAggregator(Module):
         hidden_size: int = 128,
         query_idx: Union[int, str] = 0,
         mode: str = "token2token",
+        mode_query: Optional[str] = None,
+        mode_keys: Optional[str] = None,
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
         # the input dictionary. If an int is provided, it is the index of the model *values* in the input dictionary.
         self.query_idx = query_idx
-        self.mode = mode
+        self.mode_query = mode_query or mode.split("2")[0]
+        self.mode_keys = mode_keys or mode.split("2")[1]
         self.hidden_size = hidden_size
         self.n_models = n_models
         # we need only one query (just for the target model embeddings)
@@ -62,44 +65,15 @@ class AttentionBasedAggregator(Module):
         values = torch.stack([k(v) for k, v in zip(self.values, x.values())], dim=-1)
         batch_size, num_tokens = values.shape[:2]
 
-        # use token embeddings of the target model as query and the token embeddings of all models as keys
-        if self.mode == "token2token":
+        if self.mode_query == "token":
             # (batch_size, num_tokens, hidden_size)
             query = self.query(x[query_key])
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
-
-        # use token embeddings of the target model as query and the cls embeddings of all models as keys
-        elif self.mode == "token2cls":
-            # (batch_size, num_tokens, hidden_size)
-            query = self.query(x[query_key])
-            # (batch_size, hidden_size, num_models)
-            keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
-
-        # use the cls embedding of the target model as query and the token embeddings of all models as keys
-        elif self.mode == "cls2token":
+        elif self.mode_query == "cls":
             # (batch_size, hidden_size)
             query_cls = self.query(x[query_key][:, 0, :])
             # (batch_size, num_tokens, hidden_size)
             query = query_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1)
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
-
-        # use the cls embedding of the target model as query and the cls embeddings of all models as keys
-        elif self.mode == "cls2cls":
-            # (batch_size, hidden_size)
-            query_cls = self.query(x[query_key][:, 0, :])
-            # (batch_size, num_tokens, hidden_size)
-            query = query_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1)
-            # (batch_size, hidden_size, num_models)
-            keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
-
-        # use a (learned) constant query and the token embeddings of all models as keys
-        elif self.mode == "constant2token":
+        elif self.mode_query == "constant":
             # passing a tensor of zeros is fine because we still have the bias of the linear layer
             # (hidden_size,)
             query_constant = self.query(torch.zeros(self.query.in_features, device=values.device))
@@ -107,50 +81,32 @@ class AttentionBasedAggregator(Module):
             query = (
                 query_constant.unsqueeze(dim=0).unsqueeze(dim=0).expand(batch_size, num_tokens, -1)
             )
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
-
-        # use token embeddings of the target model as query and (learned) constant keys
-        elif self.mode == "token2constant":
-            # (batch_size, num_tokens, hidden_size)
-            query = self.query(x[query_key])
-            # passing a tensor of zeros is fine because we still have the bias of the linear layer
-            # (hidden_size, num_models)
-            keys_constant = torch.stack(
-                [key(torch.zeros(key.in_features, device=values.device)) for key in self.keys],
-                dim=-1,
-            )
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = (
-                keys_constant.unsqueeze(dim=0)
-                .unsqueeze(dim=0)
-                .expand(batch_size, num_tokens, -1, -1)
-            )
-
-        # use a (learned) constant query and (learned) constant keys
-        elif self.mode == "constant2constant":
-            # passing a tensor of zeros is fine because we still have the bias of the linear layer
-            # (hidden_size,)
-            query_constant = self.query(torch.zeros(self.query.in_features, device=values.device))
-            # (batch_size, num_tokens, hidden_size)
-            query = (
-                query_constant.unsqueeze(dim=0).unsqueeze(dim=0).expand(batch_size, num_tokens, -1)
-            )
-            # passing a tensor of zeros is fine because we still have the bias of the linear layer
-            # (hidden_size, num_models)
-            keys_constant = torch.stack(
-                [key(torch.zeros(key.in_features, device=values.device)) for key in self.keys],
-                dim=-1,
-            )
-            # (batch_size, num_tokens, hidden_size, num_models)
-            keys = (
-                keys_constant.unsqueeze(dim=0)
-                .unsqueeze(dim=0)
-                .expand(batch_size, num_tokens, -1, -1)
-            )
-
         else:
-            raise ValueError(f"Unknown attention mode: {self.mode}")
+            raise ValueError(f"Unknown query mode: {self.mode_query}")
+
+        if self.mode_keys == "token":
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+        elif self.mode_keys == "cls":
+            # (batch_size, hidden_size, num_models)
+            keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = keys_cls.unsqueeze(dim=1).expand(-1, values.shape[1], -1, -1)
+        elif self.mode_keys == "constant":
+            # passing a tensor of zeros is fine because we still have the bias of the linear layer
+            # (hidden_size, num_models)
+            keys_constant = torch.stack(
+                [key(torch.zeros(key.in_features, device=values.device)) for key in self.keys],
+                dim=-1,
+            )
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = (
+                keys_constant.unsqueeze(dim=0)
+                .unsqueeze(dim=0)
+                .expand(batch_size, num_tokens, -1, -1)
+            )
+        else:
+            raise ValueError(f"Unknown keys mode: {self.mode_keys}")
 
         # flatten (combine batch dim and token dim) to calculate attention weights
         # (batch_size x num_tokens, 1, hidden_size)
