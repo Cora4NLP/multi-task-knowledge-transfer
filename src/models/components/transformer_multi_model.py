@@ -110,7 +110,7 @@ class AttentionBasedAggregator(Module):
         attention_flat = torch.softmax(scores_flat, dim=-1)
 
         # unflatten
-        batch_size, num_tokens = query.shape[:2]
+        batch_size, num_tokens = values.shape[:2]
         # (batch_size, num_tokens, 1, num_models)
         attention = attention_flat.view(batch_size, num_tokens, 1, self.n_models)
 
