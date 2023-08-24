@@ -66,9 +66,9 @@ model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
-    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
-    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
-    bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
+    bert-base-cased-coref1: "models/conll2012/coref_hoi/2023-08-01_12-39-09"
+    bert-base-cased-coref2: "models/conll2012/coref_hoi/2023-08-01_15-21-06"
+    bert-base-cased-coref3: "models/conll2012/coref_hoi/2023-08-01_18-03-12"
     bert-base-cased: "bert-base-cased"
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
