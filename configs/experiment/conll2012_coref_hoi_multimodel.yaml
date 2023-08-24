@@ -25,7 +25,7 @@
 
 defaults:
   # load everything from this config file
-  - _conll2012_coref_hoi_multimodel.yaml
+  - conll2012_coref_hoi_multimodel_base.yaml
 
 model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
