@@ -190,7 +190,7 @@ class TransformerMultiModel(Module):
                 **aggregate_config,
             )
         else:
-            raise NotImplementedError(f"Aggregate method '{aggregate}' is not implemented")
+            raise NotImplementedError(f"Aggregate method '{aggregate_type}' is not implemented")
 
     def resize_token_embeddings(self, new_num_tokens: int) -> None:
         for model in self.models.values():
