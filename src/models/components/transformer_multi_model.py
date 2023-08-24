@@ -127,6 +127,28 @@ class AttentionBasedAggregator(Module):
                 .expand(batch_size, num_tokens, -1, -1)
             )
 
+        # use a (learned) constant query and (learned) constant keys
+        elif self.mode == "constant2constant":
+            # passing a tensor of zeros is fine because we still have the bias of the linear layer
+            # (hidden_size,)
+            query_constant = self.query(torch.zeros(self.query.in_features, device=values.device))
+            # (batch_size, num_tokens, hidden_size)
+            query = (
+                query_constant.unsqueeze(dim=0).unsqueeze(dim=0).expand(batch_size, num_tokens, -1)
+            )
+            # passing a tensor of zeros is fine because we still have the bias of the linear layer
+            # (hidden_size, num_models)
+            keys_constant = torch.stack(
+                [key(torch.zeros(key.in_features, device=values.device)) for key in self.keys],
+                dim=-1,
+            )
+            # (batch_size, num_tokens, hidden_size, num_models)
+            keys = (
+                keys_constant.unsqueeze(dim=0)
+                .unsqueeze(dim=0)
+                .expand(batch_size, num_tokens, -1, -1)
+            )
+
         else:
             raise ValueError(f"Unknown attention mode: {self.mode}")
 
