@@ -5,14 +5,8 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch
 from pytorch_ie.annotations import Span
-from pytorch_ie.core import (
-    Annotation,
-    AnnotationList,
-    Document,
-    TaskEncoding,
-    TaskModule,
-    annotation_field,
-)
+from pytorch_ie.core import Annotation, AnnotationList, TaskEncoding, TaskModule, annotation_field
+from pytorch_ie.documents import TextBasedDocument, TokenBasedDocument
 from transformers import AutoTokenizer, BatchEncoding, PreTrainedTokenizer
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 from typing_extensions import TypeAlias
@@ -37,20 +31,26 @@ class ExtractiveAnswer(Span):
     question: Question
 
     def __str__(self) -> str:
-        if self.question.target is None:
+        if self.question.targets is None:
             return ""
         return str(self.question.target[self.start : self.end])
 
 
 @dataclasses.dataclass
-class ExtractiveQADocument(Document):
-    """A PIE document with annotations for extractive question answering."""
+class ExtractiveQADocument(TextBasedDocument):
+    """A PIE document with annotations for SQuAD v2.0."""
 
-    context: str
+    title: Optional[str] = None
     questions: AnnotationList[Question] = annotation_field(target="context")
     answers: AnnotationList[ExtractiveAnswer] = annotation_field(target="questions")
-    id: Optional[str] = None
-    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
+
+
+# @dataclasses.dataclass
+# class TokenizedExtractiveQADocument(TokenBasedDocument):
+#    """A tokenized PIE document with annotations for extractive question answering."""
+#
+#    questions: AnnotationList[Question] = annotation_field(target="tokens")
+#    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["questions", "tokens"])
 
 
 DocumentType: TypeAlias = ExtractiveQADocument
@@ -143,6 +143,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             Sequence[TaskEncoding[DocumentType, InputEncoding, TargetEncoding]],
         ]
     ]:
+        # tokenized_docs = tokenize_document(document, tokenizer=self.tokenizer, result_document_type=TokenizedExtractiveQADocument)
         context = self.get_context(document)
         questions = self.get_question_layer(document)
         task_encodings: List[_TaskEncoding] = []
@@ -185,7 +186,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
                 "the context. This may happen because it is out of the max input length of the model."
             )
             logger.warning(f'\tAnswer: "{answer}" [{answer.start}, {answer.end})')
-            logger.warning(f'\tContext: "{task_encoding.document.context}"')
+            logger.warning(f'\tContext: "{task_encoding.document.text}"')
             return None
         return TargetEncoding(start_token_idx, last_token_idx)
 
