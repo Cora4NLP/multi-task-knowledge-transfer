@@ -1,82 +1,9 @@
 # @package _global_
 
-# This implements a simple showcase for our idea.
-# - task: coreference on conll2012
-# - included pretrained models:
-#   - ner trained on Ontonotes
-#   - re trained on Tacred
-# - aggregation: mean
-#
-# Prerequisites:
-# - put the pretrained models to models/pretrained (see parameter model.model_paths below)
-# - rename the model weight files (*.bin) to pytorch_model.bin, if not yet done
-#
-# To train, execute:
-#
-## fast dev run: on cpu, run just for two steps
-# python src/train.py experiment=conll2012-coref-hoi-multimodel +trainer.fast_dev_run=true
-#
-## full training on gpu
-# python src/train.py experiment=conll2012-coref-hoi-multimodel trainer=gpu
-#
-# The model implementation can be found here: src/models/multi_model_coref_hoi.py
-#
-# The config is here: configs/experiments/conll2012_coref_hoi_multimodel.yaml (this file)
-
 defaults:
-  - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
-  - override /datamodule: default.yaml
-  - override /taskmodule: coref_hoi.yaml
-  - override /model: multi_model_coref_hoi.yaml
-  - override /callbacks: default.yaml
-  - override /logger: wandb.yaml
-  - override /trainer: default.yaml
-
-# all parameters below will be merged with parameters from default configurations set above
-# this allows you to overwrite only specified parameters
-
-# name of the run determines folder name in logs
-name: "conll2012/multi_model_coref_hoi"
-
-tags: ["dataset=conll2012", "model=multi_model_coref_hoi"]
-
-seed: 12345
-
-transformer_model: bert-base-cased
-
-# metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
-monitor_metric: "val/f1"
-monitor_mode: "max"
-
-taskmodule:
-  # to work with data preprocessed by Tatiana
-  max_segment_len: 384
-  # to work with model trained by Tatiana
-  tokenizer_name_or_path: ${transformer_model}
-  max_training_sentences: 11
+  - _conll2012_coref_hoi_multimodel.yaml
 
 model:
-  model_name: ${transformer_model}
-  #num_docs: 2802  # seems to be not used anywhere
-  bert_learning_rate: 1e-05
-  task_learning_rate: 2e-4
-  ffnn_size: 3000
-  cluster_ffnn_size: 3000
-  aggregate: mean # mean, sum
-  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
-  # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-mrpc: "models/pretrained/bert-base-cased-mrpc"
     bert-base-cased: "bert-base-cased"
-  # freeze_models:
-  #  - bert-base-cased-ner-ontonotes
-
-trainer:
-  min_epochs: 5
-  max_epochs: 20
-  gradient_clip_val: 1.0
-  gradient_clip_algorithm: norm
-
-datamodule:
-  # the whole setup works only with batch_size=1!
-  batch_size: 1

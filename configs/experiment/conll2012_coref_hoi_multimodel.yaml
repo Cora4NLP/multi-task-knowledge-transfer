@@ -24,45 +24,10 @@
 # The config is here: configs/experiments/conll2012_coref_hoi_multimodel.yaml (this file)
 
 defaults:
-  - override /dataset: conll2012_ontonotesv5_preprocessed.yaml
-  - override /datamodule: default.yaml
-  - override /taskmodule: coref_hoi.yaml
-  - override /model: multi_model_coref_hoi.yaml
-  - override /callbacks: default.yaml
-  - override /logger: wandb.yaml
-  - override /trainer: default.yaml
-
-# all parameters below will be merged with parameters from default configurations set above
-# this allows you to overwrite only specified parameters
-
-# name of the run determines folder name in logs
-name: "conll2012/multi_model_coref_hoi"
-
-tags: ["dataset=conll2012", "model=multi_model_coref_hoi"]
-
-seed: 12345
-
-transformer_model: bert-base-cased
-
-# metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
-monitor_metric: "val/f1"
-monitor_mode: "max"
-
-taskmodule:
-  # to work with data preprocessed by Tatiana
-  max_segment_len: 384
-  # to work with model trained by Tatiana
-  tokenizer_name_or_path: ${transformer_model}
-  max_training_sentences: 11
+  # load everything from this config file
+  - _conll2012_coref_hoi_multimodel.yaml
 
 model:
-  model_name: ${transformer_model}
-  #num_docs: 2802  # seems to be not used anywhere
-  bert_learning_rate: 1e-05
-  task_learning_rate: 2e-4
-  ffnn_size: 3000
-  cluster_ffnn_size: 3000
-  aggregate: mean # mean, sum
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
@@ -70,15 +35,3 @@ model:
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
     bert-base-cased: "bert-base-cased"
-  # freeze_models:
-  #  - bert-base-cased-ner-ontonotes
-
-trainer:
-  min_epochs: 5
-  max_epochs: 20
-  gradient_clip_val: 1.0
-  gradient_clip_algorithm: norm
-
-datamodule:
-  # the whole setup works only with batch_size=1!
-  batch_size: 1
