@@ -31,7 +31,7 @@ class ExtractiveAnswer(Span):
     """An answer to a question."""
 
     question: Question
-    score: Optional[float] = None
+    score: Optional[float] = dataclasses.field(default=None, compare=False)
 
     def __str__(self) -> str:
         if self.targets is None:
