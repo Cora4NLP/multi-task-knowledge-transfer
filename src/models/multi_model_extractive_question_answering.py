@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
 from torch.nn import CrossEntropyLoss
@@ -48,18 +49,14 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
 
         self.qa_outputs = nn.Linear(self.base_models.config.hidden_size, 2)
 
-        # TODO: add metrics
-        # self.f1 = nn.ModuleDict(
-        #    {
-        #        f"stage_{stage}": torchmetrics.F1Score(
-        #            num_classes=num_classes, ignore_index=ignore_index
-        #        )
-        #        for stage in [TRAINING, VALIDATION, TEST]
-        #    }
-        # )
+        self.f1_start = nn.ModuleDict(
+            {f"stage_{stage}": torchmetrics.F1Score() for stage in [TRAINING, VALIDATION, TEST]}
+        )
+        self.f1_end = nn.ModuleDict(
+            {f"stage_{stage}": torchmetrics.F1Score() for stage in [TRAINING, VALIDATION, TEST]}
+        )
 
-        # Initialize weights and apply final processing
-        # self.post_init()
+        # Initialize weights and apply final processing (taken from self.post_init())
         # Initialize weights
         self.apply(self._init_weights)
 
@@ -132,15 +129,20 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         # show loss on each step only during training
         self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
 
-        # target_flat = target.view(-1)
-
-        # valid_indices = target_flat != self.label_pad_token_id
-        # valid_logits = output.logits.view(-1, self.num_classes)[valid_indices]
-        # valid_target = target_flat[valid_indices]
-
-        # f1 = self.f1[f"stage_{stage}"]
-        # f1(valid_logits, valid_target)
-        # self.log(f"{stage}/f1", f1, on_step=False, on_epoch=True, prog_bar=True)
+        f1_start = self.f1_end[f"stage_{stage}"]
+        f1_start(start_logits, start_positions)
+        self.log(
+            f"{stage}/f1_start",
+            f1_start,
+            on_step=(stage == TRAINING),
+            on_epoch=True,
+            prog_bar=True,
+        )
+        f1_end = self.f1_end[f"stage_{stage}"]
+        f1_end(end_logits, end_positions)
+        self.log(
+            f"{stage}/f1_end", f1_end, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True
+        )
 
         return loss
 
