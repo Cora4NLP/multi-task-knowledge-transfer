@@ -1,0 +1,9 @@
+defaults:
+  - squadv2_base
+  - _rename_splits
+  - _select_n
+  - _create_validation_split
+
+rename_splits:
+  mapping:
+    validation: test
