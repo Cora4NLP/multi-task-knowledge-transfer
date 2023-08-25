@@ -1,9 +1,12 @@
+import logging
 from copy import copy
 from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torch.nn import Module, ModuleDict
 from transformers import AutoConfig, AutoModel
+
+logger = logging.getLogger(__name__)
 
 
 class ConcatAggregator(Module):
@@ -34,10 +37,13 @@ class AttentionBasedAggregator(Module):
         input_size: int,
         n_models: int,
         hidden_size: int = 128,
+        output_size: Optional[int] = None,
         query_idx: Union[int, str] = 0,
         mode: str = "token2token",
         mode_query: Optional[str] = None,
         mode_keys: Optional[str] = None,
+        project_target_values: bool = True,
+        project_target_query: bool = True,
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
@@ -45,16 +51,42 @@ class AttentionBasedAggregator(Module):
         self.query_idx = query_idx
         self.mode_query = mode_query or mode.split("2")[0]
         self.mode_keys = mode_keys or mode.split("2")[1]
+        self.input_size = input_size
         self.hidden_size = hidden_size
+        self.output_size = output_size or input_size
         self.n_models = n_models
-        # we need only one query (just for the target model embeddings)
-        self.query = torch.nn.Linear(input_size, hidden_size)
-        # we need keys and values for all model embeddings
+
+        # we need only one query projection (just for the target model embeddings)
+        if project_target_query:
+            self.query = torch.nn.Linear(input_size, self.hidden_size)
+        else:
+            self.query = torch.nn.Identity()
+            if self.hidden_size != input_size:
+                logger.warning(
+                    f"We do not project the query layer, so hidden_size [{self.hidden_size}] is overwritten "
+                    f"with input_size [{input_size}]."
+                )
+            self.hidden_size = input_size
+
+        # we need individual key projections for all model embeddings
         self.keys = torch.nn.ModuleList(
-            [torch.nn.Linear(input_size, hidden_size) for _ in range(n_models)]
+            [torch.nn.Linear(input_size, self.hidden_size) for _ in range(n_models)]
         )
+        if not project_target_values and self.output_size != self.input_size:
+            logger.warning(
+                f"We do not project the target values, so output_size [{self.output_size}] is overwritten "
+                f"with input_size [{self.input_size}]."
+            )
+            self.output_size = self.input_size
+
+        # we need individual value projections for all model embeddings
         self.values = torch.nn.ModuleList(
-            [torch.nn.Linear(input_size, input_size) for _ in range(n_models)]
+            [
+                torch.nn.Linear(self.input_size, self.output_size)
+                if i != query_idx or project_target_values
+                else torch.nn.Identity()
+                for i in range(n_models)
+            ]
         )
 
     def forward(self, x: Dict[str, torch.Tensor]) -> torch.Tensor:
