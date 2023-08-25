@@ -1,5 +1,8 @@
 # --------- pytorch-ie --------- #
-pytorch-ie>=0.19.0,<1.0.0
+#pytorch-ie>=0.19.0,<1.0.0
+# requires:
+# - https://github.com/ChristophAlt/pytorch-ie/pull/317
+git+https://github.com/ChristophAlt/pytorch-ie@tokenize_with_text_pair
 # pie-utils provides some useful helper methods for pytorch-ie,
 # e.g. document processors or span utils (convert span annotations
 # to sequence encodings such as BIO, IO or BIOUL, and back).

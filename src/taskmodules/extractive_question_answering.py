@@ -4,9 +4,11 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
+from pytorch_ie import tokenize_document
 from pytorch_ie.annotations import Span
 from pytorch_ie.core import Annotation, AnnotationList, TaskEncoding, TaskModule, annotation_field
 from pytorch_ie.documents import TextBasedDocument, TokenBasedDocument
+from tokenizers import Encoding
 from transformers import AutoTokenizer, BatchEncoding, PreTrainedTokenizer
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 from typing_extensions import TypeAlias
@@ -29,6 +31,7 @@ class ExtractiveAnswer(Span):
     """An answer to a question."""
 
     question: Question
+    score: Optional[float] = None
 
     def __str__(self) -> str:
         if self.targets is None:
@@ -46,12 +49,12 @@ class ExtractiveQADocument(TextBasedDocument):
     answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["text", "questions"])
 
 
-# @dataclasses.dataclass
-# class TokenizedExtractiveQADocument(TokenBasedDocument):
-#    """A tokenized PIE document with annotations for extractive question answering."""
-#
-#    questions: AnnotationList[Question] = annotation_field()
-#    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["tokens", "questions"])
+@dataclasses.dataclass
+class TokenizedExtractiveQADocument(TokenBasedDocument):
+    """A tokenized PIE document with annotations for extractive question answering."""
+
+    questions: AnnotationList[Question] = annotation_field()
+    answers: AnnotationList[ExtractiveAnswer] = annotation_field(targets=["tokens", "questions"])
 
 
 DocumentType: TypeAlias = ExtractiveQADocument
@@ -64,7 +67,7 @@ class TargetEncoding:
     end_position: int
 
 
-_TaskEncoding: TypeAlias = TaskEncoding[
+TaskEncodingType: TypeAlias = TaskEncoding[
     ExtractiveQADocument,
     InputEncoding,
     TargetEncoding,
@@ -79,8 +82,8 @@ class TaskOutput:
     start: int
     end: int
     # the logits are not yet used
-    start_logits: np.ndarray
-    end_logits: np.ndarray
+    start_probability: float
+    end_probability: float
 
 
 @TaskModule.register()
@@ -122,18 +125,6 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         context_field_name = answers._targets[0]
         return getattr(document, context_field_name)
 
-    def encode_context_and_question(self, context: str, question: str) -> BatchEncoding:
-        # TODO: is this the right way to encode the context and question?
-        inputs: BatchEncoding = self.tokenizer(
-            text=question.strip(),
-            text_pair=context,
-            padding=False,
-            truncation="only_second",
-            max_length=self.max_length,
-            return_token_type_ids=True,
-        )
-        return inputs
-
     def encode_input(
         self,
         document: DocumentType,
@@ -144,26 +135,37 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             Sequence[TaskEncoding[DocumentType, InputEncoding, TargetEncoding]],
         ]
     ]:
-        # tokenized_docs = tokenize_document(document, tokenizer=self.tokenizer, result_document_type=TokenizedExtractiveQADocument)
-        context = self.get_context(document)
+
         questions = self.get_question_layer(document)
-        task_encodings: List[_TaskEncoding] = []
+        task_encodings: List[TaskEncodingType] = []
         for question in questions:
-            inputs = self.encode_context_and_question(context, question.text)
-            task_encodings.append(
-                TaskEncoding(
-                    document=document,
-                    inputs=inputs,
-                    metadata=dict(question=question),
-                )
+            tokenized_docs = tokenize_document(
+                document,
+                tokenizer=self.tokenizer,
+                text=question.text.strip(),
+                truncation="only_second",
+                max_length=self.max_length,
+                return_overflowing_tokens=True,
+                result_document_type=TokenizedExtractiveQADocument,
+                strict_span_conversion=False,
+                verbose=False,
             )
+            for doc in tokenized_docs:
+                inputs = self.tokenizer.convert_tokens_to_ids(list(doc.tokens))
+                task_encodings.append(
+                    TaskEncodingType(
+                        document=document,
+                        inputs=inputs,
+                        metadata=dict(question=question, tokenized_document=doc),
+                    )
+                )
         return task_encodings
 
     def encode_target(
         self,
-        task_encoding: TaskEncoding[DocumentType, InputEncoding, TargetEncoding],
+        task_encoding: TaskEncodingType,
     ) -> Optional[TargetEncoding]:
-        answers = self.get_answer_layer(task_encoding.document)
+        answers = self.get_answer_layer(task_encoding.metadata["tokenized_document"])
         if len(answers) > 1:
             logger.warning(
                 f"The answers layer is expected to have not more than one answer, but it has "
@@ -177,25 +179,20 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
             raise Exception(
                 f"the answer {answer} does not match the question {task_encoding.metadata['question']}"
             )
-        # the context is in the second sequence, so set sequence_index=1
-        start_token_idx = task_encoding.inputs.char_to_token(answer.start, sequence_index=1)
-        # the end token is inclusive
-        last_token_idx = task_encoding.inputs.char_to_token(answer.end - 1, sequence_index=1)
-        if start_token_idx is None or last_token_idx is None:
-            logger.warning(
-                "Skip the example, because the start or last token index for the answer could not be determined in "
-                "the context. This may happen because it is out of the max input length of the model."
-            )
-            logger.warning(f'\tAnswer: "{answer}" [{answer.start}, {answer.end})')
-            logger.warning(f'\tContext: "{task_encoding.document.text}"')
-            return None
-        return TargetEncoding(start_token_idx, last_token_idx)
+        return TargetEncoding(answer.start, answer.end - 1)
 
     def collate(
         self, task_encodings: Sequence[TaskEncoding[DocumentType, InputEncoding, TargetEncoding]]
     ) -> TaskBatchEncoding:
-        input_features = [task_encoding.inputs for task_encoding in task_encodings]
+        def task_encoding2input_features(task_encoding: TaskEncodingType) -> Dict[str, Any]:
+            encoding = task_encoding.metadata["tokenized_document"].metadata["tokenizer_encoding"]
+            return {"input_ids": encoding.ids, "token_type_ids": encoding.type_ids}
 
+        input_features = [
+            task_encoding2input_features(task_encoding) for task_encoding in task_encodings
+        ]
+
+        # will contain: input_ids, token_type_ids, attention_mask
         inputs: BatchEncoding = self.tokenizer.pad(
             input_features, padding="longest", max_length=self.max_length, return_tensors="pt"
         )
@@ -217,16 +214,16 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
 
     def unbatch_output(self, model_output: ModelBatchOutput) -> Sequence[TaskOutput]:
         batch_size = len(model_output.start_logits)
-        start_logits = model_output.start_logits.detach().cpu().numpy()
-        end_logits = model_output.end_logits.detach().cpu().numpy()
-        best_start = np.argmax(start_logits, axis=1)
-        best_end = np.argmax(end_logits, axis=1)
+        start_probs = torch.softmax(model_output.start_logits, dim=-1).detach().cpu().numpy()
+        end_probs = torch.softmax(model_output.end_logits, dim=-1).detach().cpu().numpy()
+        best_start = np.argmax(start_probs, axis=1)
+        best_end = np.argmax(end_probs, axis=1)
         return [
             TaskOutput(
                 start=best_start[i],
                 end=best_end[i],
-                start_logits=start_logits[i],
-                end_logits=end_logits[i],
+                start_probability=start_probs[i, best_start[i]],
+                end_probability=end_probs[i, best_end[i]],
             )
             for i in range(batch_size)
         ]
@@ -237,17 +234,23 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         task_output: TaskOutput,
     ) -> Iterator[Tuple[str, Annotation]]:
 
-        start_char = task_encoding.inputs.token_to_chars(task_output.start)
-        end_char = task_encoding.inputs.token_to_chars(task_output.end)
-        if start_char is not None and end_char is not None:
-            start_sequence_index = task_encoding.inputs.token_to_sequence(task_output.start)
-            end_sequence_index = task_encoding.inputs.token_to_sequence(task_output.end)
+        tokenizer_encoding: Encoding = task_encoding.metadata["tokenized_document"].metadata[
+            "tokenizer_encoding"
+        ]
+        start_chars = tokenizer_encoding.token_to_chars(task_output.start)
+        end_chars = tokenizer_encoding.token_to_chars(task_output.end)
+        if start_chars is not None and end_chars is not None:
+            start_sequence_index = tokenizer_encoding.token_to_sequence(task_output.start)
+            end_sequence_index = tokenizer_encoding.token_to_sequence(task_output.end)
             # the indices need to point into the context which is the second sequence
             if start_sequence_index == 1 and end_sequence_index == 1:
+                start_char = start_chars[0]
+                end_char = end_chars[-1]
                 context = self.get_context(task_encoding.document)
-                if 0 <= start_char.start < end_char.end <= len(context):
+                if 0 <= start_char < end_char <= len(context):
                     yield self.answer_annotation, ExtractiveAnswer(
-                        start=start_char.start,
-                        end=end_char.end,
+                        start=start_char,
+                        end=end_char,
                         question=task_encoding.metadata["question"],
+                        score=float(task_output.start_probability * task_output.end_probability),
                     )
