@@ -1,0 +1,11 @@
+# @package _global_
+
+defaults:
+  - conll2012_coref_hoi_multimodel_base.yaml
+
+model:
+  pretrained_models:
+    bert-base-cased: "bert-base-cased"
+    bert-base-cased-coref1: "models/conll2012/coref_hoi/2023-08-01_12-39-09"
+    bert-base-cased-coref2: "models/conll2012/coref_hoi/2023-08-01_15-21-06"
+    bert-base-cased-coref3: "models/conll2012/coref_hoi/2023-08-01_18-03-12"

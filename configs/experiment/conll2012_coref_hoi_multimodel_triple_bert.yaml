@@ -1,0 +1,10 @@
+# @package _global_
+
+defaults:
+  - conll2012_coref_hoi_multimodel_base.yaml
+
+model:
+  pretrained_models:
+    bert-base-cased: "bert-base-cased"
+    bert-base-cased2: "bert-base-cased"
+    bert-base-cased3: "bert-base-cased"
