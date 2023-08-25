@@ -63,6 +63,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         # Initialize weights
         self.apply(self._init_weights)
 
+    # taken from BertPreTrainedModel, see
+    # https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
     def _init_weights(self, module):
         """Initialize the weights."""
         if isinstance(module, nn.Linear):
@@ -82,6 +84,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
     def forward(self, inputs: BatchEncoding) -> QuestionAnsweringModelOutput:
         sequence_output = self.base_models(**inputs)
 
+        # taken from BertForQuestionAnswering, see
+        # https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
         logits = self.qa_outputs(sequence_output)
         start_logits, end_logits = logits.split(1, dim=-1)
         start_logits = start_logits.squeeze(-1).contiguous()
@@ -108,6 +112,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         start_positions = targets["start_positions"]
         end_positions = targets["end_positions"]
 
+        # taken from BertForQuestionAnswering, see
+        # https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
         # If we are on multi-GPU, split add a dimension
         if len(start_positions.size()) > 1:
             start_positions = start_positions.squeeze(-1)
