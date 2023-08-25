@@ -32,6 +32,51 @@ def aggregate_sum(x: Dict[str, torch.Tensor]) -> torch.Tensor:
 
 
 class AttentionBasedAggregator(Module):
+    """This module implements an attention-based aggregation mechanism for multiple transformer
+    model outputs.
+
+    The module expects a dictionary of model outputs as input. The keys of the dictionary are the model ids and the
+    values are the model outputs. The model outputs are expected to be tensors of shape (batch_size, num_tokens,
+    hidden_size). The module then calculates attention weights for each model output and aggregates the outputs
+    using these weights. The attention weights are calculated using a query vector that comes from one of the model
+    outputs (the target model) and key vectors that come from all model outputs. The query and key vectors are
+    calculated using linear layers. The query vector is multiplied with the transpose of the key vectors to get
+    scores that are then normalized using a softmax function to get the attention weights. The attention weights are
+    then used to weight the projected model outputs (values) and the weighted values are summed up to get the final
+    output. The module can be configured to use different parts of the model outputs as query and key vectors. The
+    following query and key modes are supported (they can be set individually via the `mode_query` and `mode_keys`
+    parameters or together via the `mode` parameter in the format `mode_query2mode_keys`):
+
+    - token: use the token embeddings as input for the linear layer to get the query or key vectors.
+    - cls: broadcast the cls embedding along the token dimension and use it as input for the linear layer to get
+        the query or key vectors.
+    - constant: broadcast a constant tensor along the batch and token dimension and use it as query or key vectors.
+
+    Args:
+        input_size: The size of the input embeddings.
+        n_models: The number of model outputs to aggregate.
+        hidden_size: The size of the query and key vectors.
+        output_size: The size of the output embeddings. If None, the input_size is used.
+        query_idx: The index of the model to use as the query, i.e. the target model. If a string is provided,
+            it is the key of the model in the input dictionary. If an int is provided, it is the index of the model
+            *values* in the input dictionary.
+        mode: The mode to use for the query and key vectors. Should be a string in the format `mode_query2mode_keys`.
+            Defaults to `token2token`.
+        mode_query: The mode to use for the query vector. Overrides the respective part of the `mode` parameter.
+        mode_keys: The mode to use for the key vectors. Overrides the respective part of the `mode` parameter.
+        project_target_query: Whether to project the target model embeddings with a linear query layer to get the
+            query vector. If disabled, the target model embeddings are used directly as the query vector. Defaults to
+            True.
+        project_target_key: Whether to project the target model embeddings with a linear key layer. If disabled, the
+            target model embeddings are used directly as the key vectors. Defaults to True.
+        project_target_value: Whether to project the target model embeddings with a linear value layer. If disabled,
+            the target model embeddings are used directly as the value vectors. Defaults to True.
+        reuse_target_query_as_key: Whether to reuse the target model query vector as the key vector. Defaults to False.
+
+    Returns:
+        The aggregated model output of shape (batch_size, num_tokens, output_size).
+    """
+
     def __init__(
         self,
         input_size: int,
@@ -42,9 +87,9 @@ class AttentionBasedAggregator(Module):
         mode: str = "token2token",
         mode_query: Optional[str] = None,
         mode_keys: Optional[str] = None,
-        project_target_value: bool = True,
         project_target_query: bool = True,
         project_target_key: bool = True,
+        project_target_value: bool = True,
         reuse_target_query_as_key: bool = False,
     ):
         super().__init__()
