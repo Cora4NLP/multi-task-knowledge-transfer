@@ -56,14 +56,16 @@ class AttentionBasedAggregator(Module):
         input_size: The size of the input embeddings.
         n_models: The number of model outputs to aggregate.
         hidden_size: The size of the query and key vectors.
-        output_size: The size of the output embeddings. If None, the input_size is used.
+        output_size: The size of the output embeddings. If None (default), the input_size is used.
         query_idx: The index of the model to use as the query, i.e. the target model. If a string is provided,
             it is the key of the model in the input dictionary. If an int is provided, it is the index of the model
-            *values* in the input dictionary.
+            *values* in the input dictionary. Defaults to 0.
         mode: The mode to use for the query and key vectors. Should be a string in the format `mode_query2mode_keys`.
             Defaults to `token2token`.
-        mode_query: The mode to use for the query vector. Overrides the respective part of the `mode` parameter.
-        mode_keys: The mode to use for the key vectors. Overrides the respective part of the `mode` parameter.
+        mode_query: The mode to use for the query vector. If defined, overrides the respective part of the `mode`
+            parameter.
+        mode_keys: The mode to use for the key vectors. If defined, overrides the respective part of the `mode`
+            parameter.
         project_target_query: Whether to project the target model embeddings with a linear query layer to get the
             query vector. If disabled, the target model embeddings are used directly as the query vector. Defaults to
             True.
