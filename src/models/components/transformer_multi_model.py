@@ -45,6 +45,7 @@ class AttentionBasedAggregator(Module):
         project_target_value: bool = True,
         project_target_query: bool = True,
         project_target_key: bool = True,
+        reuse_target_query_as_key: bool = False,
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
@@ -78,11 +79,18 @@ class AttentionBasedAggregator(Module):
             self.query = torch.nn.Identity()
 
         # we need individual key projections for all model embeddings
+        if reuse_target_query_as_key:
+            target_key = self.query
+        else:
+            if project_target_key:
+                target_key = torch.nn.Linear(self.input_size, self.hidden_size)
+            else:
+                target_key = torch.nn.Identity()
         self.keys = torch.nn.ModuleList(
             [
                 torch.nn.Linear(self.input_size, self.hidden_size)
-                if i != query_idx or project_target_key
-                else torch.nn.Identity()
+                if i != query_idx
+                else target_key
                 for i in range(n_models)
             ]
         )
