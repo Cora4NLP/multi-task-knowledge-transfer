@@ -1,0 +1,47 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=squadv2_multimodel
+
+defaults:
+  - override /dataset: squadv2_prepared.yaml
+  - override /datamodule: default.yaml
+  - override /taskmodule: extractive_question_answering.yaml
+  - override /model: multi_model_extractive_question_answering.yaml
+  - override /callbacks: default.yaml
+  - override /logger: wandb.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "dataset+squadv2/task+extractive_question_answering"
+
+tags: ["dataset=squadv2", "task=extractive_question_answering"]
+
+# metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
+monitor_metric: "val/loss"
+monitor_mode: "min"
+
+transformer_model: bert-base-cased
+
+seed: 12345
+
+trainer:
+  min_epochs: 5
+  max_epochs: 20
+  # gradient_clip_val: 0.5
+
+datamodule:
+  batch_size: 4
+
+taskmodule:
+  tokenizer_name_or_path: ${transformer_model}
+
+model:
+  model_name: ${transformer_model}
+  pretrained_models:
+    bert-base-cased: "bert-base-cased"
+    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
+    # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"

@@ -1,5 +1,6 @@
 from .coref_hoi import CorefHoiModel
 from .extractive_question_answering import ExtractiveQuestionAnsweringModel
 from .multi_model_coref_hoi import MultiModelCorefHoiModel
+from .multi_model_extractive_question_answering import MultiModelExtractiveQuestionAnsweringModel
 from .multi_model_text_classification import MultiModelTextClassificationModel
 from .multi_model_token_classification import MultiModelTokenClassificationModel
