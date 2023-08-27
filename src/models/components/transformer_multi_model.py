@@ -3,7 +3,7 @@ from copy import copy
 from typing import Any, Dict, List, Optional, Union
 
 import torch
-from torch.nn import Module, ModuleDict
+from torch.nn import Module, ModuleDict, functional
 from transformers import AutoConfig, AutoModel
 
 logger = logging.getLogger(__name__)
@@ -203,25 +203,11 @@ class AttentionBasedAggregator(Module):
         else:
             raise ValueError(f"Unknown keys mode: {self.mode_keys}")
 
-        # flatten (combine batch dim and token dim) to calculate attention weights
-        # (batch_size x num_tokens, 1, hidden_size)
-        query_flat = query.reshape(-1, 1, self.hidden_size)
-        # (batch_size x num_tokens, hidden_size, num_models)
-        keys_flat = keys.reshape(-1, self.hidden_size, self.n_models)
-        # (batch_size x num_tokens, 1, num_models)
-        scores_flat = torch.bmm(query_flat, keys_flat)
-        attention_flat = torch.softmax(scores_flat, dim=-1)
+        aggregated = functional.scaled_dot_product_attention(
+            query=query.unsqueeze(-2), key=keys.transpose(-1, -2), value=values.transpose(-1, -2)
+        )
 
-        # unflatten
-        # (batch_size, num_tokens, 1, num_models)
-        attention = attention_flat.view(batch_size, num_tokens, 1, self.n_models)
-
-        # (batch_size, num_tokens, output_size, num_models)
-        weighted = values * attention
-        # (batch_size, num_tokens, output_size)
-        aggregated = weighted.sum(dim=-1)
-
-        return aggregated
+        return aggregated.squeeze(-2)
 
 
 class TransformerMultiModel(Module):
