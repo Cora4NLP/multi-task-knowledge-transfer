@@ -73,7 +73,7 @@ class AttentionBasedAggregator(Module):
             target model embeddings are used directly as the key vectors. Defaults to True.
         project_target_value: Whether to project the target model embeddings with a linear value layer. If disabled,
             the target model embeddings are used directly as the value vectors. Defaults to True.
-        reuse_target_query_as_key: Whether to reuse the target model query vector as the key vector. Defaults to False.
+        reuse_target_query_as_key: Whether to reuse the target model query vector as the key vector. Defaults to True.
 
     Returns:
         The aggregated model output of shape (batch_size, num_tokens, output_size).
