@@ -92,7 +92,7 @@ class AttentionBasedAggregator(Module):
         project_target_query: bool = True,
         project_target_key: bool = True,
         project_target_value: bool = True,
-        reuse_target_query_as_key: bool = False,
+        reuse_target_query_as_key: bool = True,
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
