@@ -203,9 +203,8 @@ class AttentionBasedAggregator(Module):
         else:
             raise ValueError(f"Unknown keys mode: {self.mode_keys}")
 
-        aggregated = functional.scaled_dot_product_attention(
-            query=query.unsqueeze(-2), key=keys.transpose(-1, -2), value=values.transpose(-1, -2)
-        )
+        attn_weight = torch.softmax((query.unsqueeze(-2) @ keys / self.hidden_size**0.5), dim=-1)
+        aggregated = attn_weight @ values.transpose(-1, -2)
 
         return aggregated.squeeze(-2)
 
