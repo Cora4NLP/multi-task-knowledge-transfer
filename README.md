@@ -132,7 +132,7 @@ python src/evaluate_documents.py metric=f1 metric.layer=entities +dataset.data_d
 Note: By default, this utilizes the dataset provided by the
 [from_serialized_documents](configs/dataset/from_serialized_documents.yaml) configuration. This configuration is
 designed to facilitate the loading of serialized documents, as generated during the [Inference](#inference) step. It
-requires to set the parameters `document_type` and `data_dir` or `data_files`. See [here](src/document/types.py) 
+requires to set the parameters `document_type` and `data_dir` or `data_files`. See [here](src/document/types.py)
 for some predefined document types, but you may have one defined in the taskmodule source code of your choice.
 If you want to use a different dataset,
 you can override the `dataset` parameter as usual with any existing dataset config, e.g `dataset=conll2003`. But
