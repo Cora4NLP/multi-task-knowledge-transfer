@@ -12,8 +12,9 @@ class F1BestVsCandidatesMetric(F1Metric):
     annotation to multiple gold candidate annotations.
 
     This is useful for tasks like extractive question answering where there are multiple gold
-    candidate answers for a question and the model may produce multiple answers because of
-    windowing (induced by max input length restrictions of the model).
+    candidate answers for a single question and, on the other hand, the model may produce multiple
+    answers for one question because of windowing (induced by max input length restrictions of the
+    model).
     """
 
     def __init__(self, score_field: str = "score", **kwargs) -> None:
