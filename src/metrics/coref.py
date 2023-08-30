@@ -8,13 +8,11 @@ from typing import Any, List
 
 import numpy as np
 import pandas as pd
-from pytorch_ie.core import Document
+from pytorch_ie.core import Document, DocumentMetric
 from scipy.optimize import linear_sum_assignment
 from scipy.optimize import linear_sum_assignment as linear_assignment
 from torch import nn
 
-from src.metrics.interface import DocumentMetric
-from src.taskmodules.coref_hoi_preprocessed import Conll2012OntonotesV5PreprocessedDocument
 from src.utils.coval.ua.markable import Markable
 from src.utils.coval.ua.reader import get_coref_infos
 
@@ -610,6 +608,9 @@ AVAILABLE_METRICS = {
 
 
 def convert_doc_to_conllua_lines(document: Document, use_predictions: bool) -> List[str]:
+    # import locally to avoid circular imports
+    from src.taskmodules.coref_hoi_preprocessed import Conll2012OntonotesV5PreprocessedDocument
+
     if not isinstance(document, Conll2012OntonotesV5PreprocessedDocument):
         raise TypeError(
             f"document must be of type Conll2012OntonotesV5PreprocessedDocument to convert to conllua, "
@@ -670,6 +671,7 @@ class CorefMetrics(DocumentMetric):
         show_as_markdown: bool = False,
         metrics: List[str] = ["lea", "muc", "bcub", "ceafe", "ceafm", "blanc"],
     ):
+        super().__init__()
         self.keep_singletons = keep_singletons
         self.keep_split_antecedent = keep_split_antecedent
         self.use_MIN = use_MIN
@@ -692,7 +694,7 @@ class CorefMetrics(DocumentMetric):
         self.gold_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=False))
         self.sys_lines.extend(convert_doc_to_conllua_lines(document, use_predictions=True))
 
-    def _values(self) -> Any:
+    def _compute(self) -> Any:
 
         doc_coref_infos, doc_non_referring_infos, doc_bridging_infos = get_coref_infos(
             self.gold_lines,
