@@ -168,20 +168,22 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         self,
         task_encoding: TaskEncodingType,
     ) -> Optional[TargetEncoding]:
-        answers = self.get_answer_layer(task_encoding.metadata["tokenized_document"])
-        if len(answers) > 1:
-            logger.warning(
-                f"The answers layer is expected to have not more than one answer, but it has "
-                f"{len(answers)} answers. We take just the first one."
-            )
-        # if there are no answers, we return a dummy target encoding
+        all_answers = self.get_answer_layer(task_encoding.metadata["tokenized_document"])
+        # the document can contain multiple questions, so we filter the answers by the target question
+        answers = [
+            answer
+            for answer in all_answers
+            if answer.question == task_encoding.metadata["question"]
+        ]
+        # if there is no answer for the target question, we return a dummy target encoding
         if len(answers) == 0:
             return TargetEncoding(0, 0)
-        answer = answers[0]
-        if not answer.question == task_encoding.metadata["question"]:
-            raise Exception(
-                f"the answer {answer} does not match the question {task_encoding.metadata['question']}"
+        if len(answers) > 1:
+            logger.warning(
+                f"The answers annotation layer is expected to have not more than one answer per question, "
+                f"but it has {len(answers)} answers. We take just the first one."
             )
+        answer = answers[0]
         return TargetEncoding(answer.start, answer.end - 1)
 
     def collate(
