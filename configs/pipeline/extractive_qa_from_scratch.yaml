@@ -1,0 +1,9 @@
+# example usage:
+# python src/predict.py dataset=squadv2_prepared pipeline=extractive_qa_from_scratch ++pipeline.model.model_name_or_path=deepset/bert-base-uncased-squad2 extras.enforce_tags=false
+
+defaults:
+  - /model: ../model/extractive_question_answering.yaml
+  - /taskmodule: ../taskmodule/extractive_question_answering.yaml
+
+_target_: pytorch_ie.Pipeline
+show_progress_bar: true
