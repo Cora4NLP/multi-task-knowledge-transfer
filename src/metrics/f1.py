@@ -11,8 +11,9 @@ class F1BestVsCandidatesMetric(F1Metric):
     """This metric calculates the F1 score over documents by comparing the best predicted
     annotation to multiple gold candidate annotations.
 
-    This is useful for tasks like extractive question answering where there are multiple possible
-    answers for a question, but only one is correct.
+    This is useful for tasks like extractive question answering where there are multiple gold
+    candidate answers for a question and the model may produce multiple answers because of
+    windowing (induced by max input length restrictions of the model).
     """
 
     def __init__(self, score_field: str = "score", **kwargs) -> None:
