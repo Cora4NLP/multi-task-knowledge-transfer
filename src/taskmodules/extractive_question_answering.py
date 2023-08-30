@@ -93,6 +93,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         tokenizer_name_or_path: str,
         max_length: int,
         answer_annotation: str = "answers",
+        tokenize_kwargs: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -101,6 +102,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
         self.answer_annotation = answer_annotation
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
         self.max_length = max_length
+        self.tokenize_kwargs = tokenize_kwargs or {}
 
     def get_answer_layer(self, document: DocumentType) -> AnnotationList[ExtractiveAnswer]:
         return document[self.answer_annotation]
@@ -149,6 +151,7 @@ class ExtractiveQuestionAnsweringTaskModule(TaskModule):
                 result_document_type=TokenizedExtractiveQADocument,
                 strict_span_conversion=False,
                 verbose=False,
+                **self.tokenize_kwargs,
             )
             for doc in tokenized_docs:
                 inputs = self.tokenizer.convert_tokens_to_ids(list(doc.tokens))
