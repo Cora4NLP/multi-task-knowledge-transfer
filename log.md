@@ -260,3 +260,179 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
     |      | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss |
     | ---: | -------: | ---------------: | ------------------: | -----: | -------: |
     | run1 |     0.73 |           88.203 |               56039 |  0.636 |   202.80 |
+
+## 2023-08-31
+
+### Coreference Resolution: BERT, Re-TACRED, NER and SQUAD (all trainable, attention aggregation)
+
+a multi-model with 3 pre-trained models + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.mode_keys=token,cls,constant seed=1`
+
+- wandb (weights & biases) run:
+
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/wp7vh69x
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/qiamto3a
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/8wwo57vu
+
+- artefacts
+
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_14-08-43`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_00-19-33`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_10-57-56`
+
+- metric values:
+
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.63 |           58.520 |               56039 |   0.64 |    72.87 | attention |     token |
+  | seed1 |     0.62 |           59.893 |               56039 |   0.63 |    69.88 | attention |       cls |
+  | seed1 |     0.58 |           69.269 |               56039 |   0.62 |    76.88 | attention |  constant |
+
+### Coreference Resolution: BERT, Re-TACRED, NER and SQUAD (Re-TACRED, NER and SQUAD frozen, attention aggregation)
+
+a multi-model with 3 pre-trained frozen models + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.mode_keys=token,cls,constant +model.freeze_models=[bert-base-cased-ner-ontonotes,bert-base-cased-re-tacred,bert-base-cased-qa-squad2] seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/u7zwuuhc
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/2932bvxz
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/3swxyqt9
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_15-20-52`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_22-20-39`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_05-23-14`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.58 |           87.707 |               56039 |   0.61 |    84.60 | attention |     token |
+  | seed1 |     0.57 |           90.813 |               56039 |   0.59 |    93.08 | attention |       cls |
+  | seed1 |     0.51 |           117.10 |               56039 |   0.56 |   105.37 | attention |  constant |
+
+### Coreference Resolution: BERT, Re-TACRED (all trainable, attention aggregation)
+
+a multi-model with Re-TACRED pre-trained model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred} seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/fj59k57q
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/umu1dygb
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cmfti2es
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-52-49`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_02-51-40`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_11-26-30`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.57 |           87.958 |               56039 |   0.61 |    87.01 | attention |     token |
+  | seed1 |     0.56 |           85.311 |               56039 |   0.60 |    81.57 | attention |       cls |
+  | seed1 |     0.41 |           61.539 |               56039 |   0.41 |    61.81 | attention |  constant |
+
+### Coreference Resolution: BERT, Re-TACRED (Re-TACRED frozen, attention aggregation)
+
+a multi-model with Re-TACRED frozen model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred} +model.freeze_models=[bert-base-cased-re-tacred] seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/kspzlvxh
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/1t1bzvh4
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/t5gta8rm
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-53-49`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_01-52-16`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_07-54-29`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.55 |           139.04 |               56039 |   0.58 |   130.97 | attention |     token |
+  | seed1 |     0.54 |           134.97 |               56039 |   0.60 |   121.08 | attention |       cls |
+  | seed1 |     0.46 |           183.37 |               56039 |   0.54 |   145.39 | attention |  constant |
+
+### Coreference Resolution: BERT, NER (all trainable, attention aggregation)
+
+a multi-model with NER pre-trained model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/libl1ly6
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/8s9ednug
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/zoseqhdt
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-44-37`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_11-42-49`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_11-43-18`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.58 |           122.32 |               56039 |   0.61 |   139.68 | attention |     token |
+  | seed1 |     0.56 |           127.20 |               56039 |   0.57 |   135.40 | attention |       cls |
+  | seed1 |     0.51 |           161.07 |               56039 |   0.56 |   148.09 | attention |  constant |
+
+### Coreference Resolution: BERT, NER (NER frozen, attention aggregation)
+
+a multi-model with NER frozen model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} +model.freeze_models=[bert-base-cased-ner-ontonotes] seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/gz5448hs
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/vt8c819z
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/npnkewuq
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-41-49`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_01-15-17`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_06-47-51`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.57 |           139.48 |               56039 |   0.60 |   135.96 | attention |     token |
+  | seed1 |     0.55 |           142.61 |               56039 |   0.57 |   154.27 | attention |       cls |
+  | seed1 |     0.50 |           198.56 |               56039 |   0.54 |   199.55 | attention |  constant |
+
+### Coreference Resolution: BERT, SQUAD (all trainable, attention aggregation)
+
+a multi-model with SQUAD pre-trained model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/tcvdqcai
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/zjgtau3f
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/6tmrh85u
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-50-52`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_02-49-04`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_11-58-00`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.58 |           119.76 |               56039 |   0.63 |   123.72 | attention |     token |
+  | seed1 |     0.58 |           121.30 |               56039 |   0.62 |   125.96 | attention |       cls |
+  | seed1 |     0.56 |           140.19 |               56039 |   0.61 |   139.06 | attention |  constant |
+
+### Coreference Resolution: BERT, SQUAD (SQUAD frozen, attention aggregation)
+
+a multi-model with SQUAD frozen model + bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_simplified trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token,cls,constant +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} +model.freeze_models=[bert-base-cased-qa-squad2] seed=1`
+- wandb (weights & biases) run:
+  - token: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ip3qos86
+  - cls: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/1tbhl9iz
+  - constant: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/td9o66j4
+- artefacts
+  - model location:
+    - token: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-30_19-54-19`
+    - cls: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_01-37-04`
+    - constant: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_07-21-01`
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.57 |           133.03 |               56039 |   0.56 |   170.24 | attention |     token |
+  | seed1 |     0.57 |           134.90 |               56039 |   0.61 |   146.54 | attention |       cls |
+  | seed1 |     0.53 |           176.92 |               56039 |   0.60 |   159.60 | attention |  constant |
