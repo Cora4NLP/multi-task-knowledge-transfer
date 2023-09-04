@@ -436,3 +436,65 @@ a multi-model with SQUAD frozen model + bert-base-cased, attention
   | seed1 |     0.57 |           133.03 |               56039 |   0.56 |   170.24 | attention |     token |
   | seed1 |     0.57 |           134.90 |               56039 |   0.61 |   146.54 | attention |       cls |
   | seed1 |     0.53 |           176.92 |               56039 |   0.60 |   159.60 | attention |  constant |
+
+## 2023-09-01
+
+### Coreference Resolution: triple BERT (all trainable, attention aggregation)
+
+a multi-model with 3 bert-base-cased models and attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_triple_bert trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token seed=1`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/pyyusdyp
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_22-23-22
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.44 |            41.53 |               56039 |   0.42 |    54.74 | attention |     token |
+
+### Coreference Resolution: triple coreference (all trainable, attention aggregation)
+
+a multi-model with 3 pre-trained coreference models and bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_triple_coref trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token seed=1`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/7mg5ron8
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-08-31_22-23-22
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.63 |            51.63 |               56039 |   0.61 |    57.91 | attention |     token |
+
+### Coreference Resolution: triple coreference (frozen pre-trained models, attention aggregation)
+
+a multi-model with 3 pre-trained coreference models (frozen) and bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_triple_coref trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token +model.freeze_models=[bert-base-cased-coref1,bert-base-cased-coref2,bert-base-cased-coref3] seed=1`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/mow07kik
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-01_01-40-01
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.61 |            58.79 |               56039 |   0.61 |    64.57 | attention |     token |
+
+### Coreference Resolution: frozen pre-trained Coref, ReTACRED, NER and SQUAD models, attention aggregation)
+
+a multi-model with 4 pre-trained models including coreference (frozen) w/o bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_pretrained_target trainer=gpu +model.aggregate.type=attention +model.aggregate.mode_query=token +model.aggregate.mode_keys=token +model.freeze_models=[bert-base-cased-coref1,bert-base-cased-ner-ontonotes,bert-base-cased-re-tacred,bert-base-cased-qa-squad2] seed=1`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/xjxngvln
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-01_08-44-21
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
+  | seed1 |     0.50 |           103.13 |               56039 |   0.57 |    80.92 | attention |     token |
