@@ -36,7 +36,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         freeze_models: Optional[List[str]] = None,
         ignore_index: Optional[int] = None,
         learning_rate: float = 1e-5,
-        task_learning_rate: float = 1e-5,
+        task_learning_rate: Optional[float] = None,
         warmup_proportion: float = 0.1,
         multi_label: bool = False,
         **kwargs,
