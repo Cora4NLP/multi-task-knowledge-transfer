@@ -36,7 +36,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         freeze_models: Optional[List[str]] = None,
         ignore_index: Optional[int] = None,
         learning_rate: float = 1e-5,
-        task_learning_rate: float = 1e-4,
+        task_learning_rate: Optional[float] = None,
         warmup_proportion: float = 0.1,
         multi_label: bool = False,
         **kwargs,
@@ -116,7 +116,19 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         return self.step(stage=TEST, batch=batch)
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=self.learning_rate)
+        if self.task_learning_rate is not None:
+            all_params = dict(self.named_parameters())
+            base_model_params = dict(self.base_models.named_parameters(prefix="base_models"))
+            task_params = {k: v for k, v in all_params.items() if k not in base_model_params}
+            optimizer = AdamW(
+                [
+                    {"params": base_model_params.values(), "lr": self.learning_rate},
+                    {"params": task_params.values(), "lr": self.task_learning_rate},
+                ]
+            )
+        else:
+            optimizer = AdamW(self.parameters(), lr=self.learning_rate)
+
         if self.warmup_proportion > 0.0:
             stepping_batches = self.trainer.estimated_stepping_batches
             scheduler = get_linear_schedule_with_warmup(
