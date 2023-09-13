@@ -25,51 +25,12 @@
 # The config is here: configs/experiments/tacred-multimodel.yaml (this file)
 
 defaults:
-  - override /dataset: tacred_prepared.yaml
-  - override /datamodule: default.yaml
-  - override /taskmodule: transformer_re_text_classification.yaml
-  - override /model: multi_model_text_classification.yaml
-  - override /callbacks: default.yaml
-  - override /logger: wandb.yaml
-  - override /trainer: default.yaml
-
-# all parameters below will be merged with parameters from default configurations set above
-# this allows you to overwrite only specified parameters
-
-# name of the run determines folder name in logs
-name: "tacred/multi_model_re_text_classification"
-
-tags: ["dataset=tacred", "model=multi_model_re_text_classification"]
-
-seed: 12345
-
-transformer_model: bert-base-cased
-
-taskmodule:
-  tokenizer_name_or_path: ${transformer_model}
+  - tacred-multimodel_base.yaml
 
 model:
-  model_name: ${transformer_model}
-  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
-  # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     coreference: "models/pretrained/coreference"
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
-
-  # configure learning rate. Default learning rate is set in model constructor (here: MultiModelTextClassificationModel)
-  learning_rate: 2e-5
-  task_learning_rate: 2e-5
-  warmup_proportion: 0.0
-  # this is the index of the no_relation (see the taskmodule), we ignore it for F1 calculation
-  ignore_index: 0
-
-trainer:
-  min_epochs: 5
-  max_epochs: 20
-  # gradient_clip_val: 0.5
-
-datamodule:
-  batch_size: 16

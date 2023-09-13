@@ -1,8 +1,5 @@
 # @package _global_
 
-# to execute this experiment run:
-# python train.py experiment=squadv2_multimodel
-
 defaults:
   - override /dataset: squadv2_prepared.yaml
   - override /datamodule: default.yaml
@@ -41,7 +38,4 @@ taskmodule:
 
 model:
   model_name: ${transformer_model}
-  pretrained_models:
-    bert-base-cased: "bert-base-cased"
-    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
-    # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+  pretrained_models: ???
