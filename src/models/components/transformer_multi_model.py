@@ -229,6 +229,9 @@ class TransformerMultiModel(Module):
         freeze_models: Optional[List[str]] = None,
         # A dictionary of config overrides to pass to AutoConfig.from_pretrained.
         config_overrides: Optional[Dict[str, Any]] = None,
+        # The size of the vocabulary of the tokenizer. If provided, the token embeddings of all models are resized
+        # to this size.
+        tokenizer_vocab_size: Optional[int] = None,
     ):
         super().__init__()
         if len(pretrained_models) < 1:
@@ -251,6 +254,9 @@ class TransformerMultiModel(Module):
                     for model_id in pretrained_models
                 }
             )
+
+        if tokenizer_vocab_size is not None:
+            self.resize_token_embeddings(tokenizer_vocab_size)
 
         for model_id in freeze_models or []:
             self.models[model_id].requires_grad_(False)
