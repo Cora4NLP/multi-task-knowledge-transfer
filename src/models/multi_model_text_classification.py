@@ -31,7 +31,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         model_name: str,
         pretrained_models: Dict[str, str],
         num_classes: int,
-        tokenizer_vocab_size: int,
+        tokenizer_vocab_size: Optional[int] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         ignore_index: Optional[int] = None,
@@ -55,10 +55,9 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
             aggregate=aggregate,
             freeze_models=freeze_models,
             config_overrides={"num_labels": num_classes},
+            # this is important because we may have added new special tokens to the tokenizer
+            tokenizer_vocab_size=tokenizer_vocab_size,
         )
-
-        # this is important because we may have added new special tokens to the tokenizer
-        self.base_models.resize_token_embeddings(tokenizer_vocab_size)
 
         classifier_dropout = (
             self.base_models.config.classifier_dropout
