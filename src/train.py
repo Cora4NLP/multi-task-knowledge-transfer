@@ -169,12 +169,21 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_dict_entries(cfg, key="logger")
     # add wandb.watch() to wandb logger if specified
-    wandb_watch_model = cfg.get("wandb_watch_model", None)
-    if wandb_watch_model is not None:
+    wandb_watch = cfg.get("wandb_watch", None)
+    if wandb_watch is not None:
+        wandb_watch_config = dict(wandb_watch)
+
+        # get the object to watch
+        watch_object = model
+        watch_module_name = wandb_watch_config.pop("module", None)
+        if watch_module_name is not None:
+            for module_name in watch_module_name.split("."):
+                watch_object = getattr(watch_object, module_name)
+
         for pl_logger in logger:
             if isinstance(pl_logger, pl.loggers.WandbLogger):
-                log.warning(f"Adding wandb.watch() to {pl_logger} with {wandb_watch_model}")
-                pl_logger.watch(model, **wandb_watch_model)
+                log.warning(f"Adding wandb.watch() to {pl_logger} with {wandb_watch}")
+                pl_logger.watch(watch_object, **wandb_watch_config)
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
