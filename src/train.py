@@ -168,6 +168,9 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_dict_entries(cfg, key="logger")
+    for pl_logger in logger:
+        if isinstance(pl_logger, pl.loggers.WandbLogger):
+            pl_logger.watch(model, log="all", log_freq=100)
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
