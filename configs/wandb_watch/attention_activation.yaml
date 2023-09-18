@@ -1,0 +1,4 @@
+attention_activation:
+  module: base_models.aggregate.attention_logger # the module to watch
+  log: activations # or: parameters, gradients, all
+  log_freq: 100 # how often to log (each log_freq batches)
