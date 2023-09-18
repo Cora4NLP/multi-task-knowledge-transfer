@@ -58,7 +58,7 @@ from src.models import (
     MultiModelTextClassificationModel,
     MultiModelTokenClassificationModel,
 )
-from src.utils.wandb_watch_utils import watch
+from src.utils.wandb_watch_utils import unwatch, watch
 
 log = utils.get_pylogger(__name__)
 
@@ -216,6 +216,9 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("train"):
         log.info("Starting training!")
         trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
+
+    # remove Weights & Biases logging hooks
+    unwatch()
 
     train_metrics = trainer.callback_metrics
 
