@@ -123,7 +123,6 @@ def watch(
             )
 
     graphs = []
-    prefix = ""
 
     if idx is None:
         idx = _global_watch_idx
@@ -133,6 +132,8 @@ def watch(
         _global_watch_idx += 1
         if global_idx > 0:
             prefix = f"graph_{global_idx}/"
+        else:
+            prefix = ""
         if model_id != "":
             prefix += f"{model_id}/"
 
