@@ -36,9 +36,11 @@ root = pyrootutils.setup_root(
 from typing import Any, Dict, List, Optional, Tuple
 
 import hydra
+import json
 import pytorch_lightning as pl
 from hydra.utils import get_class
 from omegaconf import DictConfig
+from pathlib import Path
 from pytorch_ie import DatasetDict
 from pytorch_ie.core import PyTorchIEModel, TaskModule
 from pytorch_ie.models import (
@@ -189,6 +191,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.model_save_dir is not None:
         log.info(f"Save taskmodule to {cfg.model_save_dir} [push_to_hub={cfg.push_to_hub}]")
         taskmodule.save_pretrained(save_directory=cfg.model_save_dir, push_to_hub=cfg.push_to_hub)
+        if hasattr(taskmodule, 'tokenizer'):
+            (Path(cfg.model_save_dir) / 'added_tokens.json').write_text(json.dumps(taskmodule.tokenizer.get_added_vocab(), indent=2))
+            (Path(cfg.model_save_dir) / 'vocab.txt').write_text(
+                '\n'.join([v for (v, idx) in sorted(list(taskmodule.tokenizer.vocab.items()), key=lambda x: x[1])])
+            )
     else:
         log.warning("the taskmodule is not saved because no save_dir is specified")
 

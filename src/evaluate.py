@@ -36,6 +36,8 @@ root = pyrootutils.setup_root(
 from typing import Tuple
 
 import hydra
+import json
+from pathlib import Path
 import pytorch_lightning as pl
 from omegaconf import DictConfig
 from pytorch_ie import DatasetDict
@@ -105,6 +107,14 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     if logger:
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
+
+    if hasattr(taskmodule, 'tokenizer'):
+        log.info(f"Save taskmodule added tokens to {cfg.paths.output_dir}/added_tokens.json")
+        (Path(cfg.paths.output_dir) / 'added_tokens.json').write_text(json.dumps(taskmodule.tokenizer.get_added_vocab(), indent=2))
+        log.info(f"Save taskmodule vocab to {cfg.paths.output_dir}/vocab.txt")
+        (Path(cfg.paths.output_dir) / 'vocab.txt').write_text(
+            '\n'.join([v for (v, idx) in sorted(list(taskmodule.tokenizer.vocab.items()), key=lambda x: x[1])])
+        )
 
     log.info("Starting testing!")
     trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
