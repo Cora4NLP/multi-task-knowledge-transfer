@@ -38,7 +38,7 @@ class AggregatorAttentionLogger(Module):
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         x_flat = x.view(-1, len(self.model_ids))
-        return {model_id: x_flat[i] for i, model_id in enumerate(self.model_ids)}
+        return {model_id: x_flat[:, i] for i, model_id in enumerate(self.model_ids)}
 
 
 class AttentionBasedAggregator(Module):
