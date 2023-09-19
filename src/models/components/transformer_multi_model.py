@@ -3,7 +3,7 @@ from copy import copy
 from typing import Any, Dict, List, Optional, Union
 
 import torch
-from torch.nn import Module, ModuleDict, functional
+from torch.nn import Module, ModuleDict
 from transformers import AutoConfig, AutoModel
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,16 @@ def aggregate_sum(x: Dict[str, torch.Tensor]) -> torch.Tensor:
     stacked = torch.stack(list(x.values()), dim=-1)
     aggregated = torch.sum(stacked, dim=-1)
     return aggregated
+
+
+class AggregatorAttentionLogger(Module):
+    def __init__(self, model_ids: List[str]):
+        super().__init__()
+        self.model_ids = model_ids
+
+    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+        x_flat = x.view(-1, len(self.model_ids))
+        return {model_id: x_flat[:, i] for i, model_id in enumerate(self.model_ids)}
 
 
 class AttentionBasedAggregator(Module):
@@ -82,7 +92,7 @@ class AttentionBasedAggregator(Module):
     def __init__(
         self,
         input_size: int,
-        n_models: int,
+        model_ids: List[str],
         hidden_size: int = 128,
         output_size: Optional[int] = None,
         query_idx: Union[int, str] = 0,
@@ -103,7 +113,8 @@ class AttentionBasedAggregator(Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = output_size or input_size
-        self.n_models = n_models
+        self.n_models = len(model_ids)
+        self.attention_logger = AggregatorAttentionLogger(model_ids)
 
         if not (project_target_query and project_target_key) and self.hidden_size != input_size:
             logger.warning(
@@ -138,7 +149,7 @@ class AttentionBasedAggregator(Module):
                 torch.nn.Linear(self.input_size, self.hidden_size)
                 if i != query_idx
                 else target_key
-                for i in range(n_models)
+                for i in range(self.n_models)
             ]
         )
 
@@ -148,7 +159,7 @@ class AttentionBasedAggregator(Module):
                 torch.nn.Linear(self.input_size, self.output_size)
                 if i != query_idx or project_target_value
                 else torch.nn.Identity()
-                for i in range(n_models)
+                for i in range(self.n_models)
             ]
         )
 
@@ -204,6 +215,7 @@ class AttentionBasedAggregator(Module):
             raise ValueError(f"Unknown keys mode: {self.mode_keys}")
 
         attn_weight = torch.softmax((query.unsqueeze(-2) @ keys / self.hidden_size**0.5), dim=-1)
+        self.attention_logger(attn_weight)
         aggregated = attn_weight @ values.transpose(-1, -2)
 
         return aggregated.squeeze(-2)
@@ -279,7 +291,7 @@ class TransformerMultiModel(Module):
         elif aggregate_type == "attention":
             self.aggregate = AttentionBasedAggregator(
                 input_size=self.config.hidden_size,
-                n_models=len(self.models),
+                model_ids=list(self.models),
                 **aggregate_config,
             )
         else:

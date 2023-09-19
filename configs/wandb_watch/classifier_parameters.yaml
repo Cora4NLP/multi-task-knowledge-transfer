@@ -1,0 +1,4 @@
+classifier_parameters:
+  module: classifier # the module to watch
+  log: parameters # or: activations, gradients, all
+  log_freq: 100 # how often to log (each log_freq batches)

@@ -58,6 +58,7 @@ from src.models import (
     MultiModelTextClassificationModel,
     MultiModelTokenClassificationModel,
 )
+from src.utils.wandb_watch_utils import watch
 
 log = utils.get_pylogger(__name__)
 
@@ -168,6 +169,26 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_dict_entries(cfg, key="logger")
+    # add wandb.watch() to wandb logger if specified
+    wandb_watch = cfg.get("wandb_watch", None)
+    if wandb_watch is not None:
+        for _, wandb_watch_config in wandb_watch.items():
+            # shallow copy to allow for modification
+            wandb_watch_config = dict(wandb_watch_config)
+            # get the object to watch
+            watch_module = model
+            watch_module_name = wandb_watch_config.pop("module", None)
+            if watch_module_name is not None:
+                for module_name in watch_module_name.split("."):
+                    watch_module = getattr(watch_module, module_name)
+                wandb_watch_config["modules"] = {watch_module_name: watch_module}
+            else:
+                wandb_watch_config["modules"] = watch_module
+            # add the watch to the Weights&Biases logger
+            for pl_logger in logger:
+                if isinstance(pl_logger, pl.loggers.WandbLogger):
+                    log.warning(f"Adding wandb.watch() to {pl_logger} with {wandb_watch}")
+                    watch(**wandb_watch_config)
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
