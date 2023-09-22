@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
@@ -28,7 +28,7 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, str],
+        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
         learning_rate: float = 1e-5,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,

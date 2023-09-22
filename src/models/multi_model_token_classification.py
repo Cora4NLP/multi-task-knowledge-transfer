@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torchmetrics
@@ -30,7 +30,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self,
         model_name: str,
         num_classes: int,
-        pretrained_models: Dict[str, str],
+        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,

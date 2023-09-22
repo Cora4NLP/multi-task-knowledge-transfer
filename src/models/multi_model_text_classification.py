@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
 
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
@@ -29,7 +29,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, str],
+        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
         num_classes: int,
         tokenizer_vocab_size: Optional[int] = None,
         aggregate: str = "mean",

@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -38,7 +38,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, str],
+        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
         genres: List[str],
         max_segment_len: int,
         max_span_width: int,

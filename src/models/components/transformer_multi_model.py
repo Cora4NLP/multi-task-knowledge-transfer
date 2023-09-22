@@ -227,7 +227,7 @@ class TransformerMultiModel(Module):
         # The shared model type e.g. bert-base-cased. This should work with AutoConfig.from_pretrained.
         model_name: str,
         # A mapping from model ids to actual model names or paths to load the model weights from.
-        pretrained_models: Dict[str, str],
+        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
         # if False, do not load the weights of the pretrained_models. Useful to save bandwidth when the model
         # is already trained because we load the weights from the checkpoint after initialisation.
         load_model_weights: bool = True,
@@ -250,20 +250,39 @@ class TransformerMultiModel(Module):
             raise ValueError("At least one model path must be provided")
 
         self.config = AutoConfig.from_pretrained(model_name, **(config_overrides or {}))
+        pretrained_models_and_configs = {}
+        for model_id, path_or_kwargs in pretrained_models.items():
+            if isinstance(path_or_kwargs, str):
+                pretrained_models_and_configs[model_id] = (path_or_kwargs, copy(self.config))
+            elif isinstance(path_or_kwargs, dict):
+                # copy to not modify the original
+                config = copy(self.config)
+                kwargs = copy(path_or_kwargs)
+
+                path = kwargs.pop("path")
+                for k, v in kwargs.items():
+                    setattr(config, k, v)
+                pretrained_models_and_configs[model_id] = (path, config)
+            else:
+                raise ValueError(
+                    f"Expected a string or a dictionary for model id {model_id}, but got "
+                    f"{path_or_kwargs} of type {type(path_or_kwargs)}"
+                )
         if load_model_weights:
             self.models = ModuleDict(
                 {
                     model_id: AutoModel.from_pretrained(
-                        path, config=self.config, ignore_mismatched_sizes=True
+                        path,
+                        config=config,
                     )
-                    for model_id, path in pretrained_models.items()
+                    for model_id, (path, config) in pretrained_models_and_configs.items()
                 }
             )
         else:
             self.models = ModuleDict(
                 {
-                    model_id: AutoModel.from_config(config=self.config)
-                    for model_id in pretrained_models
+                    model_id: AutoModel.from_config(config=config)
+                    for model_id, (path, config) in pretrained_models_and_configs.items()
                 }
             )
 
