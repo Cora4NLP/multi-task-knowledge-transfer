@@ -31,10 +31,10 @@ model:
   pretrained_models:
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     bert-base-cased-ner-ontonotes:
-      path: "models/pretrained/bert-base-cased-ner-ontonotes"
+      name_or_path: "models/pretrained/bert-base-cased-ner-ontonotes"
       vocab_size: 28996
     coreference:
-      path: "models/pretrained/coreference"
+      name_or_path: "models/pretrained/coreference"
       vocab_size: 28996
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes

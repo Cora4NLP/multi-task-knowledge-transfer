@@ -34,6 +34,6 @@ model:
     bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     bert-base-cased-re-tacred:
-      path: "models/pretrained/bert-base-cased-re-tacred"
+      name_or_path: "models/pretrained/bert-base-cased-re-tacred"
       vocab_size: 29000
     bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"

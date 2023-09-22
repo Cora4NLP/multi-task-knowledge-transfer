@@ -259,10 +259,10 @@ class TransformerMultiModel(Module):
                 config = copy(self.config)
                 kwargs = copy(path_or_kwargs)
 
-                path = kwargs.pop("path")
+                name_or_path = kwargs.pop("name_or_path")
                 for k, v in kwargs.items():
                     setattr(config, k, v)
-                pretrained_models_and_configs[model_id] = (path, config)
+                pretrained_models_and_configs[model_id] = (name_or_path, config)
             else:
                 raise ValueError(
                     f"Expected a string or a dictionary for model id {model_id}, but got "
@@ -272,17 +272,17 @@ class TransformerMultiModel(Module):
             self.models = ModuleDict(
                 {
                     model_id: AutoModel.from_pretrained(
-                        path,
+                        name_or_path,
                         config=config,
                     )
-                    for model_id, (path, config) in pretrained_models_and_configs.items()
+                    for model_id, (name_or_path, config) in pretrained_models_and_configs.items()
                 }
             )
         else:
             self.models = ModuleDict(
                 {
                     model_id: AutoModel.from_config(config=config)
-                    for model_id, (path, config) in pretrained_models_and_configs.items()
+                    for model_id, (name_or_path, config) in pretrained_models_and_configs.items()
                 }
             )
 
