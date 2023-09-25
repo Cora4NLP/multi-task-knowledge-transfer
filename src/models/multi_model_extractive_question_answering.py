@@ -61,10 +61,16 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         self.qa_outputs = nn.Linear(self.base_models.config.hidden_size, 2)
 
         self.f1_start = nn.ModuleDict(
-            {f"stage_{stage}": torchmetrics.F1Score() for stage in [TRAINING, VALIDATION, TEST]}
+            {
+                f"stage_{stage}": torchmetrics.F1Score(task="multiclass")
+                for stage in [TRAINING, VALIDATION, TEST]
+            }
         )
         self.f1_end = nn.ModuleDict(
-            {f"stage_{stage}": torchmetrics.F1Score() for stage in [TRAINING, VALIDATION, TEST]}
+            {
+                f"stage_{stage}": torchmetrics.F1Score(task="multiclass")
+                for stage in [TRAINING, VALIDATION, TEST]
+            }
         )
 
         # Initialize weights and apply final processing (taken from self.post_init())
