@@ -224,10 +224,11 @@ class AttentionBasedAggregator(Module):
 class TransformerMultiModel(Module):
     def __init__(
         self,
-        # The shared model type e.g. bert-base-cased. This should work with AutoConfig.from_pretrained.
-        model_name: str,
         # A mapping from model ids to actual model names or paths to load the model weights from.
         pretrained_models: Dict[str, str],
+        # The shared model type e.g. bert-base-cased. This should work with AutoConfig.from_pretrained.
+        pretrained_default_config: Optional[str] = None,
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         # if False, do not load the weights of the pretrained_models. Useful to save bandwidth when the model
         # is already trained because we load the weights from the checkpoint after initialisation.
         load_model_weights: bool = True,
@@ -239,8 +240,6 @@ class TransformerMultiModel(Module):
         aggregate: Union[str, Dict[str, Any]] = "mean",
         # A list of model ids to freeze during training.
         freeze_models: Optional[List[str]] = None,
-        # A dictionary of config overrides to pass to AutoConfig.from_pretrained.
-        config_overrides: Optional[Dict[str, Any]] = None,
         # The size of the vocabulary of the tokenizer. If provided, the token embeddings of all models are resized
         # to this size.
         tokenizer_vocab_size: Optional[int] = None,
@@ -249,21 +248,58 @@ class TransformerMultiModel(Module):
         if len(pretrained_models) < 1:
             raise ValueError("At least one model path must be provided")
 
-        self.config = AutoConfig.from_pretrained(model_name, **(config_overrides or {}))
+        pretrained_configs = pretrained_configs or {}
+        only_in_configs = {
+            k: pretrained_configs[k] for k in set(pretrained_configs) - set(pretrained_models)
+        }
+        if len(only_in_configs) > 0:
+            logger.warning(
+                f"The following entries in pretrained_configs do not have a respective entry in pretrained_models, "
+                f"so they are not used: {only_in_configs}"
+            )
+        self.default_config_name = pretrained_default_config
+        self.configs = {}
+        for model_id, model_name_or_path in pretrained_models.items():
+            config_kwargs = {}
+            # default to the model name or path if no name_or_path is provided
+            default_config_name_or_path = self.default_config_name or model_name_or_path
+            config_name_or_path: str
+            if model_id not in pretrained_configs:
+                config_name_or_path = default_config_name_or_path
+            else:
+                config_name_or_dict = pretrained_configs[model_id]
+                if isinstance(config_name_or_dict, str):
+                    config_name_or_path = config_name_or_dict
+                elif isinstance(config_name_or_dict, dict):
+                    # copy to not modify the original
+                    config_kwargs = copy(config_name_or_dict)
+                    config_name_or_path = config_kwargs.pop(
+                        "name_or_path", default_config_name_or_path
+                    )
+                else:
+                    raise ValueError(
+                        f"entries of pretrained_configs must be a string or a dictionary, "
+                        f"but got {config_name_or_dict}"
+                    )
+            self.configs[model_id] = AutoConfig.from_pretrained(
+                config_name_or_path, **config_kwargs
+            )
+
         if load_model_weights:
             self.models = ModuleDict(
                 {
                     model_id: AutoModel.from_pretrained(
-                        path, config=self.config, ignore_mismatched_sizes=True
+                        name_or_path,
+                        config=self.configs[model_id],
                     )
-                    for model_id, path in pretrained_models.items()
+                    for model_id, name_or_path in pretrained_models.items()
                 }
             )
         else:
             self.models = ModuleDict(
                 {
-                    model_id: AutoModel.from_config(config=self.config)
-                    for model_id in pretrained_models
+                    model_id: AutoModel.from_config(config=config)
+                    for model_id, config in self.configs.items()
                 }
             )
 
@@ -296,6 +332,11 @@ class TransformerMultiModel(Module):
             )
         else:
             raise NotImplementedError(f"Aggregate method '{aggregate_type}' is not implemented")
+
+    @property
+    def config(self):
+        # just return the config of the first model
+        return self.models[list(self.models.keys())[0]].config
 
     def resize_token_embeddings(self, new_num_tokens: int) -> None:
         for model in self.models.values():

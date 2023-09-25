@@ -11,3 +11,6 @@ model:
     bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      vocab_size: 29034

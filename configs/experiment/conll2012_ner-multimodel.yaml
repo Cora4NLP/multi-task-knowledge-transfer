@@ -37,13 +37,16 @@ datamodule:
   batch_size: 32
 
 model:
-  model_name: ${transformer_model}
+  pretrained_default_config: ${transformer_model}
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     coreference: "models/pretrained/coreference"
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      vocab_size: 29034
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
   # configure learning rate. Default learning rate is set in model constructor (here: TransformerTokenClassificationModel)

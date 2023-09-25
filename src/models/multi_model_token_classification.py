@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
@@ -24,41 +25,50 @@ VALIDATION = "val"
 TEST = "test"
 
 
+logger = logging.getLogger(__name__)
+
+
 @PyTorchIEModel.register()
 class MultiModelTokenClassificationModel(PyTorchIEModel):
     def __init__(
         self,
-        model_name: str,
         num_classes: int,
         pretrained_models: Dict[str, str],
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
+        pretrained_default_config: Optional[str] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,
         learning_rate: float = 1e-5,
         label_pad_token_id: int = -100,
         ignore_index: int = 0,
+        model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.save_hyperparameters()
+        if model_name is not None:
+            logger.warning(
+                "The `model_name` argument is deprecated and will be removed in a future version. "
+                "Please use `pretrained_default_config` instead."
+            )
+            pretrained_default_config = model_name
+        self.save_hyperparameters(ignore=["model_name"])
 
         self.learning_rate = learning_rate
         self.label_pad_token_id = label_pad_token_id
         self.num_classes = num_classes
 
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            pretrained_default_config=pretrained_default_config,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
-            config_overrides={"num_labels": num_classes},
         )
 
         self.dropout = nn.Dropout(classifier_dropout)
-        self.classifier = nn.Linear(
-            self.base_models.config.hidden_size, self.base_models.config.num_labels
-        )
+        self.classifier = nn.Linear(self.base_models.config.hidden_size, self.num_classes)
 
         self.f1 = nn.ModuleDict(
             {

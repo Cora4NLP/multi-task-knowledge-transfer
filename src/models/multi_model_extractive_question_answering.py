@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import torchmetrics
@@ -22,6 +23,8 @@ TRAINING = "train"
 VALIDATION = "val"
 TEST = "test"
 
+logger = logging.getLogger(__name__)
+
 
 @PyTorchIEModel.register()
 class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
@@ -29,19 +32,27 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         self,
         model_name: str,
         pretrained_models: Dict[str, str],
+        pretrained_default_config: Optional[str] = None,
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         learning_rate: float = 1e-5,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.save_hyperparameters()
-
+        if model_name is not None:
+            logger.warning(
+                "The `model_name` argument is deprecated and will be removed in a future version. "
+                "Please use `pretrained_default_config` instead."
+            )
+            pretrained_default_config = model_name
+        self.save_hyperparameters(ignore=["model_name"])
         self.learning_rate = learning_rate
 
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            pretrained_default_config=pretrained_default_config,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
