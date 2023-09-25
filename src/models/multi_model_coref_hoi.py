@@ -76,6 +76,8 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         model_name: Optional[str] = None,
+        gradient_clip_val: Optional[float] = None,
+        gradient_clip_algorithm: str = "norm",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -86,6 +88,9 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             )
             pretrained_default_config = model_name
         self.save_hyperparameters(ignore=["model_name"])
+
+        # need to be disabled because we have multiple optimizers
+        self.automatic_optimization = False
 
         self.base_models = TransformerMultiModel(
             pretrained_models=pretrained_models,
@@ -129,6 +134,8 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         self.task_learning_rate = task_learning_rate
         self.adam_eps = adam_eps
         self.warmup_ratio = warmup_ratio
+        self.gradient_clip_val = gradient_clip_val
+        self.gradient_clip_algorithm = gradient_clip_algorithm
 
         # Model
         self.dropout = nn.Dropout(p=dropout_rate)
@@ -834,25 +841,48 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int, optimizer_idx: int):  # type: ignore
-        return self.step(stage=TRAINING, batch=batch)
+    def training_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
+        # we need to implement the optimization by ourself because automatic optimization is not
+        # possible with multiple optimizers
 
-    def validation_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):  # type: ignore
+        for opt in self.optimizers():
+            opt.zero_grad()
+
+        loss = self.step(stage=TRAINING, batch=batch)
+        self.manual_backward(loss)
+
+        for opt in self.optimizers():
+            # clip gradients
+            if self.gradient_clip_val is not None:
+                self.clip_gradients(
+                    opt,
+                    gradient_clip_val=self.gradient_clip_val,
+                    gradient_clip_algorithm=self.gradient_clip_algorithm,
+                )
+            # optimizer step
+            opt.step()
+
+        for schedulers in self.lr_schedulers():
+            schedulers.step()
+
+        return loss
+
+    def validation_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
         return self.step(stage=VALIDATION, batch=batch)
 
-    def test_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def test_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
         return self.step(stage=TEST, batch=batch)
 
-    def training_epoch_end(self, training_step_outputs):
-        self.epoch_end(training_step_outputs, stage=TRAINING)
+    def on_train_epoch_end(self):
+        self.epoch_end(stage=TRAINING)
 
-    def validation_epoch_end(self, validation_step_outputs):
-        self.epoch_end(validation_step_outputs, stage=VALIDATION)
+    def on_validation_epoch_end(self):
+        self.epoch_end(stage=VALIDATION)
 
-    def test_epoch_end(self, test_step_outputs):
-        self.epoch_end(test_step_outputs, stage=TEST)
+    def on_test_epoch_end(self):
+        self.epoch_end(stage=TEST)
 
-    def epoch_end(self, step_outputs, stage):
+    def epoch_end(self, stage):
         f1_value = self.f1[f"stage_{stage}"].compute(reset=True)
         self.log(f"{stage}/f1", f1_value, on_step=False, on_epoch=True, prog_bar=True)
 

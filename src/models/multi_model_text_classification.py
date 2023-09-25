@@ -81,7 +81,9 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         self.f1 = nn.ModuleDict(
             {
                 f"stage_{stage}": torchmetrics.F1Score(
-                    num_classes=num_classes, ignore_index=ignore_index
+                    task="multilabel" if multi_label else "multiclass",
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
                 )
                 for stage in [TRAINING, VALIDATION, TEST]
             }
