@@ -58,7 +58,7 @@ model:
     coreference: "models/pretrained/coreference"
   pretrained_configs:
     bert-base-cased-re-tacred:
-      vocab_size: 29000
+      vocab_size: 29034
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
 

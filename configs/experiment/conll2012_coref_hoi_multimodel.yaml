@@ -37,4 +37,4 @@ model:
     bert-base-cased-qa-squad2: "models/pretrained/bert-base-cased-qa-squad2"
   pretrained_configs:
     bert-base-cased-re-tacred:
-      vocab_size: 29000
+      vocab_size: 29034

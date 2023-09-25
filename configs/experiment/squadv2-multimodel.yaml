@@ -13,4 +13,4 @@ model:
     # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
   pretrained_configs:
     bert-base-cased-re-tacred:
-      vocab_size: 29000
+      vocab_size: 29034
