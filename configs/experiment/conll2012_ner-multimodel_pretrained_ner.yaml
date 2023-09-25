@@ -4,5 +4,6 @@ defaults:
   - conll2012_ner-multimodel_base.yaml
 
 model:
+  pretrained_default_config: ${transformer_model}
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"

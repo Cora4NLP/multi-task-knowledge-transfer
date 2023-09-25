@@ -7,6 +7,7 @@ defaults:
   - squadv2-multimodel_base.yaml
 
 model:
+  pretrained_default_config: ${transformer_model}
   pretrained_models:
     bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"

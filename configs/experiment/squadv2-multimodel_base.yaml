@@ -37,5 +37,4 @@ taskmodule:
   tokenizer_name_or_path: ${transformer_model}
 
 model:
-  pretrained_default_config: ${transformer_model}
   pretrained_models: ???
