@@ -29,7 +29,8 @@ defaults:
 
 model:
   pretrained_models:
-    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf
+    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred-20230919-hf"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     coreference: "models/pretrained/coreference"
   pretrained_configs:
