@@ -1,5 +1,3 @@
 _target_: src.models.MultiModelExtractiveQuestionAnsweringModel
 
-model_name: bert-base-cased
-
 pretrained_models: ???
