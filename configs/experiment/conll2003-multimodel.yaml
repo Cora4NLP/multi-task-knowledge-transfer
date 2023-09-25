@@ -49,7 +49,7 @@ taskmodule:
   tokenizer_name_or_path: ${transformer_model}
 
 model:
-  model_name: ${transformer_model}
+  pretrained_default_config: ${transformer_model}
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:

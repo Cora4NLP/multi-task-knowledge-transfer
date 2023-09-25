@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple
 
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 class MultiModelTextClassificationModel(PyTorchIEModel):
     def __init__(
         self,
-        model_name: str,
         pretrained_models: Dict[str, str],
         num_classes: int,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
+        pretrained_default_config: Optional[str] = None,
         tokenizer_vocab_size: Optional[int] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
@@ -40,10 +40,17 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         task_learning_rate: Optional[float] = None,
         warmup_proportion: float = 0.1,
         multi_label: bool = False,
+        model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.save_hyperparameters()
+        if model_name is not None:
+            logger.warning(
+                "The `model_name` argument is deprecated and will be removed in a future version. "
+                "Please use `pretrained_default_config` instead."
+            )
+            pretrained_default_config = model_name
+        self.save_hyperparameters(ignore=["model_name"])
 
         self.learning_rate = learning_rate
         self.task_learning_rate = task_learning_rate
@@ -51,7 +58,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
 
         self.base_models = TransformerMultiModel(
             pretrained_models=pretrained_models,
-            default_config=model_name,
+            pretrained_default_config=pretrained_default_config,
             pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
@@ -74,7 +81,8 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         self.f1 = nn.ModuleDict(
             {
                 f"stage_{stage}": torchmetrics.F1Score(
-                    num_classes=num_classes, ignore_index=ignore_index
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,  # task="multiclass"
                 )
                 for stage in [TRAINING, VALIDATION, TEST]
             }

@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -37,7 +37,6 @@ logger = logging.getLogger()
 class MultiModelCorefHoiModel(PyTorchIEModel):
     def __init__(
         self,
-        model_name: str,
         pretrained_models: Dict[str, str],
         genres: List[str],
         max_segment_len: int,
@@ -74,15 +73,23 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         num_genres=None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
+        model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.save_hyperparameters()
+        if model_name is not None:
+            logger.warning(
+                "The `model_name` argument is deprecated and will be removed in a future version. "
+                "Please use `pretrained_default_config` instead."
+            )
+            pretrained_default_config = model_name
+        self.save_hyperparameters(ignore=["model_name"])
 
         self.base_models = TransformerMultiModel(
             pretrained_models=pretrained_models,
-            default_config=model_name,
+            pretrained_default_config=pretrained_default_config,
             pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,

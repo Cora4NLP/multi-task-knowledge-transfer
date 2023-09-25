@@ -227,7 +227,7 @@ class TransformerMultiModel(Module):
         # A mapping from model ids to actual model names or paths to load the model weights from.
         pretrained_models: Dict[str, str],
         # The shared model type e.g. bert-base-cased. This should work with AutoConfig.from_pretrained.
-        default_config: Optional[str] = None,
+        pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         # if False, do not load the weights of the pretrained_models. Useful to save bandwidth when the model
         # is already trained because we load the weights from the checkpoint after initialisation.
@@ -257,7 +257,7 @@ class TransformerMultiModel(Module):
                 f"The following entries in pretrained_configs do not have a respective entry in pretrained_models, "
                 f"so they are not used: {only_in_configs}"
             )
-        self.default_config_name = default_config
+        self.default_config_name = pretrained_default_config
         if self.default_config_name is not None:
             self.default_config = AutoConfig.from_pretrained(self.default_config_name)
         else:
