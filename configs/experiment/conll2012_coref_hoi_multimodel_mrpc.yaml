@@ -6,4 +6,6 @@ defaults:
 model:
   pretrained_models:
     bert-base-cased: "bert-base-cased"
-    bert-base-cased-mrpc: "models/pretrained/bert-base-cased-mrpc"
+    #bert-base-cased-mrpc: "models/pretrained/bert-base-cased-mrpc"
+    # TODO: check with Tatiana if this is the correct model
+    bert-base-cased-mrpc: "bert-base-cased-finetuned-mrpc"
