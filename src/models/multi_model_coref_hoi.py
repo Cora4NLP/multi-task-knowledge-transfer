@@ -38,7 +38,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
+        pretrained_models: Dict[str, str],
         genres: List[str],
         max_segment_len: int,
         max_span_width: int,
@@ -74,18 +74,19 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         num_genres=None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.save_hyperparameters()
 
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            default_config=model_name,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
-            # config_overrides={"num_labels": num_classes},
         )
 
         self.num_genres = num_genres if num_genres else len(genres)

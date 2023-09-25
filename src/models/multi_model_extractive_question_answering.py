@@ -28,7 +28,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
+        pretrained_models: Dict[str, str],
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         learning_rate: float = 1e-5,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
@@ -40,8 +41,9 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         self.learning_rate = learning_rate
 
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            default_config=model_name,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,

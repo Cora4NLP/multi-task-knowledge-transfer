@@ -54,10 +54,11 @@ model:
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
-    bert-base-cased-re-tacred:
-      name_or_path: "models/pretrained/bert-base-cased-re-tacred"
-      vocab_size: 29000
+    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
     coreference: "models/pretrained/coreference"
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      vocab_size: 29000
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
 

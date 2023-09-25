@@ -30,11 +30,10 @@ defaults:
 model:
   pretrained_models:
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
-    bert-base-cased-ner-ontonotes:
-      name_or_path: "models/pretrained/bert-base-cased-ner-ontonotes"
-      vocab_size: 28996
-    coreference:
-      name_or_path: "models/pretrained/coreference"
-      vocab_size: 28996
+    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
+    coreference: "models/pretrained/coreference"
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      vocab_size: 29000
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes

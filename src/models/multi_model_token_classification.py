@@ -30,7 +30,8 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self,
         model_name: str,
         num_classes: int,
-        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
+        pretrained_models: Dict[str, str],
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,
@@ -47,18 +48,16 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self.num_classes = num_classes
 
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            default_config=model_name,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
-            config_overrides={"num_labels": num_classes},
         )
 
         self.dropout = nn.Dropout(classifier_dropout)
-        self.classifier = nn.Linear(
-            self.base_models.config.hidden_size, self.base_models.config.num_labels
-        )
+        self.classifier = nn.Linear(self.base_models.config.hidden_size, self.num_classes)
 
         self.f1 = nn.ModuleDict(
             {

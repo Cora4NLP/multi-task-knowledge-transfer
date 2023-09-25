@@ -29,8 +29,9 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
     def __init__(
         self,
         model_name: str,
-        pretrained_models: Dict[str, Union[str, Dict[str, Any]]],
+        pretrained_models: Dict[str, str],
         num_classes: int,
+        pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         tokenizer_vocab_size: Optional[int] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
@@ -48,16 +49,13 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         self.task_learning_rate = task_learning_rate
         self.warmup_proportion = warmup_proportion
 
-        config_overrides = {"num_labels": num_classes}
-        if tokenizer_vocab_size is not None:
-            config_overrides["vocab_size"] = tokenizer_vocab_size
         self.base_models = TransformerMultiModel(
-            model_name=model_name,
             pretrained_models=pretrained_models,
+            default_config=model_name,
+            pretrained_configs=pretrained_configs,
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
-            config_overrides=config_overrides,
             # this is important because we may have added new special tokens to the tokenizer
             tokenizer_vocab_size=tokenizer_vocab_size,
         )
