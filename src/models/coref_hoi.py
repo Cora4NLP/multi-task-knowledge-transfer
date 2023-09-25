@@ -71,10 +71,15 @@ class CorefHoiModel(PyTorchIEModel):
         adam_eps,
         warmup_ratio,
         num_genres=None,
+        gradient_clip_val: Optional[float] = None,
+        gradient_clip_algorithm: str = "norm",
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.save_hyperparameters()
+
+        # need to be disabled because we have multiple optimizers
+        self.automatic_optimization = False
 
         self.num_genres = num_genres if num_genres else len(genres)
         self.max_seg_len = max_segment_len
@@ -109,6 +114,8 @@ class CorefHoiModel(PyTorchIEModel):
         self.task_learning_rate = task_learning_rate
         self.adam_eps = adam_eps
         self.warmup_ratio = warmup_ratio
+        self.gradient_clip_val = gradient_clip_val
+        self.gradient_clip_algorithm = gradient_clip_algorithm
 
         # Model
         self.dropout = nn.Dropout(p=dropout_rate)
@@ -808,13 +815,36 @@ class CorefHoiModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch, batch_idx: int, optimizer_idx: int):  # type: ignore
-        return self.step(stage=TRAINING, batch=batch)
+    def training_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
+        # we need to implement the optimization by ourself because automatic optimization is not
+        # possible with multiple optimizers
 
-    def validation_step(self, batch, batch_idx: int):  # type: ignore
+        for opt in self.optimizers():
+            opt.zero_grad()
+
+        loss = self.step(stage=TRAINING, batch=batch)
+        self.manual_backward(loss)
+
+        for opt in self.optimizers():
+            # clip gradients
+            if self.gradient_clip_val is not None:
+                self.clip_gradients(
+                    opt,
+                    gradient_clip_val=self.gradient_clip_val,
+                    gradient_clip_algorithm=self.gradient_clip_algorithm,
+                )
+            # optimizer step
+            opt.step()
+
+        for schedulers in self.lr_schedulers():
+            schedulers.step()
+
+        return loss
+
+    def validation_step(self, batch, batch_idx: int):
         return self.step(stage=VALIDATION, batch=batch)
 
-    def test_step(self, batch, batch_idx: int):  # type: ignore
+    def test_step(self, batch, batch_idx: int):
         return self.step(stage=TEST, batch=batch)
 
     def on_train_epoch_end(self):

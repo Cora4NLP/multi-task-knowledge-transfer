@@ -70,8 +70,6 @@ model:
 trainer:
   min_epochs: 5
   max_epochs: 20
-  gradient_clip_val: 1.0
-  gradient_clip_algorithm: norm
 
 datamodule:
   # the whole setup works only with batch_size=1!
