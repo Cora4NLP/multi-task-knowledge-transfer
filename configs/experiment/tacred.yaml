@@ -20,7 +20,7 @@ name: "dataset+tacred/task+relations"
 
 tags: ["dataset=tacred", "task=relations"]
 
-transformer_model: bert-base-uncased
+transformer_model: bert-base-cased
 
 # uncomment the following to use the revisited tacred version
 # dataset:
