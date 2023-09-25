@@ -4,13 +4,15 @@
 # python train.py experiment=squadv2-multimodel
 
 defaults:
-  - sqadv2-multimodel_base.yaml
+  - squadv2-multimodel_base.yaml
 
 model:
+  pretrained_default_config: ${transformer_model}
   pretrained_models:
     bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
-    # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf
+    # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred-20230919-hf"
   pretrained_configs:
     bert-base-cased-re-tacred:
       vocab_size: 29034

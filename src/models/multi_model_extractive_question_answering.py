@@ -30,13 +30,13 @@ logger = logging.getLogger(__name__)
 class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
     def __init__(
         self,
-        model_name: str,
         pretrained_models: Dict[str, str],
         pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         learning_rate: float = 1e-5,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
