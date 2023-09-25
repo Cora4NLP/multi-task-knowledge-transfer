@@ -258,10 +258,6 @@ class TransformerMultiModel(Module):
                 f"so they are not used: {only_in_configs}"
             )
         self.default_config_name = pretrained_default_config
-        if self.default_config_name is not None:
-            self.default_config = AutoConfig.from_pretrained(self.default_config_name)
-        else:
-            self.default_config = None
         self.configs = {}
         for model_id, model_name_or_path in pretrained_models.items():
             config_kwargs = {}
