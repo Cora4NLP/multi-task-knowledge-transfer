@@ -69,8 +69,14 @@ model:
 
 trainer:
   min_epochs: 5
-  max_epochs: 20
+  max_epochs: 100
 
 datamodule:
   # the whole setup works only with batch_size=1!
   batch_size: 1
+
+callbacks:
+  early_stopping:
+    monitor: "val/f1"
+    patience: 5
+    mode: max
