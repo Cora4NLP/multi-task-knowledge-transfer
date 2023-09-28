@@ -498,3 +498,123 @@ a multi-model with 4 pre-trained models including coreference (frozen) w/o bert-
   |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate | mode_keys |
   | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: | --------: |
   | seed1 |     0.50 |           103.13 |               56039 |   0.57 |    80.92 | attention |     token |
+
+## 2023-09-28
+
+### Coreference Resolution: target-only model
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_target_only trainer=gpu`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/3dal5i30
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_11-24-47
+- metric values:
+  |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  | seed1 |    0.949 |            7.926 |               81257 |  0.734 |   157.03 |        NA |
+
+### Coreference Resolution: frozen target (pre-trained) coreference model and bert-base-cased
+
+a multi-model with a pre-trained coreference model and bert-base-cased, attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_with_bert trainer=gpu +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/q1jepcct
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-28_12-59-21
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.940 |            7.362 |               36425 |  0.728 |   103.62 | attention |
+
+### Coreference Resolution: frozen target (pre-trained) coreference model and frozen NER
+
+a multi-model with 2 pre-trained models including coreference (frozen) and NER (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-ner-ontonotes] +model.pretrained_configs.bert-base-cased-ner-ontonotes.name_or_path=bert-base-cased +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/jazixec9
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_16-40-54
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.953 |            5.513 |               78455 |  0.737 |   127.94 | attention |
+
+### Coreference Resolution: frozen target (pre-trained) coreference model and frozen Re-TACRED
+
+a multi-model with 2 pre-trained models including coreference (frozen) and Re-TACRED (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf} +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-re-tacred] +model.pretrained_configs.bert-base-cased-re-tacred.name_or_path=bert-base-cased +model.pretrained_configs.bert-base-cased-re-tacred.vocab_size=29034 +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/sa0bco64
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_16-50-40
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.954 |            5.311 |               81257 |  0.738 |   124.11 | attention |
+
+### Coreference Resolution: frozen target (pre-trained) coreference model and frozen SQUAD
+
+a multi-model with 2 pre-trained models including coreference (frozen) and SQUAD (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-qa-squad2] +model.pretrained_configs.bert-base-cased-qa-squad2.name_or_path=bert-base-cased +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/3frydgsh
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_16-54-34
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.940 |            7.049 |               47633 |  0.731 |   108.63 | attention |
+
+### Coreference Resolution: tuned target (pre-trained) coreference model and frozen NER
+
+a multi-model with 2 pre-trained models including coreference (tuned) and NER (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} +model.freeze_models=[bert-base-cased-ner-ontonotes] +model.pretrained_configs.bert-base-cased-ner-ontonotes.name_or_path=bert-base-cased +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/dolw92mi
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_17-01-26
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.968 |            4.599 |               72851 |  0.735 |   183.30 | attention |
+
+### Coreference Resolution: tuned target (pre-trained) coreference model and frozen Re-TACRED
+
+a multi-model with 2 pre-trained models including coreference (tuned) and Re-TACRED (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf} +model.freeze_models=[bert-base-cased-re-tacred] +model.pretrained_configs.bert-base-cased-re-tacred.name_or_path=bert-base-cased +model.pretrained_configs.bert-base-cased-re-tacred.vocab_size=29034 +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/lbzjb6z6
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_18-17-58
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.974 |            3.761 |               92465 |  0.738 |   196.69 | attention |
+
+### Coreference Resolution: tuned target (pre-trained) coreference model and frozen SQUAD
+
+a multi-model with 2 pre-trained models including coreference (tuned) and SQUAD (frozen), attention
+
+- command: `python src/train.py experiment=conll2012_coref_hoi_multimodel_frozen_target_frozen_non-coref_model trainer=gpu +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} +model.freeze_models=[bert-base-cased-qa-squad2] +model.pretrained_configs.bert-base-cased-qa-squad2.name_or_path=bert-base-cased +model.aggregate=attention`
+- wandb (weights & biases) run:
+  https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/5d1irxwl
+- artefacts
+  - model location:
+    /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-27_18-56-33
+- metric values:
+  | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+  | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+  |    0.972 |            3.924 |               81257 |  0.733 |   213.41 | attention |
