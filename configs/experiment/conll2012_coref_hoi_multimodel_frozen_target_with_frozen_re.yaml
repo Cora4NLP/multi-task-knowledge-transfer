@@ -4,6 +4,7 @@
 # - task: coreference on conll2012
 # - included pretrained models:
 #   - coref trained on Ontonotes
+#   - re trained on Tacred
 #
 # Prerequisites:
 # - put the pretrained models to models/pretrained (see parameter model.model_paths below)
@@ -12,14 +13,14 @@
 # To train, execute:
 #
 ## fast dev run: on cpu, run just for two steps
-# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_with_bert +trainer.fast_dev_run=true
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_frozen_target_with_frozen_re +trainer.fast_dev_run=true
 #
 ## full training on gpu
-# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_with_bert trainer=gpu
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_frozen_target_with_frozen_re trainer=gpu
 #
 # The model implementation can be found here: src/models/multi_model_coref_hoi.py
 #
-# The config is here: configs/experiments/conll2012_coref_hoi_multimodel_target_with_bert.yaml (this file)
+# The config is here: configs/experiments/conll2012_coref_hoi_multimodel_frozen_target_with_frozen_re.yaml (this file)
 
 defaults:
   # load everything from this config file
@@ -29,11 +30,15 @@ model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
-    bert-base-cased: "bert-base-cased"
     # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
     bert-base-cased-coref-hoi: "models/pretrained/bert-base-cased-coref-hoi"
+    bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred-20230919-hf"
   pretrained_configs:
     bert-base-cased-coref-hoi:
       name_or_path: "bert-base-cased"
+    bert-base-cased-re-tacred:
+      name_or_path: "bert-base-cased"
+      vocab_size: 29034
   freeze_models:
     - bert-base-cased-coref-hoi
+    - bert-base-cased-re-tacred
