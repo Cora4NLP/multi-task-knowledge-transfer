@@ -1,2 +1,2 @@
 convert_documents:
-  _processor_: pytorch_ie.DatasetDict.map
+  _processor_: pytorch_ie.DatasetDict.to_document_type

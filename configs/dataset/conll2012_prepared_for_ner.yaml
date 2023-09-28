@@ -4,5 +4,4 @@ defaults:
   - _convert_documents
 
 convert_documents:
-  function: src.document.conversion.token_based_document_with_entities_and_sentences_to_text_based
-  result_document_type: src.document.types.DocumentWithEntitiesRelationsAndSentences
+  document_type: pytorch_ie.documents.TextDocumentWithLabeledEntitiesAndLabeledPartitions
