@@ -1,0 +1,33 @@
+# @package _global_
+
+# This implements a simple showcase for our idea.
+# - task: coreference on conll2012
+# - no pretrained task-specfic models, only bert-base-cased
+#
+# Prerequisites:
+# - put the pretrained models to models/pretrained (see parameter model.model_paths below)
+# - rename the model weight files (*.bin) to pytorch_model.bin, if not yet done
+#
+# To train, execute:
+#
+## fast dev run: on cpu, run just for two steps
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_only +trainer.fast_dev_run=true
+#
+## full training on gpu
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_only trainer=gpu
+#
+# The model implementation can be found here: src/models/multi_model_coref_hoi.py
+#
+# The config is here: configs/experiments/conll2012_coref_hoi_multimodel_target_only.yaml (this file)
+
+defaults:
+  # load everything from this config file
+  - conll2012_coref_hoi_multimodel_base.yaml
+
+model:
+  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
+  # that can be loaded with Huggingface AutoModel.from_pretrained.
+  pretrained_models:
+    bert-base-cased: "bert-base-cased"
+  pretrained_configs:
+    bert-base-cased: "bert-base-cased"
