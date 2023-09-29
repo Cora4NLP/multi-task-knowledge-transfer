@@ -7,7 +7,6 @@ defaults:
   - squadv2-multimodel_base.yaml
 
 model:
-  pretrained_default_config: ${transformer_model}
   pretrained_models:
     bert-base-cased: "bert-base-cased"
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
@@ -15,4 +14,5 @@ model:
     # bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred-20230919-hf"
   pretrained_configs:
     bert-base-cased-re-tacred:
+      name_or_path: "bert-base-cased"
       vocab_size: 29034

@@ -7,16 +7,19 @@ defaults:
   - conll2012_ner-multimodel_base.yaml
 
 model:
-  pretrained_default_config: ${transformer_model}
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
     # copy from: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf
     bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred-20230919-hf"
-    coreference: "models/pretrained/coreference"
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
+    bert-base-cased-coref-hoi: "models/pretrained/bert-base-cased-coref-hoi"
   pretrained_configs:
     bert-base-cased-re-tacred:
+      name_or_path: "bert-base-cased"
       vocab_size: 29034
+    bert-base-cased-coref-hoi:
+      name_or_path: "bert-base-cased"
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
