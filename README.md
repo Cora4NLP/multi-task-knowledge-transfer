@@ -139,16 +139,6 @@ predictions. However, it could be used with statistical metrics such as
 [count_text_tokens](configs/metric/count_text_tokens.yaml) or
 [count_entity_labels](configs/metric/count_entity_labels.yaml).
 
-## Development
-
-```bash
-# run pre-commit: code formatting, code analysis, static type checking, and more (see .pre-commit-config.yaml)
-pre-commit run -a
-
-# run tests
-pytest -k "not slow" --cov --cov-report term-missing
-```
-
 ## Pre-trained Models
 
 ### Coreference
@@ -179,3 +169,13 @@ bert_base = ${best}{
 ```
 
 The `bert_base` configuration refers to the `best` configuration which specifies additional parameters, it is defined in the coref-hoi repository: [https://github.com/lxucs/coref-hoi/blob/master/experiments.conf](https://github.com/lxucs/coref-hoi/blob/master/experiments.conf)
+
+## Development
+
+```bash
+# run pre-commit: code formatting, code analysis, static type checking, and more (see .pre-commit-config.yaml)
+pre-commit run -a
+
+# run tests
+pytest -k "not slow" --cov --cov-report term-missing
+```
