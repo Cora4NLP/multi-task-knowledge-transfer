@@ -940,3 +940,44 @@ model:
   freeze_models:
     - bert-base-cased-coref-hoi
 ```
+
+## 2023-09-29
+
+### Coreference Resolution: target-only model with attention
+
+- running a target-only model (trained from scratch, using bert-base-cased and attention aggregation)
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=conll2012_coref_hoi_multimodel_train_target \
+        trainer=gpu \
+        model.aggregate=attention
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/miywcbq8
+  - artefacts
+    - model location:
+      /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-29_17-31-34
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.953 |            6.119 |               72851 |  0.736 |   114.95 | attention |
+
+### Coreference Resolution: pre-trained frozen target-only model with attention
+
+- running a pre-trained frozen target-only model (bert-base-cased-coref-hoi with attention aggregation)
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=conll2012_coref_hoi_multimodel_frozen_target \
+        trainer=gpu
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/7uyjay9c
+  - artefacts
+    - model location:
+      /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-29_17-31-16
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.946 |            6.186 |               81257 |  0.735 |   119.19 | attention |
