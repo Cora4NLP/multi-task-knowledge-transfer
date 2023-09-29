@@ -735,11 +735,11 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
 
 ### Coreference Resolution: target-only model
 
-- running a target-only model
+- running a target-only model (trained from scratch, using bert-base-cased)
   - command:
     ```bash
       python src/train.py \
-        experiment=conll2012_coref_hoi_multimodel_tuned_target \
+        experiment=conll2012_coref_hoi_multimodel_train_target \
         trainer=gpu
     ```
   - wandb (weights & biases) run:
