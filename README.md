@@ -139,6 +139,37 @@ predictions. However, it could be used with statistical metrics such as
 [count_text_tokens](configs/metric/count_text_tokens.yaml) or
 [count_entity_labels](configs/metric/count_entity_labels.yaml).
 
+## Pre-trained Models
+
+### Coreference
+
+The pre-trained coreference model in `models/pretrained/bert-base-cased-coref-hoi` is trained on the CoNLL2012 [OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) data using the official code from the [coref-hoi repository](https://github.com/lxucs/coref-hoi/) as follows:
+
+```bash
+python run.py bert_base 0
+```
+
+`bert_base` is the configuration defined below and 0 is the gpu id.
+
+```bash
+bert_base = ${best}{
+  num_docs = 2802
+  trn_data_path = /ds/text/ontonotes_coref/seg_len_384/train.english.384.jsonlines
+  dev_data_path = /ds/text/ontonotes_coref/seg_len_384/dev.english.384.jsonlines
+  tst_data_path = /ds/text/ontonotes_coref/seg_len_384/test.english.384.jsonlines
+  bert_learning_rate = 1e-05
+  task_learning_rate = 2e-4
+  max_segment_len = 384
+  ffnn_size = 3000
+  cluster_ffnn_size = 3000
+  max_training_sentences = 11
+  bert_tokenizer_name = bert-base-cased
+  bert_pretrained_name_or_path = bert-base-cased
+}
+```
+
+The `bert_base` configuration refers to the `best` configuration which specifies additional parameters, it is defined in the coref-hoi repository: [https://github.com/lxucs/coref-hoi/blob/master/experiments.conf](https://github.com/lxucs/coref-hoi/blob/master/experiments.conf)
+
 ## Development
 
 ```bash
