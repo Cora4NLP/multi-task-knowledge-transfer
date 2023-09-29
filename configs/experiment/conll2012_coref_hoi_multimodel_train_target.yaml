@@ -28,5 +28,3 @@ model:
   aggregate: attention
   pretrained_models:
     bert-base-cased: "bert-base-cased"
-defaults:
-  - conll2012_coref_hoi_multimodel_base.yaml
