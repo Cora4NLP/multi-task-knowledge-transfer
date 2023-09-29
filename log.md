@@ -740,7 +740,8 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
     ```bash
       python src/train.py \
         experiment=conll2012_coref_hoi_multimodel_train_target \
-        trainer=gpu
+        trainer=gpu \
+        model.aggregate=mean
     ```
   - wandb (weights & biases) run:
     https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/3dal5i30
@@ -750,7 +751,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    | seed1 |    0.949 |            7.926 |               81257 |  0.734 |   157.03 |        NA |
+    | seed1 |    0.949 |            7.926 |               81257 |  0.734 |   157.03 |      mean |
 
 ### Coreference Resolution: frozen target (pre-trained) coreference model and bert-base-cased
 
