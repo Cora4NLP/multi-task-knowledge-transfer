@@ -5,7 +5,7 @@
 # - included pretrained models:
 #   - ner trained on Ontonotes
 #   - re trained on Tacred
-# - aggregation: attention
+# - aggregation: mean
 #
 # Prerequisites:
 # - put the pretrained models to models/pretrained (see parameter model.model_paths below)

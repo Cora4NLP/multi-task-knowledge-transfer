@@ -27,8 +27,7 @@ defaults:
   - conll2012_coref_hoi_multimodel_base.yaml
 
 model:
-  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
-  # that can be loaded with Huggingface AutoModel.from_pretrained.
+  aggregate: attention
   pretrained_models:
     # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
     bert-base-cased-coref-hoi: "models/pretrained/bert-base-cased-coref-hoi"
