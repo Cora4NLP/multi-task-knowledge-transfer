@@ -1079,5 +1079,3 @@ model:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.998 |            0.002 |              106449 |  0.681 |    1.224 | attention |
-
-https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/by7864hv
