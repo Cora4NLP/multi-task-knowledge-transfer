@@ -981,3 +981,105 @@ model:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.946 |            6.186 |               81257 |  0.735 |   119.19 | attention |
+
+
+## 2023-10-04
+
+### Relation Extraction - target-only model with attention
+
+- running a target-only model (trained from scratch, using bert-base-cased and attention aggregation)
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=tacred_multimodel \
+        trainer=gpu \
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/8fdr64nu
+  - artefacts
+    - model location:
+      /netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-09-08_14-08-59
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.991 |            0.010 |              106449 |  0.656 |   1.110  | attention |
+
+
+### Relation Extraction - frozen pre-trained target-model + bert-base-cased with attention
+
+- combining a frozen pretrained RE model with bert-base-cased
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=tacred_multimodel_bert_frozen_re \
+        trainer=gpu \
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/je97qssk
+  - artefacts
+    - model location:
+      /netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-09-26_08-37-53
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.986 |            0.012 |              106449 |  0.709 |   0.955  | attention |
+
+### Relation Extraction - frozen pre-trained target-model + frozen NER model with attention
+
+- combining a frozen pretrained RE model with frozen pretrained NER model, using attention aggregation
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=tacred_multimodel_frozen_re_ner \
+        trainer=gpu \
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/wlcdze53
+  - artefacts
+    - model location:
+      /netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-09-26_08-49-25
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.979 |            0.023 |              106449 |  0.719 |   0.820  | attention |
+
+### Relation Extraction - pre-trained target-model + frozen NER model with attention
+
+- combining a pretrained RE model with frozen pretrained NER model, using attention aggregation
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=tacred_multimodel_re_frozen_ner \
+        trainer=gpu \
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/467lkbxr
+  - artefacts
+    - model location:
+      /netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-09-26_08-49-25
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.991 |            0.010 |              106449 |  0.632 |   1.031  | attention |
+
+### Relation Extraction - pre-trained target-model + frozen NER model with attention, LR = 5e-6
+
+- same as above, but using a much smaller learning rate (combining a pretrained RE model with frozen pretrained NER model, using attention aggregation)
+  - command:
+    ```bash
+      python src/train.py \
+        experiment=tacred_multimodel_re_frozen_ner \
+        trainer=gpu \
+        model.learning_rate=5e-6
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/by7864hv
+  - artefacts
+    - model location:
+      /netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-09-27_10-48-15
+  - metric values:
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.998 |            0.002 |              106449 |  0.681 |   1.224  | attention |
+
+https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/by7864hv

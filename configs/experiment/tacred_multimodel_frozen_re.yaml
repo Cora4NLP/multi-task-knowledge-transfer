@@ -1,0 +1,79 @@
+# @package _global_
+
+# This implements a simple showcase for our idea.
+# - task: RE on Tacred
+#
+# Prerequisites:
+# - put the pretrained models to models/pretrained (see parameter model.model_paths below)
+# - rename the model weight files (*.bin) to pytorch_model.bin, if not yet done
+#
+# To train, execute:
+#
+## fast dev run: on cpu, run just for two steps
+# python src/train.py experiment=tacred_multimodel +trainer.fast_dev_run=true
+#
+## full training on gpu
+# python src/train.py experiment=tacred_multimodel trainer=gpu
+#
+# The model implementation can be found here: src/models/multi_model_text_classification.py
+#
+# The config is here: configs/experiments/tacred_multimodel.yaml (this file)
+
+defaults:
+  - override /dataset: tacred_prepared.yaml
+  - override /datamodule: default.yaml
+  - override /taskmodule: transformer_re_text_classification.yaml
+  - override /model: multi_model_text_classification.yaml
+  - override /callbacks: default.yaml
+  - override /logger: wandb.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "tacred/multi_model_re_text_classification"
+
+tags: ["dataset=tacred", "model=multi_model_re_text_classification", "frozen_pretrained_re"]
+
+seed: 12345
+
+transformer_model: bert-base-cased
+
+taskmodule:
+  tokenizer_name_or_path: ${transformer_model}
+  #max_window: 512
+  #add_type_to_marker: False
+  append_markers: True
+  # max_length: 512
+  log_first_n_examples: 5
+
+model:
+  pretrained_default_config: ${transformer_model}
+  aggregate: attention
+  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
+  # that can be loaded with Huggingface AutoModel.from_pretrained.
+  # order matters - the first is the target model
+  pretrained_models:
+    bert-base-cased-re-tacred: "/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf"
+  freeze_models:
+    - bert-base-cased-re-tacred
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      vocab_size: 29034
+
+
+  # configure learning rate. Default learning rate is set in model constructor (here: MultiModelTextClassificationModel)
+  learning_rate: 2e-5
+  task_learning_rate: 2e-5
+  warmup_proportion: 0.0
+  # this is the index of the no_relation (see the taskmodule), we ignore it for F1 calculation
+  ignore_index: 0
+
+trainer:
+  min_epochs: 5
+  max_epochs: 50
+  # gradient_clip_val: 0.5
+
+datamodule:
+  batch_size: 32
