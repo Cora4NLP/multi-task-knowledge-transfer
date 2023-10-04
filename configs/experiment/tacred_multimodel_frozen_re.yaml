@@ -2,7 +2,7 @@
 
 defaults:
   # load everything from this config file
-  - tacred-multimodel_base.yaml
+  - tacred_multimodel_base.yaml
 
 tags:
   - dataset=tacred
