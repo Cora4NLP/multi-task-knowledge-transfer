@@ -982,7 +982,6 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.946 |            6.186 |               81257 |  0.735 |   119.19 | attention |
 
-
 ## 2023-10-04
 
 ### Relation Extraction - target-only model with attention
@@ -1002,8 +1001,7 @@ model:
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.991 |            0.010 |              106449 |  0.656 |   1.110  | attention |
-
+    |    0.991 |            0.010 |              106449 |  0.656 |    1.110 | attention |
 
 ### Relation Extraction - frozen pre-trained target-model + bert-base-cased with attention
 
@@ -1022,7 +1020,7 @@ model:
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.986 |            0.012 |              106449 |  0.709 |   0.955  | attention |
+    |    0.986 |            0.012 |              106449 |  0.709 |    0.955 | attention |
 
 ### Relation Extraction - frozen pre-trained target-model + frozen NER model with attention
 
@@ -1041,7 +1039,7 @@ model:
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.979 |            0.023 |              106449 |  0.719 |   0.820  | attention |
+    |    0.979 |            0.023 |              106449 |  0.719 |    0.820 | attention |
 
 ### Relation Extraction - pre-trained target-model + frozen NER model with attention
 
@@ -1060,7 +1058,7 @@ model:
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.991 |            0.010 |              106449 |  0.632 |   1.031  | attention |
+    |    0.991 |            0.010 |              106449 |  0.632 |    1.031 | attention |
 
 ### Relation Extraction - pre-trained target-model + frozen NER model with attention, LR = 5e-6
 
@@ -1080,6 +1078,6 @@ model:
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.998 |            0.002 |              106449 |  0.681 |   1.224  | attention |
+    |    0.998 |            0.002 |              106449 |  0.681 |    1.224 | attention |
 
 https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/by7864hv

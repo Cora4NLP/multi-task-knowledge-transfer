@@ -34,7 +34,13 @@ defaults:
 # name of the run determines folder name in logs
 name: "tacred/multi_model_re_text_classification"
 
-tags: ["dataset=tacred", "model=multi_model_re_text_classification", "bert-base-cased", "frozen-pretrained-re"]
+tags:
+  [
+    "dataset=tacred",
+    "model=multi_model_re_text_classification",
+    "bert-base-cased",
+    "frozen-pretrained-re",
+  ]
 
 seed: 12345
 
@@ -62,7 +68,6 @@ model:
   pretrained_configs:
     bert-base-cased-re-tacred:
       vocab_size: 29034
-
 
   # configure learning rate. Default learning rate is set in model constructor (here: MultiModelTextClassificationModel)
   learning_rate: 2e-5

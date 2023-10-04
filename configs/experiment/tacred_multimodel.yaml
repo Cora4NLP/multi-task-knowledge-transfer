@@ -34,7 +34,12 @@ defaults:
 # name of the run determines folder name in logs
 name: "tacred/multi_model_re_text_classification"
 
-tags: ["dataset=tacred", "model=multi_model_re_text_classification", "bert-base-cased"]
+tags:
+  [
+    "dataset=tacred",
+    "model=multi_model_re_text_classification",
+    "bert-base-cased",
+  ]
 
 seed: 12345
 
