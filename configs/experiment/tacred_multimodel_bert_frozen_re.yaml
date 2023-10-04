@@ -10,8 +10,6 @@ tags:
   - bert-base-cased
   - frozen-pretrained-re
 
-seed: 12345
-
 model:
   aggregate: attention
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
@@ -19,9 +17,7 @@ model:
   # order matters - the first is the target model
   pretrained_models:
     bert-base-cased: "bert-base-cased"
-    bert-base-cased-re-tacred: "/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf"
-  freeze_models:
-    - bert-base-cased-re-tacred
+    bert-base-cased-re-tacred: ${local_pretrained_model_dir}/bert-base-cased-re-tacred-20230919-hf
   pretrained_configs:
     bert-base-cased-re-tacred:
       name_or_path: bert-base-cased

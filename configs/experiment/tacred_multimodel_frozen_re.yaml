@@ -9,17 +9,13 @@ tags:
   - model=multi_model_re_text_classification
   - frozen_pretrained_re
 
-seed: 12345
-
 model:
   aggregate: attention
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   # order matters - the first is the target model
   pretrained_models:
-    bert-base-cased-re-tacred: "/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf"
-  freeze_models:
-    - bert-base-cased-re-tacred
+    bert-base-cased-re-tacred: ${local_pretrained_model_dir}/bert-base-cased-re-tacred-20230919-hf
   pretrained_configs:
     bert-base-cased-re-tacred:
       name_or_path: bert-base-cased

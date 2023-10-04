@@ -1,27 +1,14 @@
 # @package _global_
 
-# This implements a simple showcase for our idea.
-# - task: RE on Tacred
-#
-# Prerequisites:
-# - put the pretrained models to models/pretrained (see parameter model.model_paths below)
-# - rename the model weight files (*.bin) to pytorch_model.bin, if not yet done
-#
-# @package _global_
-
 defaults:
   # load everything from this config file
   - tacred-multimodel_base.yaml
 
 tags:
-  [
-    "dataset=tacred",
-    "model=multi_model_re_text_classification",
-    "pretrained_re",
-    "frozen_pretrained_ner",
-  ]
-
-seed: 12345
+  - dataset=tacred
+  - model=multi_model_re_text_classification
+  - pretrained_re
+  - frozen_pretrained_ner
 
 model:
   aggregate: attention
@@ -29,10 +16,8 @@ model:
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   # order matters - the first is the target model
   pretrained_models:
-    bert-base-cased-re-tacred: "/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf"
-    bert-base-cased-ner-ontonotes: "/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes"
-  freeze_models:
-    - bert-base-cased-ner-ontonotes
+    bert-base-cased-re-tacred: ${local_pretrained_model_dir}/bert-base-cased-re-tacred-20230919-hf
+    bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes
   pretrained_configs:
     bert-base-cased-re-tacred:
       name_or_path: bert-base-cased

@@ -21,6 +21,9 @@ tags:
 
 seed: 12345
 
+local_pretrained_model_dir: "/ds/text/cora4nlp/models"
+# local_pretrained_model_dir: "models/pretrained"
+
 transformer_model: bert-base-cased
 
 taskmodule:
