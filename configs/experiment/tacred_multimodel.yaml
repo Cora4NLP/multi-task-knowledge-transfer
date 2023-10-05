@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  # load everything from this config file
+  - tacred_multimodel_base.yaml
+
+tags:
+  - dataset=tacred
+  - model=multi_model_re_text_classification
+  - bert-base-cased
+
+model:
+  aggregate: attention
+  pretrained_models:
+    bert-base-cased: "bert-base-cased"

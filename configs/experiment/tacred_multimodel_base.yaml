@@ -15,14 +15,23 @@ defaults:
 # name of the run determines folder name in logs
 name: "tacred/multi_model_re_text_classification"
 
-tags: ["dataset=tacred", "model=multi_model_re_text_classification"]
+tags:
+  - dataset=tacred
+  - model=multi_model_re_text_classification
 
 seed: 12345
+
+local_pretrained_model_dir: "/ds/text/cora4nlp/models"
+# local_pretrained_model_dir: "models/pretrained"
 
 transformer_model: bert-base-cased
 
 taskmodule:
   tokenizer_name_or_path: ${transformer_model}
+  #max_window: 512
+  #add_type_to_marker: False
+  append_markers: True
+  log_first_n_examples: 5
 
 model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
@@ -40,8 +49,8 @@ model:
 
 trainer:
   min_epochs: 5
-  max_epochs: 20
+  max_epochs: 50
   # gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 16
+  batch_size: 32
