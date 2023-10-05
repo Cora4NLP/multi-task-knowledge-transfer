@@ -11,11 +11,15 @@ model:
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
-     # copy from: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes
     bert-base-cased-ner-ontonotes: "/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes"
-    bert-base-cased: "bert-base-cased"
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
+    bert-base-cased-coref-hoi: "/ds/text/cora4nlp/models/bert-base-cased-coref-hoi"
   pretrained_configs:
     bert-base-cased-ner-ontonotes:
       name_or_path: "bert-base-cased"
+    bert-base-cased-coref-hoi:
+      name_or_path: "bert-base-cased"
   freeze_models:
    - bert-base-cased-ner-ontonotes
+   - bert-base-cased-coref-hoi
