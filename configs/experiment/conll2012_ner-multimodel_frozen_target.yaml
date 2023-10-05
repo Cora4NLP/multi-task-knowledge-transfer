@@ -15,4 +15,4 @@ model:
     bert-base-cased-ner-ontonotes:
       name_or_path: "bert-base-cased"
   freeze_models:
-   - bert-base-cased-ner-ontonotes
+    - bert-base-cased-ner-ontonotes

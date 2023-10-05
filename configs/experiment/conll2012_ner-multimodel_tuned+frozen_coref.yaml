@@ -19,4 +19,4 @@ model:
     bert-base-cased-coref-hoi:
       name_or_path: "bert-base-cased"
   freeze_models:
-   - bert-base-cased-coref-hoi
+    - bert-base-cased-coref-hoi
