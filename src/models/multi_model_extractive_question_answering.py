@@ -178,6 +178,9 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         self.log(
             f"{stage}/f1_end", f1_end, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True
         )
+        self.log(
+            f"{stage}/f1", (f1_start + f1_end) / 2, on_step=False, on_epoch=True, prog_bar=True
+        )
 
         return loss
 
