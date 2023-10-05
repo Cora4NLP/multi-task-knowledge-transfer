@@ -22,6 +22,8 @@ tags: ["dataset=conll2012", "model=multi_model_token_classification"]
 
 seed: 12345
 
+local_pretrained_model_dir: "/ds/text/cora4nlp/models"
+
 trainer:
   min_epochs: 5
   max_epochs: 20
