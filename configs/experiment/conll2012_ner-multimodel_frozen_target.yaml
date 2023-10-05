@@ -11,7 +11,7 @@ model:
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
      # copy from: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes
-    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
+    bert-base-cased-ner-ontonotes: "/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes"
   pretrained_configs:
     bert-base-cased-ner-ontonotes:
       name_or_path: "bert-base-cased"
