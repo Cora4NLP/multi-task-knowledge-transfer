@@ -18,8 +18,8 @@ name: "dataset+squadv2/task+extractive_question_answering"
 tags: ["dataset=squadv2", "task=extractive_question_answering"]
 
 # metric with mode (minimize or maximize) to monitor for checkpointing and early stopping callbacks
-monitor_metric: "val/loss"
-monitor_mode: "min"
+#monitor_metric: "val/loss"
+#monitor_mode: "min"
 
 # for local testing, set the local_pretrained_model_dir to the directory where you downloaded the pretrained models
 # local_pretrained_model_dir: "models/pretrained"
