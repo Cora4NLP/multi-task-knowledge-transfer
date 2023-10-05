@@ -1068,7 +1068,8 @@ model:
       python src/train.py \
         experiment=tacred_multimodel_re_frozen_ner \
         trainer=gpu \
-        model.learning_rate=5e-6
+        model.learning_rate=5e-6 \
+        "tags=[multimodel-re-frozen-ner,lr5e-6]"
     ```
   - wandb (weights & biases) run:
     https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/by7864hv
