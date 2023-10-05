@@ -11,8 +11,5 @@ model:
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
     bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes
-  pretrained_configs:
-    bert-base-cased-ner-ontonotes:
-      name_or_path: "bert-base-cased"
   freeze_models:
     - bert-base-cased-ner-ontonotes

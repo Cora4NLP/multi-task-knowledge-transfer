@@ -14,8 +14,5 @@ model:
     # copy from: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes
     bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes
     bert-base-cased: "bert-base-cased"
-  pretrained_configs:
-    bert-base-cased-ner-ontonotes:
-      name_or_path: "bert-base-cased"
   freeze_models:
     - bert-base-cased-ner-ontonotes
