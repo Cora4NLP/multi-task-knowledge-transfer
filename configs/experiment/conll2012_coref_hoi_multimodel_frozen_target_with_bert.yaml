@@ -28,9 +28,9 @@ defaults:
 model:
   aggregate: attention
   pretrained_models:
-    bert-base-cased: "bert-base-cased"
     # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
     bert-base-cased-coref-hoi: "models/pretrained/bert-base-cased-coref-hoi"
+    bert-base-cased: "bert-base-cased"
   pretrained_configs:
     bert-base-cased-coref-hoi:
       name_or_path: "bert-base-cased"
