@@ -991,7 +991,8 @@ model:
     ```bash
       python src/train.py \
         experiment=tacred_multimodel \
-        trainer=gpu \
+        taskmodule.add_type_to_marker=false \
+        trainer=gpu
     ```
   - wandb (weights & biases) run:
     https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/8fdr64nu
