@@ -46,6 +46,10 @@ tags: ["dev"]
 # set False to skip model training
 train: True
 
+# evaluate on validation set, using best model weights achieved during training
+# lightning chooses best weights based on the metric specified in checkpoint callback
+validate: False
+
 # evaluate on test set, using best model weights achieved during training
 # lightning chooses best weights based on the metric specified in checkpoint callback
 test: False
