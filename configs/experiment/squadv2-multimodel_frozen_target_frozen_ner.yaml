@@ -4,9 +4,11 @@
 # python train.py experiment=squadv2-multimodel_frozen_target_frozen_ner trainer=gpu
 
 defaults:
+  # load everything from this config file
   - squadv2-multimodel_base.yaml
 
 model:
+  aggregate: attention
   pretrained_models:
     bert-base-cased-qa-squad2: ${local_pretrained_model_dir}/bert-base-cased-qa-squad2
     bert-base-cased: "bert-base-cased"

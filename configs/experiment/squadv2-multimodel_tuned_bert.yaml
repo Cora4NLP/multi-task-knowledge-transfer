@@ -4,8 +4,10 @@
 # python train.py experiment=squadv2-multimodel_tuned_bert trainer=gpu
 
 defaults:
+  # load everything from this config file
   - squadv2-multimodel_base.yaml
 
 model:
+  aggregate: attention
   pretrained_models:
     bert-base-cased: "bert-base-cased"
