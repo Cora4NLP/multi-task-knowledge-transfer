@@ -751,7 +751,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     |       | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | ----: | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    | seed1 |    0.949 |            7.926 |               81257 |  0.734 |   157.03 |      mean |
+    | seed1 |    0.949 |            7.926 |               81257 |  0.736 |   139.71 |      mean |
 
 ### Coreference Resolution: frozen target (pre-trained) coreference model and bert-base-cased
 
@@ -763,14 +763,14 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
         trainer=gpu
     ```
   - wandb (weights & biases) run:
-    https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/q1jepcct
+    https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ce4ye393
   - artefacts
     - model location:
-      /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-09-28_12-59-21
+      /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-05_16-20-29
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.940 |            7.362 |               36425 |  0.728 |   103.62 | attention |
+    |    0.940 |            7.362 |               36425 |  0.736 |    98.87 | attention |
 
 ### Coreference Resolution: frozen target (pre-trained) coreference model and frozen NER
 
@@ -792,7 +792,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.953 |            5.513 |               78455 |  0.737 |   127.94 | attention |
+    |    0.953 |            5.513 |               78455 |  0.739 |   119.41 | attention |
 
 ### Coreference Resolution: frozen target (pre-trained) coreference model and frozen Re-TACRED
 
@@ -815,7 +815,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.954 |            5.311 |               81257 |  0.738 |   124.11 | attention |
+    |    0.954 |            5.311 |               81257 |  0.738 |   119.55 | attention |
 
 ### Coreference Resolution: frozen target (pre-trained) coreference model and frozen SQUAD
 
@@ -837,7 +837,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.940 |            7.049 |               47633 |  0.731 |   108.63 | attention |
+    |    0.940 |            7.049 |               47633 |  0.735 |    93.24 | attention |
 
 ### Coreference Resolution: tuned target (pre-trained) coreference model and frozen NER
 
@@ -859,7 +859,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.968 |            4.599 |               72851 |  0.735 |   183.30 | attention |
+    |    0.968 |            4.599 |               72851 |  0.738 |   174.12 | attention |
 
 ### Coreference Resolution: tuned target (pre-trained) coreference model and frozen Re-TACRED
 
@@ -882,7 +882,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.974 |            3.761 |               92465 |  0.738 |   196.69 | attention |
+    |    0.974 |            3.761 |               92465 |  0.743 |   181.19 | attention |
 
 ### Coreference Resolution: tuned target (pre-trained) coreference model and frozen SQUAD
 
@@ -904,7 +904,7 @@ IMPORTANT: Execute `pre-commit run -a` before committing to ensure that the mark
   - metric values:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
-    |    0.972 |            3.924 |               81257 |  0.733 |   213.41 | attention |
+    |    0.972 |            3.924 |               81257 |  0.737 |   153.83 | attention |
 
 ### Deleted configuration files:
 
@@ -1081,3 +1081,10 @@ model:
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.998 |            0.002 |              106449 |  0.681 |    1.224 | attention |
+
+## 2023-10-06
+
+### Coreference Resolution
+
+- wandb report with the val/f1 and val/loss graphs (experiments from 2023-09-28 and 2023-09-29):
+  [https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy](https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy)
