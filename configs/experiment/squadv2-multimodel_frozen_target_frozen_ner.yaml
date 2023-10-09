@@ -13,5 +13,5 @@ model:
     bert-base-cased-qa-squad2: ${local_pretrained_model_dir}/bert-base-cased-qa-squad2
     bert-base-cased: "bert-base-cased"
   freeze_models:
-    - bert-base-cased-coref-hoi
+    - bert-base-cased-qa-squad2
     - bert-base-cased
