@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
-from torch.nn import CrossEntropyLoss
+from torch.nn import CrossEntropyLoss, functional
 from torch.optim import Adam
 from transformers import BatchEncoding
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
@@ -31,6 +31,7 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
     def __init__(
         self,
         pretrained_models: Dict[str, str],
+        max_input_length: int,
         pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         learning_rate: float = 1e-5,
@@ -57,18 +58,23 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
             aggregate=aggregate,
             freeze_models=freeze_models,
         )
+        self.max_input_length = max_input_length
 
         self.qa_outputs = nn.Linear(self.base_models.config.hidden_size, 2)
 
         self.f1_start = nn.ModuleDict(
             {
-                f"stage_{stage}": torchmetrics.F1Score(task="multiclass")
+                f"stage_{stage}": torchmetrics.F1Score(
+                    task="multiclass", num_classes=self.max_input_length
+                )
                 for stage in [TRAINING, VALIDATION, TEST]
             }
         )
         self.f1_end = nn.ModuleDict(
             {
-                f"stage_{stage}": torchmetrics.F1Score(task="multiclass")
+                f"stage_{stage}": torchmetrics.F1Score(
+                    task="multiclass", num_classes=self.max_input_length
+                )
                 for stage in [TRAINING, VALIDATION, TEST]
             }
         )
@@ -146,8 +152,15 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         # show loss on each step only during training
         self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
 
+        sequence_length = inputs["input_ids"].size(1)
+
         f1_start = self.f1_end[f"stage_{stage}"]
-        f1_start(start_logits, start_positions)
+        # We need to pad the logits to the max_input_length, otherwise the F1 metric complains
+        # that the shape does not match the num_classes.
+        start_logits_padded = functional.pad(
+            start_logits, (0, self.max_input_length - sequence_length), value=float("-inf")
+        )
+        f1_start(start_logits_padded, start_positions)
         self.log(
             f"{stage}/f1_start",
             f1_start,
@@ -156,7 +169,12 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
             prog_bar=True,
         )
         f1_end = self.f1_end[f"stage_{stage}"]
-        f1_end(end_logits, end_positions)
+        # We need to pad the logits to the max_input_length, otherwise the F1 metric complains
+        # that the shape does not match the num_classes.
+        end_logits_padded = functional.pad(
+            end_logits, (0, self.max_input_length - sequence_length), value=float("-inf")
+        )
+        f1_end(end_logits_padded, end_positions)
         self.log(
             f"{stage}/f1_end", f1_end, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True
         )

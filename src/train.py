@@ -145,7 +145,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     elif model_cls == ExtractiveQuestionAnsweringModel:
         pass
     elif model_cls == MultiModelExtractiveQuestionAnsweringModel:
-        pass
+        additional_model_kwargs["max_input_length"] = taskmodule.max_length
     # elif model_cls == pytorch_ie.models.TransformerSpanClassificationModel:
     #     additional_model_kwargs["num_classes"] = len(taskmodule.label_to_id)
     #     max_train_steps = cfg["trainer"]["max_epochs"] * datamodule.num_train
