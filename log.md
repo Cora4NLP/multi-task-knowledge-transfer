@@ -1164,6 +1164,26 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.950 |            0.047 |               72399 |  0.911 |    0.091 | attention |
 
+### NER - tunable finetuned NER target model + frozen coreference model
+
+- running a tunable NER model with a frozen coref model and attention aggregation
+  - command:
+    ```bash
+       python src/train.py \
+       experiment=conll2012_ner-multimodel_train_target \
+       trainer=gpu \
+       seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/dy1928uo
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-59-40
+  - metric values (epoch 7):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.996 |            0.003 |               72399 |  0.914 |    0.118 | attention |
+
 ## 2023-10-06
 
 ### Coreference Resolution
