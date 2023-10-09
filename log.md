@@ -1175,10 +1175,10 @@ model:
        seed=1
     ```
   - wandb (weights & biases) run:
-    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/dy1928uo
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/mdwun8lz
   - artefacts
     - model location:
-      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-59-40
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_15-46-51
   - metric values (epoch 7):
     | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
