@@ -1164,9 +1164,9 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.950 |            0.047 |               72399 |  0.911 |    0.091 | attention |
 
-### NER - tunable finetuned NER target model + frozen coreference model
+### NER - training bert base cased in multimodel with attention
 
-- running a tunable NER model with a frozen coref model and attention aggregation
+- training a bert base cased model with an attention head from the multimodel
   - command:
     ```bash
        python src/train.py \
