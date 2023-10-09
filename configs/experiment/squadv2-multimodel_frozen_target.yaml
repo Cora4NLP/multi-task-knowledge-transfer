@@ -12,4 +12,4 @@ model:
   pretrained_models:
     bert-base-cased-qa-squad2: ${local_pretrained_model_dir}/bert-base-cased-qa-squad2
   freeze_models:
-    - bert-base-cased-coref-hoi
+    - bert-base-cased-qa-squad2
