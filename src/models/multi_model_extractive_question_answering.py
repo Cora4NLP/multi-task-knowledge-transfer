@@ -171,10 +171,10 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         f1_end = self.f1_end[f"stage_{stage}"]
         # We need to pad the logits to the max_input_length, otherwise the F1 metric complains
         # that the shape does not match the num_classes.
-        start_logits_padded = functional.pad(
-            start_logits, (0, self.max_input_length - sequence_length), value=float("-inf")
+        end_logits_padded = functional.pad(
+            end_logits, (0, self.max_input_length - sequence_length), value=float("-inf")
         )
-        f1_end(start_logits_padded, end_positions)
+        f1_end(end_logits_padded, end_positions)
         self.log(
             f"{stage}/f1_end", f1_end, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True
         )
