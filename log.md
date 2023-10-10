@@ -1091,8 +1091,8 @@ model:
     ```bash
        python src/train.py \
          experiment=conll2012_ner-multimodel_frozen_target \
+         aggregate=mean \
          trainer=gpu \
-         model.aggregate=mean \
          seed=1
     ```
   - wandb (weights & biases) run:
