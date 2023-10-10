@@ -7,6 +7,7 @@ defaults:
   - conll2012_ner-multimodel_base.yaml
 
 model:
+  aggregate: attention
   # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
   # that can be loaded with Huggingface AutoModel.from_pretrained.
   pretrained_models:
