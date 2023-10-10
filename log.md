@@ -1185,6 +1185,51 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.996 |            0.003 |               72399 |  0.914 |    0.118 | attention |
 
+### Relation Extraction - tune bert-base-cased in multimodel
+
+- tune bert-base-cased in multimodel (with attention)
+  - command:
+    ```bash
+    python src/train.py \
+    trainer=gpu \
+    experiment=tacred_multimodel \
+    tags=[multimodel_bert]
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/5oo1xfcc
+  - artefacts
+    - model location:
+      `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-05_09-30-38`
+  - metric values (epoch 3)
+    | val/f1 | val/loss |
+    | -----: | -------: |
+    |  0.764 |   0.4647 |
+
+### Relation Extraction - frozen pre-trained target-model with tuned bert-base-cased
+
+- frozen pre-trained target-model with tuned bert-base-cased
+  - original command (from W&B run):
+    ```bash
+    python src/train.py \
+    trainer=gpu \
+    experiment=tacred_multimodel_bert_frozen_re
+    ```
+  - correct command (to reproduce with current configs):
+    ```bash
+    python src/train.py \
+    trainer=gpu \
+    experiment=tacred_multimodel_frozen_re_tuned_bert
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/40dmu49m
+  - artefacts
+    - model location:
+      `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-05_14-05-58`
+  - metric values (epoch 8)
+    | val/f1 | val/loss |
+    | -----: | -------: |
+    | 0.7305 |   0.7121 |
+
 ## 2023-10-06
 
 ### Coreference Resolution
