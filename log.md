@@ -1091,7 +1091,7 @@ model:
     ```bash
        python src/train.py \
          experiment=conll2012_ner-multimodel_frozen_target \
-         aggregate=mean \
+         +aggregate=mean \
          trainer=gpu \
          seed=1
     ```
