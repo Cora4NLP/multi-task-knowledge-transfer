@@ -5,4 +5,4 @@ defaults:
 
 model:
   pretrained_models:
-    bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
+    bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes

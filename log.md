@@ -1082,6 +1082,109 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.998 |            0.002 |              106449 |  0.681 |    1.224 | attention |
 
+## 2023-10-05
+
+### NER - frozen target model
+
+- running a frozen NER model with mean aggregation
+  - command:
+    ```bash
+       python src/train.py \
+         experiment=conll2012_ner-multimodel_frozen_target \
+         model.aggregate=mean \
+         trainer=gpu \
+         seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/1l35macp
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-30-34
+  - metric values (epoch 19):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.925 |            0.077 |               72399 |  0.897 |    0.100 |      mean |
+
+### NER - frozen finetuned NER target model + bert base cased
+
+- running a frozen NER model with a tunable bert_base_cased and attention aggregation
+  - command:
+    ```bash
+       python src/train.py \
+       experiment=conll2012_ner-multimodel_frozen+bert \
+       trainer=gpu \
+       seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/12o8g7b3
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-57-29
+  - metric values (epoch 4):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.948 |            0.039 |               72399 |  0.911 |    0.094 | attention |
+
+### NER - frozen finetuned NER target model + frozen coreference model
+
+- running a frozen NER model with a frozen coref model and attention aggregation
+  - command:
+    ```bash
+       python src/train.py \
+       experiment=conll2012_ner-multimodel_frozen+frozen_coref \
+       trainer=gpu \
+       seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/04jcjyls
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-59-11
+  - metric values (epoch 11):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.930 |            0.070 |               72399 |  0.902 |    0.096 | attention |
+
+### NER - tunable finetuned NER target model + frozen coreference model
+
+- running a tunable NER model with a frozen coref model and attention aggregation
+  - command:
+    ```bash
+       python src/train.py \
+       experiment=conll2012_ner-multimodel_tuned+frozen_coref \
+       trainer=gpu \
+       seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/dy1928uo
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_06-59-40
+  - metric values (epoch 1):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.950 |            0.047 |               72399 |  0.911 |    0.091 | attention |
+
+### NER - training bert base cased in multimodel with attention
+
+- training a bert base cased model with an attention head from the multimodel
+  - command:
+    ```bash
+       python src/train.py \
+       experiment=conll2012_ner-multimodel_train_target \
+       trainer=gpu \
+       seed=1
+    ```
+  - wandb (weights & biases) run:
+    https://wandb.ai/dfki-nlp/conll2012-multi_model_token_classification-training/runs/mdwun8lz
+  - artefacts
+    - model location:
+      /netscratch/harbecke/multi-task-knowledge-transfer/models/conll2012/multi_model_token_classification/2023-10-05_15-46-51
+  - metric values (epoch 7):
+    | train/f1 | train/loss_epoch | trainer/global_step | val/f1 | val/loss | aggregate |
+    | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
+    |    0.996 |            0.003 |               72399 |  0.914 |    0.118 | attention |
+
 ## 2023-10-06
 
 ### Coreference Resolution

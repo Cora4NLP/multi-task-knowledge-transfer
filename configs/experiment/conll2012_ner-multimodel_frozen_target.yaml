@@ -1,0 +1,16 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=conll2012_ner-multimodel_frozen_target
+
+defaults:
+  - conll2012_ner-multimodel_base.yaml
+
+model:
+  aggregate: attention
+  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
+  # that can be loaded with Huggingface AutoModel.from_pretrained.
+  pretrained_models:
+    bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes
+  freeze_models:
+    - bert-base-cased-ner-ontonotes
