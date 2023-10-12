@@ -66,6 +66,7 @@ class F1ForExtractiveQuestionAnswering(F1Metric):
     def __init__(self, score_field: str = "score", **kwargs) -> None:
         super().__init__(layer="answers", **kwargs)
         self.score_field = score_field
+        self.reset()
 
     def calculate_counts(
         self,
