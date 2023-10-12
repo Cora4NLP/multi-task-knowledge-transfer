@@ -64,7 +64,7 @@ class F1BestVsCandidatesMetric(F1Metric):
 
 class F1ForExtractiveQuestionAnswering(F1Metric):
     def __init__(self, score_field: str = "score", **kwargs) -> None:
-        super().__init__(**kwargs)
+        super().__init__(layer="answers", **kwargs)
         self.score_field = score_field
 
     def calculate_counts(
@@ -83,9 +83,8 @@ class F1ForExtractiveQuestionAnswering(F1Metric):
             gold_annotations_per_question[ann.question].add(ann)
 
         tp, fp, fn = 0, 0, 0
-        for question in set(gold_annotations_per_question) | set(
-            predicted_annotations_per_question
-        ):
+        questions = set(gold_annotations_per_question) | set(predicted_annotations_per_question)
+        for question in questions:
             gold_annotations = gold_annotations_per_question.get(question, set())
             predicted_annotations = predicted_annotations_per_question.get(question, set())
 
