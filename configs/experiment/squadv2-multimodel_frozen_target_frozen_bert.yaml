@@ -1,7 +1,7 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=squadv2-multimodel_frozen_target_tuned_bert trainer=gpu
+# python train.py experiment=squadv2-multimodel_frozen_target_frozen_bert trainer=gpu
 
 defaults:
   # load everything from this config file
