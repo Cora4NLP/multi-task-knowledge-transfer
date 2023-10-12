@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Set, Tuple
 
 from pytorch_ie.core import Annotation, Document
 from pytorch_ie.metrics import F1Metric
@@ -86,8 +86,12 @@ class F1ForExtractiveQuestionAnswering(F1Metric):
         tp, fp, fn = 0, 0, 0
         questions = set(gold_annotations_per_question) | set(predicted_annotations_per_question)
         for question in questions:
-            gold_annotations = gold_annotations_per_question.get(question, set())
-            predicted_annotations = predicted_annotations_per_question.get(question, set())
+            gold_annotations: Set[ExtractiveAnswer] = gold_annotations_per_question.get(
+                question, set()
+            )
+            predicted_annotations: Set[ExtractiveAnswer] = predicted_annotations_per_question.get(
+                question, set()
+            )
 
             if len(gold_annotations) == 0 and len(predicted_annotations) == 0:
                 continue
@@ -105,7 +109,7 @@ class F1ForExtractiveQuestionAnswering(F1Metric):
                     f"All predicted annotations must have a {self.score_field} value to calculate "
                     f"{self.__class__.__name__}."
                 )
-            best_predicted_annotation = max(
+            best_predicted_annotation: ExtractiveAnswer = max(
                 predicted_annotations, key=lambda ann: getattr(ann, self.score_field)
             )
 
