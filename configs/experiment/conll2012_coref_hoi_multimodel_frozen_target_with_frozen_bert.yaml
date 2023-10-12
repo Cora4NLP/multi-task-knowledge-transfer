@@ -1,0 +1,39 @@
+# @package _global_
+
+# This implements a simple showcase for our idea.
+# - task: coreference on conll2012
+# - included pretrained models:
+#   - coref trained on Ontonotes
+#
+# Prerequisites:
+# - put the pretrained models to models/pretrained (see parameter model.model_paths below)
+# - rename the model weight files (*.bin) to pytorch_model.bin, if not yet done
+#
+# To train, execute:
+#
+## fast dev run: on cpu, run just for two steps
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_with_bert +trainer.fast_dev_run=true
+#
+## full training on gpu
+# python src/train.py experiment=conll2012-coref-hoi-multimodel_target_with_bert trainer=gpu
+#
+# The model implementation can be found here: src/models/multi_model_coref_hoi.py
+#
+# The config is here: configs/experiments/conll2012_coref_hoi_multimodel_target_with_bert.yaml (this file)
+
+defaults:
+  # load everything from this config file
+  - conll2012_coref_hoi_multimodel_base.yaml
+
+model:
+  aggregate: attention
+  pretrained_models:
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi
+    bert-base-cased-coref-hoi: "models/pretrained/bert-base-cased-coref-hoi"
+    bert-base-cased: "bert-base-cased"
+  pretrained_configs:
+    bert-base-cased-coref-hoi:
+      name_or_path: "bert-base-cased"
+  freeze_models:
+    - bert-base-cased-coref-hoi
+    - bert-base-cased

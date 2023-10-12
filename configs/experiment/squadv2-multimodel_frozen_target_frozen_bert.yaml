@@ -1,0 +1,17 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=squadv2-multimodel_frozen_target_tuned_bert trainer=gpu
+
+defaults:
+  # load everything from this config file
+  - squadv2-multimodel_base.yaml
+
+model:
+  aggregate: attention
+  pretrained_models:
+    bert-base-cased-qa-squad2: ${local_pretrained_model_dir}/bert-base-cased-qa-squad2
+    bert-base-cased: "bert-base-cased"
+  freeze_models:
+    - bert-base-cased-qa-squad2
+    - bert-base-cased

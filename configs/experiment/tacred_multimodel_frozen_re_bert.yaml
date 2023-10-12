@@ -1,0 +1,27 @@
+# @package _global_
+
+defaults:
+  # load everything from this config file
+  - tacred_multimodel_base.yaml
+
+tags:
+  - dataset=tacred
+  - model=multi_model_re_text_classification
+  - frozen-bert-base-cased
+  - frozen-pretrained-re
+
+model:
+  aggregate: attention
+  # This should be a mapping from an arbitrary model identifier to a pretrained model name or path
+  # that can be loaded with Huggingface AutoModel.from_pretrained.
+  # order matters - the first is the target model
+  pretrained_models:
+    bert-base-cased-re-tacred: ${local_pretrained_model_dir}/bert-base-cased-re-tacred-20230919-hf
+    bert-base-cased: "bert-base-cased"
+  pretrained_configs:
+    bert-base-cased-re-tacred:
+      name_or_path: bert-base-cased
+      vocab_size: 29034
+  freeze_models:
+    - bert-base-cased-re-tacred
+    - bert-base-cased
