@@ -1236,3 +1236,125 @@ model:
 
 - wandb report with the val/f1 and val/loss graphs (experiments from 2023-09-28 and 2023-09-29):
   [https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy](https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy)
+
+## 2023-10-12
+
+### Relation Extraction - multimodel_bert-FINAL
+
+- command:
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel \
+  validate=True \
+  +logger.wandb.name=multimodel_bert-FINAL
+  ```
+- wandb run: https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/n17ion9u
+- artefacts
+  - model location:
+    `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-10_12-29-24`
+- metric values (epoch_003.ckpt):
+  ```
+  307 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  308 ┃      Validate metric      ┃       DataLoader 0        ┃
+  309 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  310 │          val/f1           │    0.7639808654785156     │
+  311 │         val/loss          │    0.46465492248535156    │
+  312 └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Relation Extraction - multimodel_frozen_re_ner-FINAL
+
+- command:
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel_frozen_re_ner \
+  validate=True \
+  +logger.wandb.name=multimodel_frozen_re_ner-FINAL
+  ```
+- wandb run: https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/90amy45n
+- artefacts
+  - model location:
+    `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-10_18-08-49`
+- metric values (epoch_012.ckpt):
+  ```
+  521 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  522 ┃      Validate metric      ┃       DataLoader 0        ┃
+  523 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  524 │          val/f1           │    0.7301324605941772     │
+  525 │         val/loss          │    0.7457929253578186     │
+  526 └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Relation Extraction - multimodel_frozen_re_tuned_bert-FINAL
+
+- command:
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel_frozen_re_tuned_bert \
+  validate=True \
+  +logger.wandb.name=multimodel_frozen_re_tuned_bert-FINAL
+  ```
+- wandb run: https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/bbjpni8a
+- artefacts
+  - model location:
+    `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-10_22-31-41`
+- metric values (epoch_008.ckpt):
+  ```
+  524 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  525 ┃      Validate metric      ┃       DataLoader 0        ┃
+  526 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  527 │          val/f1           │    0.7330757975578308     │
+  528 │         val/loss          │     0.779472827911377     │
+  529 └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Relation Extraction - multimodel_frozen_re-FINAL
+
+- command:
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel_frozen_re \
+  validate=True \
+  +logger.wandb.name=multimodel_frozen_re-FINAL
+  ```
+- wandb run: https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/u503tnqy
+- artefacts
+  - model location:
+    `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-11_06-11-56`
+- metric values (epoch_030.ckpt):
+  ```
+  303 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  304 ┃      Validate metric      ┃       DataLoader 0        ┃
+  305 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  306 │          val/f1           │    0.7273730635643005     │
+  307 │         val/loss          │    0.7825005054473877     │
+  308 └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Relation Extraction - multimodel_re_frozen_ner-FINAL
+
+- command:
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel_re_frozen_ner \
+  validate=True \
+  +logger.wandb.name=multimodel_re_frozen_ner-FINAL
+  ```
+- wandb run: https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training/runs/8rh5e4wr
+- artefacts
+  - model location:
+    `/netscratch/hennig/code/multi-task-knowledge-transfer/models/tacred/multi_model_re_text_classification/2023-10-11_14-23-30`
+- metric values (epoch_003.ckpt):
+  ```
+  521 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  522 ┃      Validate metric      ┃       DataLoader 0        ┃
+  523 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  524 │          val/f1           │    0.7617733478546143     │
+  525 │         val/loss          │    0.7384195327758789     │
+  526 └───────────────────────────┴───────────────────────────┘
+  ```
