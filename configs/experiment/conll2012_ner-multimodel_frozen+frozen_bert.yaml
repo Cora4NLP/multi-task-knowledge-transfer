@@ -1,0 +1,14 @@
+# @package _global_
+
+defaults:
+  - conll2012_ner-multimodel_base.yaml
+
+model:
+  aggregate: attention
+  pretrained_models:
+    # copy from: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes
+    bert-base-cased-ner-ontonotes: ${local_pretrained_model_dir}/bert-base-cased-ner-ontonotes
+    bert-base-cased: "bert-base-cased"
+  freeze_models:
+    - bert-base-cased-ner-ontonotes
+    - bert-base-cased
