@@ -984,7 +984,7 @@ model:
 
 ## 2023-10-04
 
-### Relation Extraction - target-only model with attention
+### Relation Extraction - target-only model with attention - DEPRECATED  
 
 - running a target-only model (trained from scratch, using bert-base-cased and attention aggregation)
   - command:
@@ -1004,7 +1004,7 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.991 |            0.010 |              106449 |  0.656 |    1.110 | attention |
 
-### Relation Extraction - frozen pre-trained target-model + bert-base-cased with attention
+### Relation Extraction - frozen pre-trained target-model + bert-base-cased with attention - DEPRECATED
 
 - combining a frozen pretrained RE model with bert-base-cased
   - command:
@@ -1023,7 +1023,7 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.986 |            0.012 |              106449 |  0.709 |    0.955 | attention |
 
-### Relation Extraction - frozen pre-trained target-model + frozen NER model with attention
+### Relation Extraction - frozen pre-trained target-model + frozen NER model with attention - DEPRECATED
 
 - combining a frozen pretrained RE model with frozen pretrained NER model, using attention aggregation
   - command:
@@ -1042,7 +1042,7 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.979 |            0.023 |              106449 |  0.719 |    0.820 | attention |
 
-### Relation Extraction - pre-trained target-model + frozen NER model with attention
+### Relation Extraction - pre-trained target-model + frozen NER model with attention - DEPRECATED
 
 - combining a pretrained RE model with frozen pretrained NER model, using attention aggregation
   - command:
@@ -1061,7 +1061,7 @@ model:
     | -------: | ---------------: | ------------------: | -----: | -------: | --------: |
     |    0.991 |            0.010 |              106449 |  0.632 |    1.031 | attention |
 
-### Relation Extraction - pre-trained target-model + frozen NER model with attention, LR = 5e-6
+### Relation Extraction - pre-trained target-model + frozen NER model with attention, LR = 5e-6 - DEPRECATED
 
 - same as above, but using a much smaller learning rate (combining a pretrained RE model with frozen pretrained NER model, using attention aggregation)
   - command:
@@ -1237,9 +1237,10 @@ model:
 - wandb report with the val/f1 and val/loss graphs (experiments from 2023-09-28 and 2023-09-29):
   [https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy](https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy)
 
-## 2023-10-12
 
-### Relation Extraction - multimodel_bert-FINAL
+## 2023-10-10
+
+### Relation Extraction - tuned bert
 
 - command:
   ```bash
@@ -1263,7 +1264,7 @@ model:
   312 └───────────────────────────┴───────────────────────────┘
   ```
 
-### Relation Extraction - multimodel_frozen_re_ner-FINAL
+### Relation Extraction - frozen pre-trained RE model + frozen pre-trained NER model
 
 - command:
   ```bash
@@ -1287,7 +1288,7 @@ model:
   526 └───────────────────────────┴───────────────────────────┘
   ```
 
-### Relation Extraction - multimodel_frozen_re_tuned_bert-FINAL
+### Relation Extraction - frozen pre-trained RE model + tuned bert
 
 - command:
   ```bash
@@ -1311,7 +1312,7 @@ model:
   529 └───────────────────────────┴───────────────────────────┘
   ```
 
-### Relation Extraction - multimodel_frozen_re-FINAL
+### Relation Extraction - frozen pre-trained RE model
 
 - command:
   ```bash
@@ -1335,7 +1336,7 @@ model:
   308 └───────────────────────────┴───────────────────────────┘
   ```
 
-### Relation Extraction - multimodel_re_frozen_ner-FINAL
+### Relation Extraction - tuned pre-trained RE model + frozen pre-trained NER model
 
 - command:
   ```bash
