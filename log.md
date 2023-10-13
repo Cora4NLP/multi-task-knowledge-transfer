@@ -984,7 +984,7 @@ model:
 
 ## 2023-10-04
 
-### Relation Extraction - target-only model with attention - DEPRECATED  
+### Relation Extraction - target-only model with attention - DEPRECATED
 
 - running a target-only model (trained from scratch, using bert-base-cased and attention aggregation)
   - command:
@@ -1236,7 +1236,6 @@ model:
 
 - wandb report with the val/f1 and val/loss graphs (experiments from 2023-09-28 and 2023-09-29):
   [https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy](https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/reports/Coreference-Experiments--Vmlldzo1NjAwNTMy)
-
 
 ## 2023-10-10
 
