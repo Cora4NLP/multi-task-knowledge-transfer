@@ -1450,7 +1450,7 @@ model:
 
 - metric values (average over 5 seeds):
 
-  - command for evaluation:
+  - command for evaluation (shortened, see below):
 
     ```bash
     python src/evaluate.py \
