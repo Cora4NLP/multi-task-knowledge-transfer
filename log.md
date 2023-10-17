@@ -1450,6 +1450,20 @@ model:
 
 - metric values (average over 5 seeds):
 
+  - command for evaluation:
+
+    ```bash
+    python src/evaluate.py \
+    dataset=conll2012_ontonotesv5_preprocessed \
+    model_name_or_path=/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_00-49-37,/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_02-21-49,/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_04-56-27 \
+    datamodule.batch_size=1 \
+    +datamodule.test_split=validation \
+    trainer=gpu \
+    --multirun
+    ```
+
+  The evaluation was done separately using the best model checkpoint for each setting (in the example above only three models are listed for readability). The best checkpoints correspond to the ones specified under `artefacts - model location`.
+
   ```
   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
   ┃      Validate metric      ┃    Learning Rate 2e-3     ┃
