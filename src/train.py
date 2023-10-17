@@ -238,8 +238,13 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("validate"):
         log.info("Starting validation!")
         if best_ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
+            log.warning("Best ckpt not found! Using current weights for validation...")
         trainer.validate(model=model, datamodule=datamodule, ckpt_path=best_ckpt_path or None)
+    else:
+        log.warning(
+            "Validation after training is skipped! That means, the finally reported validation scores are "
+            "the values from the *last* checkpoint, not from the *best* checkpoint!"
+        )
 
     if cfg.get("test"):
         log.info("Starting testing!")
