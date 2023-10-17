@@ -1358,3 +1358,146 @@ model:
   525 │         val/loss          │    0.7384195327758789     │
   526 └───────────────────────────┴───────────────────────────┘
   ```
+
+## 2023-10-17
+
+### Coreference resolution - frozen pre-trained target-model + frozen bert (learning rate optimization)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_frozen_target_with_frozen_bert \
+  trainer=gpu \
+  model.task_learning_rate=2e-3,1e-3,2e-4,1e-4,2e-5 \
+  seed=1,2,3,4,5 \
+  --multirun
+  ```
+
+- wandb runs for learning_rate=2e-3:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0qj9dypi
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/wt456mvi
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/asa1b45g
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/4kwweri4
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ros5hm3c
+
+- wandb runs for learning_rate=1e-3:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hopchzdz
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ytjw33ox
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/f3wwxqi0
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0pscdw99
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/proghe84
+
+- wandb runs for learning_rate=2e-4:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/di1ocoeb
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cbrgafhc
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/1dttt4mx
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hnrqepd6
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/fbqikzff
+
+- wandb runs for learning_rate=1e-4:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/wuvc53pf
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/vi0yqoyz
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/p8epwiv8
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ah6k4mj4
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/y9kqvz90
+
+- wandb runs for learning_rate=2e-5:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/o8glhamx
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/qcbthya0
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/euk6ysrd
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/waymuds1
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/3q0ho8l9
+
+- artefacts
+
+  - model location:
+    - learning_rate=2e-3:
+      - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_11-23-39`
+      - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_13-28-47`
+      - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_16-02-25`
+      - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_18-45-14`
+      - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_21-20-12`
+    - learning_rate=1e-3:
+      - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-13_23-17-08`
+      - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_02-40-09`
+      - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_04-47-19`
+      - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_06-54-11`
+      - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_09-41-38`
+    - learning_rate=2e-4:
+      - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_12-39-28`
+      - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_15-31-46`
+      - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_17-49-12`
+      - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_19-50-07`
+      - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-14_21-31-46`
+    - learning_rate=1e-4:
+      - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_00-49-37`
+      - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_02-21-49`
+      - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_04-56-27`
+      - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_06-23-44`
+      - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_08-05-27`
+    - learning_rate=2e-5:
+      - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_10-59-18`
+      - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_13-43-54`
+      - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_16-42-53`
+      - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_19-51-49`
+      - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_21-57-53`
+
+- metric values (average over 5 seeds):
+
+  - command for evaluation (shortened, see below):
+
+    ```bash
+    python src/evaluate.py \
+    dataset=conll2012_ontonotesv5_preprocessed \
+    model_name_or_path=/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_00-49-37,/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_02-21-49,/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-15_04-56-27 \
+    datamodule.batch_size=1 \
+    +datamodule.test_split=validation \
+    trainer=gpu \
+    --multirun
+    ```
+
+  The evaluation was done separately using the best model checkpoint for each setting (in the example above only three models are listed for readability). The best checkpoints correspond to the ones specified under `artefacts - model location`.
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃    Learning Rate 2e-3     ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.72661                │
+  │         val/loss          │    389.376344             │
+  │         best epoch        │    28.4                   │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃    Learning Rate 1e-3     ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.730305999            │
+  │         val/loss          │    233.429692             │
+  │         best epoch        │    30.6                   │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃    Learning Rate 2e-4     ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.735008               │
+  │         val/loss          │    119.97546              │
+  │         best epoch        │    28.6                   │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃    Learning Rate 1e-4     ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.736529999999         │
+  │         val/loss          │    99.116872              │
+  │         best epoch        │    24.2                   │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃    Learning Rate 2e-5     ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.731014               │
+  │         val/loss          │    85.900434              │
+  │         best epoch        │    32.6                   │
+  └───────────────────────────┴───────────────────────────┘
+  ```
