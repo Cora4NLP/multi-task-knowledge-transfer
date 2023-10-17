@@ -235,17 +235,24 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         else:
             log.warning("the model is not saved because no save_dir is specified")
 
-    if cfg.get("validate"):
-        log.info("Starting validation!")
-        if best_ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-        trainer.validate(model=model, datamodule=datamodule, ckpt_path=best_ckpt_path or None)
+        if cfg.get("validate"):
+            log.info("Starting validation!")
+            if best_ckpt_path == "":
+                log.warning("Best ckpt not found! Using current weights for validation...")
+            trainer.validate(model=model, datamodule=datamodule, ckpt_path=best_ckpt_path or None)
+        else:
+            log.warning(
+                "Validation after training is skipped! That means, the finally reported validation scores are "
+                "the values from the *last* checkpoint, not from the *best* checkpoint!"
+            )
 
-    if cfg.get("test"):
-        log.info("Starting testing!")
-        if best_ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=best_ckpt_path or None)
+        if cfg.get("test"):
+            log.info("Starting testing!")
+            if best_ckpt_path == "":
+                log.warning("Best ckpt not found! Using current weights for testing...")
+            trainer.test(model=model, datamodule=datamodule, ckpt_path=best_ckpt_path or None)
+    else:
+        log.warning("Validation and testing are disabled because fast_dev_run is enabled!")
 
     test_metrics = trainer.callback_metrics
 
