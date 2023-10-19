@@ -39,6 +39,12 @@ model:
   pretrained_models: ???
   # freeze_models:
   #  - bert-base-cased-ner-ontonotes
+  pretrained_configs:
+    bert-base-cased-coref-hoi:
+      name_or_path: "bert-base-cased"
+    bert-base-cased-re-tacred:
+      name_or_path: "bert-base-cased"
+      vocab_size: 29034
 
   # configure learning rate. Default learning rate is set in model constructor (here: MultiModelTextClassificationModel)
   learning_rate: 2e-5

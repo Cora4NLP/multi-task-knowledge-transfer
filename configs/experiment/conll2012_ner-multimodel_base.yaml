@@ -45,6 +45,12 @@ model:
   #   bert-base-cased-ner-ontonotes: "models/pretrained/bert-base-cased-ner-ontonotes"
   #   bert-base-cased-re-tacred: "models/pretrained/bert-base-cased-re-tacred"
   #   coreference: "models/pretrained/coreference"
+  pretrained_configs:
+    bert-base-cased-coref-hoi:
+      name_or_path: "bert-base-cased"
+    bert-base-cased-re-tacred:
+      name_or_path: "bert-base-cased"
+      vocab_size: 29034
   # freeze_models:
   #   - bert-base-cased-ner-ontonotes
   # configure learning rate. Default learning rate is set in model constructor (here: TransformerTokenClassificationModel)
