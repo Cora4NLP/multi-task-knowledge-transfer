@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-import torch
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
@@ -107,7 +106,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
 
         logits = self(input_)["logits"]
 
-        loss_fct = CrossEntropyLoss()
+        loss_fct = nn.CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, self.num_classes), target.view(-1))
 
         # show loss on each step only during training
@@ -125,13 +124,19 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def training_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=TRAINING, batch=batch)
 
-    def validation_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def validation_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=VALIDATION, batch=batch)
 
-    def test_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def test_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=TEST, batch=batch)
 
     def configure_optimizers(self):
