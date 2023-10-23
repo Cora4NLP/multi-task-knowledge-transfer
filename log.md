@@ -1501,3 +1501,329 @@ model:
   │         best epoch        │    32.6                   │
   └───────────────────────────┴───────────────────────────┘
   ```
+
+## 2023-10-23
+
+### Coreference resolution - frozen pre-trained target-model + frozen NER model (learning rate 1e-4)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-ner-ontonotes] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/y5n287a5
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/sgcjpctm
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/la3n3hhj
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/e4y3c6ra
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/tiksiabq
+
+- artefacts
+
+  - model location:
+    - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_13-35-43`
+    - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_15-26-42`
+    - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_18-02-41`
+    - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_21-13-38`
+    - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_23-25-53`
+
+- metric values:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7374212373841105     │
+  │         val/loss          │     89.27302551269531     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 2           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7385665835541994     │
+  │         val/loss          │    104.8567123413086      │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 3           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7405116325919838     │
+  │         val/loss          │    112.85895538330078     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 4           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7368688214233279     │
+  │         val/loss          │     98.02670288085938     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 5           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7380053605281095     │
+  │         val/loss          │    104.0604248046875      │
+  └───────────────────────────┴───────────────────────────┘
+
+  ```
+
+  Average values across 5 seeds:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7382747270963461     │
+  │         val/loss          │    101.8151641845703      │
+  └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Coreference resolution - frozen pre-trained target-model + frozen RE model (learning rate 1e-4)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-re-tacred] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/qfy6d1b0
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/mssfnz3z
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/f50ybjt2
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/qe6wkhfr
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/u8cq3f8r
+
+- artefacts
+
+  - model location:
+    - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_13-31-35`
+    - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_15-46-44`
+    - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_17-46-58`
+    - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_19-17-16`
+    - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_21-28-54`
+
+- metric values:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7375453715826782     │
+  │         val/loss          │     95.70906066894531     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 2           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7376111337986209     │
+  │         val/loss          │     94.58311462402344     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 3           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7335361986715941     │
+  │         val/loss          │     81.6808090209961      │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 4           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7381286773175374     │
+  │         val/loss          │     95.9354019165039      │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 5           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7361911959774242     │
+  │         val/loss          │       84.1064453125       │
+  └───────────────────────────┴───────────────────────────┘
+
+  ```
+
+  Average values across 5 seeds:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.736602515469571      │
+  │         val/loss          │    90.40296630859375      │
+  └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Coreference resolution - frozen pre-trained target-model + frozen SQUAD model (learning rate 1e-4)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-qa-squad2] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/zajxvjv4
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/6rrzy3y9
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hu3xo8e9
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/wcwdgwbx
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/geac74ge
+
+- artefacts
+
+  - model location:
+    - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_13-36-00`
+    - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_16-11-15`
+    - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_18-57-25`
+    - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_20-52-16`
+    - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_23-02-37`
+
+- metric values:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7388475516715952     │
+  │         val/loss          │    102.83316802978516     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 2           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7401193760532786     │
+  │         val/loss          │    104.69572448730469     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 3           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7367386140375581     │
+  │         val/loss          │     93.01738739013672     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 4           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7385736881540638     │
+  │         val/loss          │     97.69039154052734     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 5           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7384439659595606     │
+  │         val/loss          │    104.82211303710938     │
+  └───────────────────────────┴───────────────────────────┘
+
+  ```
+
+  Average values across 5 seeds:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7385446391752113     │
+  │         val/loss          │    100.61175689697265     │
+  └───────────────────────────┴───────────────────────────┘
+  ```
+
+### Coreference resolution - frozen pre-trained target-model + frozen MRPC model (learning rate 1e-4)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/dz0sxnxa
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cvpf3jp5
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/1rppg5xw
+  - seed4: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/epykn14j
+  - seed5: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/lua1uxum
+
+- artefacts
+
+  - model location:
+    - seed1: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_13-43-05`
+    - seed2: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_16-30-01`
+    - seed3: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_18-38-06`
+    - seed4: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_20-41-04`
+    - seed5: `/netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-10-20_22-39-02`
+
+- metric values:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7397955379490755     │
+  │         val/loss          │    106.63662719726562     │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 2           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.737568557800207      │
+  │         val/loss          │    95.46542358398438      │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 3           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.737098904107325      │
+  │         val/loss          │    96.36104583740234      │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 4           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7382568081532878     │
+  │         val/loss          │    94.9079818725586       │
+  └───────────────────────────┴───────────────────────────┘
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 5           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.738821621725308      │
+  │         val/loss          │    103.93763732910156     │
+  └───────────────────────────┴───────────────────────────┘
+
+  ```
+
+  Average values across 5 seeds:
+
+  ```
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃      Validate metric      ┃          Seed 1           ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │          val/f1           │    0.7383082859470406     │
+  │         val/loss          │    99.4617431640625       │
+  └───────────────────────────┴───────────────────────────┘
+  ```
