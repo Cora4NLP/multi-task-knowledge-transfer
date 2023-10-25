@@ -1738,6 +1738,10 @@ metric values (averaged over 5 seeds):
   -m
   ```
 
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
 - results:
 
 |                  |        25% |       50% |       75% | count |       max |      mean |        min |        std |
@@ -1765,6 +1769,10 @@ metric values (averaged over 5 seeds):
   +hydra.callbacks.save_job_return.integrate_multirun_result=true \
   -m
   ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
 
 - results:
 
@@ -1794,6 +1802,10 @@ metric values (averaged over 5 seeds):
   -m
   ```
 
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
 - results:
 
 |                  |        25% |       50% |       75% | count |       max |      mean |        min |         std |
@@ -1821,6 +1833,10 @@ metric values (averaged over 5 seeds):
   +hydra.callbacks.save_job_return.integrate_multirun_result=true \
   -m
   ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
 
 - results:
 
