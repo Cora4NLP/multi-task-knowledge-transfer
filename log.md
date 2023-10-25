@@ -1720,3 +1720,135 @@ metric values (averaged over 5 seeds):
 |         0.001 |      0.7376 |    0.0085 |        1.7975 |
 |         0.003 |      0.7327 |    0.0026 |        2.9013 |
 |          0.01 |      0.7283 |     0.004 |         3.387 |
+
+### RE - frozen pre-trained target-model + frozen NER model (learning rate 1e-3)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=tacred_multimodel_base \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-ner-ontonotes=/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
+- results:
+
+|                  |        25% |       50% |       75% | count |       max |      mean |        min |        std |
+| :--------------- | ---------: | --------: | --------: | ----: | --------: | --------: | ---------: | ---------: |
+| train/f1         |   0.972717 |  0.973486 |  0.974331 |     5 |  0.974639 |  0.973394 |   0.971795 |  0.0011673 |
+| train/loss       |   0.028742 | 0.0295178 | 0.0314421 |     5 | 0.0335904 | 0.0302926 |  0.0281709 | 0.00221942 |
+| train/loss_epoch |   0.028742 | 0.0295178 | 0.0314421 |     5 | 0.0335904 | 0.0302926 |  0.0281709 | 0.00221942 |
+| train/loss_step  | 0.00602266 | 0.0141531 | 0.0262175 |     5 |  0.188285 | 0.0472922 | 0.00178264 |  0.0793658 |
+| val/f1           |   0.731052 |  0.733444 |  0.736203 |     5 |  0.751472 |  0.736534 |     0.7305 | 0.00864941 |
+| val/loss         |     1.7009 |   1.78245 |   1.88908 |     5 |   1.89592 |   1.77755 |    1.61942 |   0.119746 |
+
+### RE - frozen pre-trained target-model + frozen QA model (learning rate 1e-3)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=tacred_multimodel_base \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-qa-squad2=/ds/text/cora4nlp/models/bert-base-cased-qa-squad2 \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-qa-squad2] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
+- results:
+
+|                  |        25% |        50% |       75% | count |       max |      mean |        min |         std |
+| :--------------- | ---------: | ---------: | --------: | ----: | --------: | --------: | ---------: | ----------: |
+| train/f1         |   0.972794 |    0.97364 |  0.974331 |     5 |  0.974485 |  0.973547 |   0.972487 | 0.000893608 |
+| train/loss       |  0.0290063 |  0.0291671 | 0.0292249 |     5 | 0.0311898 | 0.0294617 |  0.0287205 |  0.00098564 |
+| train/loss_epoch |  0.0290063 |  0.0291671 | 0.0292249 |     5 | 0.0311898 | 0.0294617 |  0.0287205 |  0.00098564 |
+| train/loss_step  | 0.00649406 | 0.00959971 | 0.0239457 |     5 |  0.173741 | 0.0430638 | 0.00153869 |   0.0735246 |
+| val/f1           |   0.733996 |   0.735835 |  0.738043 |     5 |  0.755151 |  0.738742 |   0.730684 |  0.00956091 |
+| val/loss         |    1.71358 |    1.77702 |    1.8848 |     5 |   1.91307 |    1.7747 |    1.58506 |    0.133202 |
+
+### RE - frozen pre-trained target-model + frozen Coref model (learning rate 1e-3)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=tacred_multimodel_base \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-coref-hoi=/ds/text/cora4nlp/models/bert-base-cased-coref-hoi \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-coref-hoi] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
+- results:
+
+|                  |        25% |       50% |       75% | count |       max |      mean |        min |         std |
+| :--------------- | ---------: | --------: | --------: | ----: | --------: | --------: | ---------: | ----------: |
+| train/f1         |   0.973102 |   0.97387 |  0.974716 |     5 |  0.974869 |  0.973732 |   0.972103 |  0.00115457 |
+| train/loss       |  0.0288969 | 0.0291348 | 0.0296901 |     5 | 0.0311432 | 0.0294986 |  0.0286281 | 0.000999218 |
+| train/loss_epoch |  0.0288969 | 0.0291348 | 0.0296901 |     5 | 0.0311432 | 0.0294986 |  0.0286281 | 0.000999218 |
+| train/loss_step  | 0.00735919 | 0.0102697 | 0.0263926 |     5 |  0.150773 | 0.0392107 | 0.00125884 |   0.0630534 |
+| val/f1           |     0.7305 |   0.73234 |  0.738043 |     5 |   0.75092 |  0.736387 |   0.730132 |  0.00871915 |
+| val/loss         |    1.74941 |   1.76399 |   1.85395 |     5 |   1.92623 |   1.71937 |    1.30326 |    0.243382 |
+
+### RE - frozen pre-trained target-model + frozen MRPC model (learning rate 1e-3)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=tacred_multimodel_base \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-mrpc=bert-base-cased-finetuned-mrpc \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-mrpc] \
+  +model.aggregate=attention \
+  model.task_learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+- wandb runs
+
+  - Runs with numbers -140 to -163 (except -147) at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
+- results:
+
+  |                  |       25% |        50% |       75% | count |      max |     mean |        min |         std |
+  | :--------------- | --------: | ---------: | --------: | ----: | -------: | -------: | ---------: | ----------: |
+  | train/f1         |  0.973179 |   0.974101 |  0.974331 |     5 | 0.974716 | 0.973578 |   0.971565 |  0.00125976 |
+  | train/loss       | 0.0290088 |   0.029706 |  0.029738 |     5 | 0.030946 | 0.029572 |  0.0284613 | 0.000933314 |
+  | train/loss_epoch | 0.0290088 |   0.029706 |  0.029738 |     5 | 0.030946 | 0.029572 |  0.0284613 | 0.000933314 |
+  | train/loss_step  | 0.0054442 | 0.00997965 | 0.0239383 |     5 | 0.184513 | 0.045318 | 0.00271478 |   0.0782401 |
+  | val/f1           |  0.729765 |   0.730316 |  0.737859 |     5 | 0.746321 | 0.734695 |   0.729213 |  0.00739438 |
+  | val/loss         |   1.61852 |     1.7736 |    1.8762 |     5 |  1.89542 |  1.71494 |    1.41099 |      0.2023 |
