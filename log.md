@@ -1687,3 +1687,36 @@ model:
   | train/loss_step  | 1.90735e-06 | 7.74858e-06 | 3.8147e-05 |     5 | 0.0123741 | 0.00248438 |        0 | 0.00552853 |
   | val/f1           |    0.737569 |    0.738257 |   0.738822 |     5 |  0.739796 |   0.738308 | 0.737099 | 0.00105923 |
   | val/loss         |     95.4654 |      96.361 |    103.938 |     5 |   106.637 |    99.4617 |   94.908 |    5.42757 |
+
+## 2023-10-25
+
+### LR Tuning for RE (frozen pretrained RE + frozen bert)
+
+- command:
+
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=tacred_multimodel_frozen_re_bert \
+  seed=1031,1097,1153,1223,1579 \
+  model.learning_rate=1e-6,3e-6,1e-5,3e-5,1e-4,3e-4,1e-3,3e-3,1e-2 \
+  validate=True
+  ```
+
+- wandb runs
+
+  - Runs with numbers -96 to -139 and -147 at https://wandb.ai/leonhardhennig/tacred-multi_model_re_text_classification-training
+
+metric values (averaged over 5 seeds):
+
+| learning rate | mean val/f1 | sd val/f1 | mean val/loss |
+| ------------: | ----------: | --------: | ------------: |
+|         1e-06 |      0.7243 |    0.0011 |        0.7284 |
+|         3e-06 |       0.727 |    0.0012 |        0.7415 |
+|         1e-05 |      0.7301 |    0.0021 |         0.754 |
+|         3e-05 |       0.732 |     0.003 |         0.798 |
+|        0.0001 |      0.7347 |    0.0026 |         0.854 |
+|        0.0003 |      0.7361 |    0.0079 |        1.0396 |
+|         0.001 |      0.7376 |    0.0085 |        1.7975 |
+|         0.003 |      0.7327 |    0.0026 |        2.9013 |
+|          0.01 |      0.7283 |     0.004 |         3.387 |
