@@ -1728,7 +1728,8 @@ metric values (averaged over 5 seeds):
   ```bash
   python src/train.py \
   experiment=tacred_multimodel_base \
-  +model.pretrained_models={bert-base-cased-re-tacred: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes: /ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes} \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-ner-ontonotes=/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes \
   +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes] \
   +model.aggregate=attention \
   model.task_learning_rate=1e-3 \
@@ -1760,7 +1761,8 @@ metric values (averaged over 5 seeds):
   ```bash
   python src/train.py \
   experiment=tacred_multimodel_base \
-  +model.pretrained_models={bert-base-cased-re-tacred: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-qa-squad2: /ds/text/cora4nlp/models/bert-base-cased-qa-squad2} \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-qa-squad2=/ds/text/cora4nlp/models/bert-base-cased-qa-squad2 \
   +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-qa-squad2] \
   +model.aggregate=attention \
   model.task_learning_rate=1e-3 \
@@ -1792,7 +1794,8 @@ metric values (averaged over 5 seeds):
   ```bash
   python src/train.py \
   experiment=tacred_multimodel_base \
-  +model.pretrained_models={bert-base-cased-re-tacred: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-coref-hoi: /ds/text/cora4nlp/models/bert-base-cased-coref-hoi} \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-coref-hoi=/ds/text/cora4nlp/models/bert-base-cased-coref-hoi \
   +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-coref-hoi] \
   +model.aggregate=attention \
   model.task_learning_rate=1e-3 \
@@ -1824,7 +1827,8 @@ metric values (averaged over 5 seeds):
   ```bash
   python src/train.py \
   experiment=tacred_multimodel_base \
-  +model.pretrained_models={bert-base-cased-re-tacred: /ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-mrpc: bert-base-cased-finetuned-mrpc} \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.pretrained_models.bert-base-cased-mrpc=bert-base-cased-finetuned-mrpc \
   +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-mrpc] \
   +model.aggregate=attention \
   model.task_learning_rate=1e-3 \
