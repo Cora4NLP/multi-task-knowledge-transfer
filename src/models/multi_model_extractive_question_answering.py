@@ -6,7 +6,7 @@ from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
 from torch.nn import CrossEntropyLoss, functional
 from torch.optim import Adam
-from transformers import BatchEncoding
+from transformers import BatchEncoding, get_linear_schedule_with_warmup
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 
 from src.models.components import TransformerMultiModel
@@ -35,6 +35,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         learning_rate: float = 1e-5,
+        task_learning_rate: Optional[float] = None,
+        warmup_proportion: float = 0.0,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
         model_name: Optional[str] = None,
@@ -49,6 +51,8 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
             pretrained_default_config = model_name
         self.save_hyperparameters(ignore=["model_name"])
         self.learning_rate = learning_rate
+        self.task_learning_rate = task_learning_rate
+        self.warmup_proportion = warmup_proportion
 
         self.base_models = TransformerMultiModel(
             pretrained_models=pretrained_models,
@@ -195,4 +199,24 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         return self.step(stage=TEST, batch=batch)
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=self.learning_rate)
+        if self.task_learning_rate is not None:
+            all_params = dict(self.named_parameters())
+            base_model_params = dict(self.base_models.named_parameters(prefix="base_models"))
+            task_params = {k: v for k, v in all_params.items() if k not in base_model_params}
+            optimizer = Adam(
+                [
+                    {"params": base_model_params.values(), "lr": self.learning_rate},
+                    {"params": task_params.values(), "lr": self.task_learning_rate},
+                ]
+            )
+        else:
+            optimizer = Adam(self.parameters(), lr=self.learning_rate)
+
+        if self.warmup_proportion > 0.0:
+            stepping_batches = self.trainer.estimated_stepping_batches
+            scheduler = get_linear_schedule_with_warmup(
+                optimizer, int(stepping_batches * self.warmup_proportion), stepping_batches
+            )
+            return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+        else:
+            return optimizer
