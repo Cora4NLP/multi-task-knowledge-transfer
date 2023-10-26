@@ -1,12 +1,11 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-import torch
 import torchmetrics
 from pytorch_ie.core import PyTorchIEModel
 from torch import Tensor, nn
-from torch.nn import CrossEntropyLoss
-from transformers import BatchEncoding
+from torch.optim import Adam
+from transformers import BatchEncoding, get_linear_schedule_with_warmup
 from typing_extensions import TypeAlias
 
 from src.models.components import TransformerMultiModel
@@ -40,6 +39,8 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         freeze_models: Optional[List[str]] = None,
         classifier_dropout: float = 0.1,
         learning_rate: float = 1e-5,
+        task_learning_rate: Optional[float] = None,
+        warmup_proportion: float = 0.0,
         label_pad_token_id: int = -100,
         ignore_index: int = 0,
         model_name: Optional[str] = None,
@@ -55,6 +56,9 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         self.save_hyperparameters(ignore=["model_name"])
 
         self.learning_rate = learning_rate
+        self.task_learning_rate = task_learning_rate
+        self.warmup_proportion = warmup_proportion
+
         self.label_pad_token_id = label_pad_token_id
         self.num_classes = num_classes
 
@@ -102,7 +106,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
 
         logits = self(input_)["logits"]
 
-        loss_fct = CrossEntropyLoss()
+        loss_fct = nn.CrossEntropyLoss()
         loss = loss_fct(logits.view(-1, self.num_classes), target.view(-1))
 
         # show loss on each step only during training
@@ -120,14 +124,40 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
 
         return loss
 
-    def training_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def training_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=TRAINING, batch=batch)
 
-    def validation_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def validation_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=VALIDATION, batch=batch)
 
-    def test_step(self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int):  # type: ignore
+    def test_step(
+        self, batch: MultiModelTokenClassificationModelStepBatchEncoding, batch_idx: int
+    ):
         return self.step(stage=TEST, batch=batch)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        if self.task_learning_rate is not None:
+            all_params = dict(self.named_parameters())
+            base_model_params = dict(self.base_models.named_parameters(prefix="base_models"))
+            task_params = {k: v for k, v in all_params.items() if k not in base_model_params}
+            optimizer = Adam(
+                [
+                    {"params": base_model_params.values(), "lr": self.learning_rate},
+                    {"params": task_params.values(), "lr": self.task_learning_rate},
+                ]
+            )
+        else:
+            optimizer = Adam(self.parameters(), lr=self.learning_rate)
+
+        if self.warmup_proportion > 0.0:
+            stepping_batches = self.trainer.estimated_stepping_batches
+            scheduler = get_linear_schedule_with_warmup(
+                optimizer, int(stepping_batches * self.warmup_proportion), stepping_batches
+            )
+            return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+        else:
+            return optimizer
