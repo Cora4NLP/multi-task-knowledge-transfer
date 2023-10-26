@@ -73,6 +73,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         num_genres=None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        truncate_models: Optional[Dict[str, int]] = None,
         pretrained_default_config: Optional[str] = None,
         pretrained_configs: Optional[Dict[str, Dict[str, Any]]] = None,
         model_name: Optional[str] = None,
@@ -99,6 +100,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
+            truncate_models=truncate_models,
         )
 
         self.num_genres = num_genres if num_genres else len(genres)

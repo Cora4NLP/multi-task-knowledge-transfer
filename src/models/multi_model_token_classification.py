@@ -38,6 +38,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
         pretrained_default_config: Optional[str] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        truncate_models: Optional[Dict[str, int]] = None,
         classifier_dropout: float = 0.1,
         learning_rate: float = 1e-5,
         label_pad_token_id: int = -100,
@@ -65,6 +66,7 @@ class MultiModelTokenClassificationModel(PyTorchIEModel):
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
+            truncate_models=truncate_models,
         )
 
         self.dropout = nn.Dropout(classifier_dropout)
