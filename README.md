@@ -67,7 +67,7 @@ and set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that locati
 #### Coreference Resolution
 
 TODO: How to get the data?
-TODO: How to preprocess?
+TODO: How to preprocess? explanations should use the local version of the preprocessing script in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed`!
 TODO: How to set the environment variable `CONLL2012_DATA_DIR`?
 
 ##### Extractive Question Answering
