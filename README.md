@@ -44,6 +44,38 @@ cp .env.example .env
 # 2. edit the .env file for your needs!
 ```
 
+### Data Preparation
+
+#### Relation Extraction
+
+We use the [TacRED dataset](https://nlp.stanford.edu/projects/tacred/).
+
+TODO: Describe, how to get the data.
+
+relevant environment variable: `TACRED_DATA_DIR`
+
+TODO: describe how to set it
+
+#### Named Entity Recognition
+
+We use the [CoNLL 2012 dataset](https://aclanthology.org/W13-3516/), see
+[here](https://huggingface.co/datasets/conll2012_ontonotesv5) for the HuggingFace Dataset.
+Because of license restrictions you need to download the data manually (e.g. from here
+https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)
+and set the environment variable `CONLL2012_DATA_DIR` to that location.
+
+#### Coreference Resolution
+
+TODO: How to get the data?
+TODO: How to preprocess?
+TODO: How to set the environment variable `CONLL2012_DATA_DIR`?
+
+##### Extractive Question Answering
+
+We use the [SQuAD 2.0](https://rajpurkar.github.io/SQuAD-explorer/) dataset for extractive question
+answering which is fully accessible as a [HuggingFace Dataset](https://huggingface.co/datasets/squad_v2),
+so no additional data preparation is required.
+
 ### Model Training
 
 **Have a look into the [train.yaml](configs/train.yaml) config to see all available options.**
