@@ -52,9 +52,9 @@ We use the [TACRED dataset](https://nlp.stanford.edu/projects/tacred/).
 
 To use TACRED you have to download it manually. It is available via the LDC
 at https://catalog.ldc.upenn.edu/LDC2018T24. Please extract all files in one folder
-and set the relevant environment variable: `TACRED_DATA_DIR=[path/to/tacred]/data/json/`.
+and set the relevant environment variable: `TACRED_DATA_DIR=[path/to/tacred]/data/json`.
 
-DFKI-internal: On the cluster, use `TACRED_DATA_DIR=/ds/text/tacred/data/json/`
+DFKI-internal: On the cluster, use `TACRED_DATA_DIR=/ds/text/tacred/data/json`
 
 #### Named Entity Recognition
 
@@ -73,7 +73,7 @@ TODO: How to get the data? can we just point to the same as described in the NER
 TODO: How to preprocess? explanations should use the local version of the preprocessing script in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed`!
 TODO: How to set the environment variable `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR`?
 
-DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref/`
+DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref`
 
 ##### Extractive Question Answering
 
