@@ -66,9 +66,9 @@ and set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that locati
 
 #### Coreference Resolution
 
-TODO: How to get the data?
+TODO: How to get the data? can we just point to the same as described in the NER section (i.e. https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)?
 TODO: How to preprocess? explanations should use the local version of the preprocessing script in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed`!
-TODO: How to set the environment variable `CONLL2012_DATA_DIR`?
+TODO: How to set the environment variable `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR`?
 
 ##### Extractive Question Answering
 
