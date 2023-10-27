@@ -69,9 +69,38 @@ DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_DATA_DIR=/ds/text/conl
 
 #### Coreference Resolution
 
-TODO: How to get the data? can we just point to the same as described in the NER section (i.e. https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)?
-TODO: How to preprocess? explanations should use the local version of the preprocessing script in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed`!
-TODO: How to set the environment variable `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR`?
+Coreference data: downloading, pre-processing and setting up the environment variable
+
+In order to download and prepare the data for coreference resolution you can execute the following script (you only need to replace the user name):
+
+```
+#!/bin/sh
+export HOME=/netscratch/anikina/multi-task-knowledge-transfer
+cd /netscratch/anikina/multi-task-knowledge-transfer/data
+wget https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/zmycy7t9h9-2.zip
+unzip zmycy7t9h9-2.zip
+rm zmycy7t9h9-2.zip
+mv zmycy7t9h9-2 ontonotes_coref
+cd ontonotes_coref
+unzip conll-2012.zip
+cd ../..
+bash scripts/setup_coref_data.sh /netscratch/anikina/multi-task-knowledge-transfer/data/ontonotes_coref /netscratch/anikina/multi-task-knowledge-transfer/data/ontonotes_coref
+python dataset_builders/pie/conll2012_ontonotesv5_preprocessed/preprocess.py --input_dir data/ontonotes_coref --output_dir data/english.384.bert-base-cased --seg_len 384
+```
+
+E.g., on the DFKI cluster you can put this script in a file `preprocess_coref.sh` and then run the following command (specifying the partition relevant for your department):
+
+```
+$ usrun.sh --output=$PWD/preprocess-coref.out -p RTX3090-MLT --mem=24G preprocess_coref.sh &
+```
+
+This script will download the files annotated with coreference from the OntoNotes CoNLL-2012 dataset. You can also download these data manually from here: [https://data.mendeley.com/datasets/zmycy7t9h9/2](https://data.mendeley.com/datasets/zmycy7t9h9/2).
+
+The pre-processing step first combines the annotations and stores them in the conll format (scripts/setup_coref_data.sh) and then the code in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed/preprocess.py` converts these files to jsonlines.
+
+The resulting files (training, development and test partitions) will be stored in `data/english.384.bert-base-cased`. They should be identical to the ones that are stored on the cluster: `/ds/text/cora4nlp/datasets/ontonotes_coref/english.384.bert-base-cased`.
+
+When the pre-processing is finished you can set the environment variable `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR` in the `.env` file to the place where you have the `english.384.bert-base-cased` directory.
 
 DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref`
 
