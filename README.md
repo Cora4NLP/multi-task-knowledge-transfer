@@ -62,7 +62,8 @@ We use the [CoNLL 2012 dataset](https://aclanthology.org/W13-3516/), see
 [here](https://huggingface.co/datasets/conll2012_ontonotesv5) for the HuggingFace Dataset.
 Because of license restrictions you need to download the data manually (e.g. from here
 https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)
-and set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that location.
+and set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that location (either to the extracted folder
+or directly to the zip file).
 
 DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_DATA_DIR=/ds/text/conll-2012`
 
