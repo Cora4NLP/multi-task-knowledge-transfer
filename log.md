@@ -1852,3 +1852,97 @@ metric values (averaged over 5 seeds):
   | train/loss_step  | 0.0054442 | 0.00997965 | 0.0239383 |     5 | 0.184513 | 0.045318 | 0.00271478 |   0.0782401 |
   | val/f1           |  0.729765 |   0.730316 |  0.737859 |     5 | 0.746321 | 0.734695 |   0.729213 |  0.00739438 |
   | val/loss         |   1.61852 |     1.7736 |    1.8762 |     5 |  1.89542 |  1.71494 |    1.41099 |      0.2023 |
+
+
+## 2023-10-27
+
+### Probing Correlation of pretrained RE model final layer embeddings with other tasks
+
+#### NER
+
+- command:
+
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=conll2012_ner-multimodel_base \
+  model.learning_rate=1e-4 \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.freeze_models=[bert-base-cased-re-tacred] \
+  \"tags=[\'dataset=conll2012\',\'model=multi_model_token_classification\',\'probing_model=bert-base-cased-re-tacred\']\" \
+  "name=probing/bert-base-cased-re-tacred" \
+  -m 
+  ```
+  
+- wandb runs:
+
+  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+
+- results:
+
+#### Coref
+
+- command:
+  
+  ```bash
+  python src/train.py \
+  trainer=gpu \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  model.task_learning_rate=1e-4 \
+  seed=1031,1097,1153,1223,1579 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.freeze_models=[bert-base-cased-re-tacred] \
+  \"tags=[\'dataset=conll2012\',\'model=multi_model_coref_hoi\',\'probing_model=bert-base-cased-re-tacred\']\" \
+  "name=probing/bert-base-cased-re-tacred" \
+  -m
+  ```
+  
+- wandb runs:
+
+  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+
+- results:
+
+#### QA
+
+- command:
+
+  ```bash
+  python src/train.py  \
+  trainer=gpu  \
+  experiment=squadv2-multimodel_base +model.learning_rate=1e-4  \
+  seed=1031,1097,1153,1223,1579  \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true  \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf  \
+  +model.freeze_models=[bert-base-cased-re-tacred]  \
+  \"tags=[\'dataset=squadv2\',\'task=extractive_question_answering\',\'probing_model=bert-base-cased-re-tacred\']\"  \
+  "name=probing/bert-base-cased-re-tacred"  \
+  -m
+  ```
+  
+- wandb runs:
+
+  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+
+- results:
+  
+#### MRPC
+
+- command:
+
+  ```bash
+  python src/train.py  \
+  trainer=gpu  \
+  experiment=mrpc-multimodel_base +model.learning_rate=1e-4  \
+  seed=1031,1097,1153,1223,1579  \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true  \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf  \
+  +model.freeze_models=[bert-base-cased-re-tacred]  \
+  \"tags=[\'dataset=mrpc\',\'task=extractive_question_answering\',\'probing_model=bert-base-cased-re-tacred\']\"  \
+  "name=probing/bert-base-cased-re-tacred"  \
+  -m
+  ```
+
