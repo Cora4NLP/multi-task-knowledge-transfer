@@ -15,7 +15,7 @@
 
 What it does
 
-## 🚀  Quickstart
+## 🚀 Quickstart
 
 ### Environment Setup
 
@@ -48,13 +48,13 @@ cp .env.example .env
 
 #### Relation Extraction
 
-We use the [TacRED dataset](https://nlp.stanford.edu/projects/tacred/).
+We use the [TACRED dataset](https://nlp.stanford.edu/projects/tacred/).
 
-TODO: Describe, how to get the data.
+To use TACRED you have to download it manually. It is available via the LDC
+at https://catalog.ldc.upenn.edu/LDC2018T24. Please extract all files in one folder
+and set the relevant environment variable: `TACRED_DATA_DIR=[path/to/tacred]/data/json/`.
 
-relevant environment variable: `TACRED_DATA_DIR`
-
-TODO: describe how to set it
+DFKI-internal: On the cluster, use `TACRED_DATA_DIR=/ds/text/tacred/data/json/`
 
 #### Named Entity Recognition
 
@@ -64,11 +64,15 @@ Because of license restrictions you need to download the data manually (e.g. fro
 https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)
 and set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that location.
 
+DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_DATA_DIR=/ds/text/conll-2012`
+
 #### Coreference Resolution
 
 TODO: How to get the data? can we just point to the same as described in the NER section (i.e. https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded)?
 TODO: How to preprocess? explanations should use the local version of the preprocessing script in `dataset_builders/pie/conll2012_ontonotesv5_preprocessed`!
 TODO: How to set the environment variable `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR`?
+
+DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref/`
 
 ##### Extractive Question Answering
 
