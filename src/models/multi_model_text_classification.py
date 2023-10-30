@@ -35,6 +35,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
         tokenizer_vocab_size: Optional[int] = None,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        truncate_models: Optional[Dict[str, int]] = None,
         ignore_index: Optional[int] = None,
         learning_rate: float = 1e-5,
         task_learning_rate: Optional[float] = None,
@@ -63,6 +64,7 @@ class MultiModelTextClassificationModel(PyTorchIEModel):
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
+            truncate_models=truncate_models,
             # this is important because we may have added new special tokens to the tokenizer
             tokenizer_vocab_size=tokenizer_vocab_size,
         )

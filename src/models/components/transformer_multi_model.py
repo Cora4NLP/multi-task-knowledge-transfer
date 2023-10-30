@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torch.nn import Module, ModuleDict
-from transformers import AutoConfig, AutoModel
+from transformers import AutoConfig, AutoModel, BertModel
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +240,8 @@ class TransformerMultiModel(Module):
         aggregate: Union[str, Dict[str, Any]] = "mean",
         # A list of model ids to freeze during training.
         freeze_models: Optional[List[str]] = None,
+        # A dictionary mapping model ids to the number of layers to keep. All other layers are discarded.
+        truncate_models: Optional[Dict[str, int]] = None,
         # The size of the vocabulary of the tokenizer. If provided, the token embeddings of all models are resized
         # to this size.
         tokenizer_vocab_size: Optional[int] = None,
@@ -308,6 +310,16 @@ class TransformerMultiModel(Module):
 
         for model_id in freeze_models or []:
             self.models[model_id].requires_grad_(False)
+
+        for model_id, truncate_length in (truncate_models or {}).items():
+            logger.warning(f"Truncating model {model_id}: use only first {truncate_length} layers")
+            model = self.models[model_id]
+            if isinstance(model, BertModel):
+                model.encoder.layer = model.encoder.layer[:truncate_length]
+            else:
+                raise NotImplementedError(
+                    f"model_id={model_id}: Truncating models of type {type(model)} is not implemented"
+                )
 
         aggregate_config: Dict[str, Any]
         if isinstance(aggregate, str):

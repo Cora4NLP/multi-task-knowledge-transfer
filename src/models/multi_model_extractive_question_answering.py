@@ -39,6 +39,7 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
         warmup_proportion: float = 0.0,
         aggregate: str = "mean",
         freeze_models: Optional[List[str]] = None,
+        truncate_models: Optional[Dict[str, int]] = None,
         model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
@@ -61,6 +62,7 @@ class MultiModelExtractiveQuestionAnsweringModel(PyTorchIEModel):
             load_model_weights=not self.is_from_pretrained,
             aggregate=aggregate,
             freeze_models=freeze_models,
+            truncate_models=truncate_models,
         )
         self.max_input_length = max_input_length
 
