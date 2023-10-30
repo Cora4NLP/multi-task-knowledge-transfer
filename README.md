@@ -15,7 +15,7 @@
 
 What it does
 
-## 🚀  Quickstart
+## 🚀 Quickstart
 
 ### Environment Setup
 
@@ -43,6 +43,79 @@ bash setup_symlinks.sh $HOME/experiments/multi-task-knowledge-transfer
 cp .env.example .env
 # 2. edit the .env file for your needs!
 ```
+
+### Data Preparation
+
+#### Relation Extraction
+
+We use the [TACRED dataset](https://nlp.stanford.edu/projects/tacred/).
+
+To use TACRED you have to download it manually. It is available via the LDC
+at https://catalog.ldc.upenn.edu/LDC2018T24. Please extract all files in one folder
+and set the relevant environment variable: `TACRED_DATA_DIR=[path/to/tacred]/data/json`.
+
+DFKI-internal: On the cluster, use `TACRED_DATA_DIR=/ds/text/tacred/data/json`
+
+#### Named Entity Recognition
+
+We use the [CoNLL 2012 dataset](https://aclanthology.org/W13-3516/), see [here](https://huggingface.co/datasets/conll2012_ontonotesv5) for the HuggingFace Dataset.
+Because of license restrictions you need to download the data manually, e.g. from [here](https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded) or from
+[here](https://data.mendeley.com/datasets/zmycy7t9h9/2) (the latter requires to unpack the data first to get the
+required `conll-2012.zip` file). Then, set the environment variable `CONLL2012_ONTONOTESV5_DATA_DIR` to that
+location (either to the extracted folder `conll-2012` or directly to the zip file `conll-2012.zip`).
+
+DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_DATA_DIR=/ds/text/conll-2012`
+
+#### Coreference Resolution
+
+We use the [CoNLL 2012 dataset](https://aclanthology.org/W13-3516/), see [here](https://huggingface.co/datasets/conll2012_ontonotesv5) for the HuggingFace Dataset.
+
+In order to download and prepare the data for coreference resolution you can execute the following script (`scripts/prepare_coref_data.sh`):
+
+```bash
+#!/bin/sh
+
+COREF_SCRIPTS_DIR="dataset_builders/pie/conll2012_ontonotesv5_preprocessed"
+DATA_DIR="data"
+TARGET_DIR="$DATA_DIR/ontonotes_coref"
+
+# download and unpack the data: this will create the directory "$DATA_DIR/conll-2012"
+sh $COREF_SCRIPTS_DIR/download_data.sh $DATA_DIR
+# combine the annotations and stores them in the conll format
+bash $COREF_SCRIPTS_DIR/setup_coref_data.sh $DATA_DIR $TARGET_DIR
+# tokenize the input (this requires the Huggingface transformers package!) and convert the files to jsonlines
+python $COREF_SCRIPTS_DIR/preprocess.py --input_dir $TARGET_DIR --output_dir $TARGET_DIR/english.384.bert-base-cased --seg_len 384
+```
+
+This script will first download the files annotated with coreference from the OntoNotes CoNLL-2012 dataset. You can
+also download these data manually from [here](https://data.mendeley.com/datasets/zmycy7t9h9/2) or from
+[here](https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded).
+Then, the pre-processing step first combines the annotations and stores them in the conll format
+(`scripts/setup_coref_data.sh`). Finally, the code in
+`dataset_builders/pie/conll2012_ontonotesv5_preprocessed/preprocess.py` converts these files to jsonlines.
+
+The resulting files (training, development and test partitions) will be stored in
+`data/english.384.bert-base-cased`. They should be identical to the ones that are stored on the cluster:
+`/ds/text/cora4nlp/datasets/ontonotes_coref/english.384.bert-base-cased`.
+
+When the data preparation is finished you can set the environment variable
+`CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR` in the `.env` file to the place that contains
+`english.384.bert-base-cased` directory.
+
+To run the data preparation code on the DFKI cluster, you can execute the following command
+(specifying the partition relevant for your department):
+
+```
+$ usrun.sh --output=$PWD/preprocess-coref.out -p RTX3090-MLT --mem=24G scripts/prepare_coref_data.sh &
+```
+
+DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref`
+
+#### Extractive Question Answering
+
+We use the [SQuAD 2.0](https://rajpurkar.github.io/SQuAD-explorer/) dataset for extractive question
+answering which is fully accessible as a [HuggingFace Dataset](https://huggingface.co/datasets/squad_v2),
+so no additional data preparation is required.
 
 ### Model Training
 
