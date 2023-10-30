@@ -1853,7 +1853,6 @@ metric values (averaged over 5 seeds):
   | val/f1           |  0.729765 |   0.730316 |  0.737859 |     5 | 0.746321 | 0.734695 |   0.729213 |  0.00739438 |
   | val/loss         |   1.61852 |     1.7736 |    1.8762 |     5 |  1.89542 |  1.71494 |    1.41099 |      0.2023 |
 
-
 ## 2023-10-27
 
 ### Probing Correlation of pretrained RE model final layer embeddings with other tasks
@@ -1873,19 +1872,28 @@ metric values (averaged over 5 seeds):
   +model.freeze_models=[bert-base-cased-re-tacred] \
   \"tags=[\'dataset=conll2012\',\'model=multi_model_token_classification\',\'probing_model=bert-base-cased-re-tacred\']\" \
   "name=probing/bert-base-cased-re-tacred" \
-  -m 
+  -m
   ```
-  
+
 - wandb runs:
 
-  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+  - Runs with NER- prefix and numbers -1,-4, -5, -6, -7 at https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
 
 - results:
+
+|                  |      25% |      50% |      75% | count |      max |     mean |       min |         std |
+| :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | --------: | ----------: |
+| train/f1         |  0.58033 |  0.58063 | 0.580819 |     5 |  0.58101 | 0.580525 |  0.579834 | 0.000460613 |
+| train/loss       | 0.229972 |  0.22998 | 0.230024 |     5 | 0.230078 | 0.229897 |  0.229433 | 0.000262888 |
+| train/loss_epoch | 0.229972 |  0.22998 | 0.230024 |     5 | 0.230078 | 0.229897 |  0.229433 | 0.000262888 |
+| train/loss_step  | 0.110126 | 0.152804 | 0.270792 |     5 | 0.393352 | 0.198475 | 0.0652988 |    0.133073 |
+| val/f1           | 0.676782 | 0.678543 | 0.679046 |     5 | 0.681175 | 0.678199 |  0.675447 |   0.0021953 |
+| val/loss         | 0.192253 | 0.192285 | 0.193033 |     5 | 0.195406 | 0.192973 |  0.191889 |  0.00142214 |
 
 #### Coref
 
 - command:
-  
+
   ```bash
   python src/train.py \
   trainer=gpu \
@@ -1899,12 +1907,21 @@ metric values (averaged over 5 seeds):
   "name=probing/bert-base-cased-re-tacred" \
   -m
   ```
-  
+
 - wandb runs:
 
-  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+  - Runs with COREF- prefix and numbers -2,-8, -10, -11, -13 at https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
 
 - results:
+
+|                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+| :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+| train/f1         | 0.430001 |  0.44413 | 0.448289 |     5 | 0.471093 | 0.443547 | 0.424219 |  0.018294 |
+| train/loss       |  779.455 |  790.471 |  832.769 |     5 |  859.321 |  790.519 |  690.582 |   64.4757 |
+| train/loss_epoch |  779.455 |  790.471 |  832.769 |     5 |  859.321 |  790.519 |  690.582 |   64.4757 |
+| train/loss_step  |  147.987 |  350.733 |  1390.74 |     5 |  1465.24 |  697.139 |   130.99 |   673.269 |
+| val/f1           | 0.498223 | 0.507702 | 0.514976 |     5 | 0.533595 | 0.505491 | 0.472961 | 0.0223366 |
+| val/loss         |  672.692 |  719.793 |  725.444 |     5 |  758.595 |   709.78 |  672.376 |   37.0915 |
 
 #### QA
 
@@ -1913,7 +1930,8 @@ metric values (averaged over 5 seeds):
   ```bash
   python src/train.py  \
   trainer=gpu  \
-  experiment=squadv2-multimodel_base +model.learning_rate=1e-4  \
+  experiment=squadv2-multimodel_base \
+  +model.learning_rate=1e-4  \
   seed=1031,1097,1153,1223,1579  \
   +hydra.callbacks.save_job_return.integrate_multirun_result=true  \
   +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf  \
@@ -1922,27 +1940,9 @@ metric values (averaged over 5 seeds):
   "name=probing/bert-base-cased-re-tacred"  \
   -m
   ```
-  
+
 - wandb runs:
 
-  - Runs with numbers -1,-4, https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
+  - Runs with QA- prefix and  numbers -3,-9, -12, -14, -15 at https://wandb.ai/leonhardhennig/probing-bert-base-cased-re-tacred-training
 
 - results:
-  
-#### MRPC
-
-- command:
-
-  ```bash
-  python src/train.py  \
-  trainer=gpu  \
-  experiment=mrpc-multimodel_base +model.learning_rate=1e-4  \
-  seed=1031,1097,1153,1223,1579  \
-  +hydra.callbacks.save_job_return.integrate_multirun_result=true  \
-  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf  \
-  +model.freeze_models=[bert-base-cased-re-tacred]  \
-  \"tags=[\'dataset=mrpc\',\'task=extractive_question_answering\',\'probing_model=bert-base-cased-re-tacred\']\"  \
-  "name=probing/bert-base-cased-re-tacred"  \
-  -m
-  ```
-
