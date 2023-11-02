@@ -2,5 +2,6 @@ _target_: src.utils.execute_pipeline
 input:
   _target_: pytorch_ie.DatasetDict.load_dataset
   path: pie/tacred
+  revision: 3ddae0f24f98fa4b3a8b5e6d12ecc94a7f025035
   name: original
   data_dir: ${oc.env:TACRED_DATA_DIR}
