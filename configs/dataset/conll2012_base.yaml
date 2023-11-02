@@ -2,6 +2,7 @@ _target_: src.utils.execute_pipeline
 input:
   _target_: pytorch_ie.DatasetDict.load_dataset
   path: pie/conll2012_ontonotesv5
+  revision: 312df95221fcbd775ddd9640d24c4fd45c803d1d
   name: english_v12
   #base_dataset_kwargs:
   data_dir: ${oc.env:CONLL2012_ONTONOTESV5_DATA_DIR}
