@@ -2298,3 +2298,48 @@ metric values (averaged over 5 seeds):
   | train/loss_step  |   5.5724 |  11.1448 |  40.9786 |     3 |  70.8124 |  27.3191 | 1.19209e-06 |   38.0763 |
   | val/f1           | 0.732669 | 0.734877 | 0.735599 |     3 | 0.736321 | 0.733886 |    0.730461 |  0.003053 |
   | val/loss         |  203.206 |  214.888 |  222.714 |     3 |   230.54 |  212.317 |     191.524 |   19.6351 |
+
+## 2023-11-02
+
+### LR Tuning for NER (frozen pretrained RE + frozen bert)
+
+- commands:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_ner-multimodel_frozen+frozen_bert \
+  model.learning_rate=1e-4,3e-5,1e-5,3e-6,1e-6 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  validate=true \
+  "tags=[ner_multimodel-frozen+frozen_bert,multirun,seeds,lrs]" \
+  --multirun
+  ```
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_ner-multimodel_frozen+frozen_bert \
+  model.learning_rate=3e-4,1e-3,3e-3,1e-2 \
+  trainer=gpu seed=1,2,3,4,5 \
+  "tags=[ner_multimodel-frozen+frozen_bert,multirun,seeds,lrs]" \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs
+
+  - filter for ner_multimodel-frozen+frozen_bert in https://wandb.ai/david-harbecke/conll2012-multi_model_token_classification-training
+
+metric values (averaged over 5 seeds):
+
+| learning rate | mean val/f1 |
+| ------------: | ----------: |
+|         1e-06 |   0.8939328 |
+|         3e-06 |    0.898562 |
+|         1e-05 |   0.9019142 |
+|         3e-05 |    0.902688 |
+|        0.0001 |   0.9049214 |
+|        0.0003 |   0.9068722 |
+|         0.001 |   0.9084206 |
+|         0.003 |   0.8956398 |
+|          0.01 |   0.8897254 |
