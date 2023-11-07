@@ -2343,3 +2343,69 @@ metric values (averaged over 5 seeds):
 |         0.001 |   0.9084206 |
 |         0.003 |   0.8956398 |
 |          0.01 |   0.8897254 |
+
+## 2023-11-02
+
+### frozen NER + frozen other model results
+
+- commands:
+  frozen+re
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_ner-multimodel_base \
+  +model.pretrained_models.bert-base-cased-ner-ontonotes=/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes \
+  +model.pretrained_models.bert-base-cased-re-tacred=/ds/text/cora4nlp/models/bert-base-cased-re-tacred-20230919-hf \
+  +model.freeze_models=[bert-base-cased-ner-ontonotes,bert-base-cased-re-tacred] \
+  +model.aggregate=attention \
+  model.learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  "tags=[ner_multimodel-frozen+frozen_re,multirun,seeds]" \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+  frozen+qa
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_ner-multimodel_base \
+  +model.pretrained_models.bert-base-cased-ner-ontonotes=/ds/text/cora4nlp/models/bert-base-cased-ner-ontonotes \
+  +model.pretrained_models.bert-base-cased-qa-squad2=/ds/text/cora4nlp/models/bert-base-cased-qa-squad2 \
+  +model.freeze_models=[bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate=attention \
+  model.learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  "tags=[ner_multimodel-frozen+frozen_qa,multirun,seeds]" \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  -m
+  ```
+
+  frozen+coref
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_ner-multimodel_frozen+frozen_coref \
+  model.learning_rate=1e-3 \
+  trainer=gpu \
+  seed=1,2,3,4,5 \
+  validate=true \
+  "tags=[ner_multimodel-frozen+frozen_coref,multirun,seeds]" \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs
+
+  - runs 132 to 146 in https://wandb.ai/david-harbecke/conll2012-multi_model_token_classification-training
+
+model performances:
+
+| model_combo  |    val_f1 |        std |
+| :----------- | --------: | ---------: |
+| frozen+re    |  0.909682 | 0.00225593 |
+| frozen+qa    |  0.908479 |  0.0010215 |
+| frozen+coref |  0.908432 | 0.00109978 |
+| frozen+bert  | 0.9084206 | 0.00101738 |
