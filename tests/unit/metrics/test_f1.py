@@ -25,11 +25,13 @@ def test_f1_for_eqa_exact_match():
     metric._update(doc)
 
     # assert internal state
-    assert metric.exact_scores == {'text=This is a test document.,question=What is this?': 1}
-    assert metric.f1_scores == {'text=This is a test document.,question=What is this?': 1.0}
-    assert metric.has_answer_qids == ['text=This is a test document.,question=What is this?']
+    assert metric.exact_scores == {"text=This is a test document.,question=What is this?": 1}
+    assert metric.f1_scores == {"text=This is a test document.,question=What is this?": 1.0}
+    assert metric.has_answer_qids == ["text=This is a test document.,question=What is this?"]
     assert metric.no_answer_qids == []
-    assert metric.qas_id_to_has_answer == {'text=This is a test document.,question=What is this?': True}
+    assert metric.qas_id_to_has_answer == {
+        "text=This is a test document.,question=What is this?": True
+    }
 
     metric_values = metric._compute()
     assert metric_values == {
@@ -61,11 +63,13 @@ def test_f1_for_eqa_exact_match_added_article():
 
     metric._update(doc)
     # assert internal state
-    assert metric.exact_scores == {'text=This is a test document.,question=What is this?': 1}
-    assert metric.f1_scores == {'text=This is a test document.,question=What is this?': 1.0}
-    assert metric.has_answer_qids == ['text=This is a test document.,question=What is this?']
+    assert metric.exact_scores == {"text=This is a test document.,question=What is this?": 1}
+    assert metric.f1_scores == {"text=This is a test document.,question=What is this?": 1.0}
+    assert metric.has_answer_qids == ["text=This is a test document.,question=What is this?"]
     assert metric.no_answer_qids == []
-    assert metric.qas_id_to_has_answer == {'text=This is a test document.,question=What is this?': True}
+    assert metric.qas_id_to_has_answer == {
+        "text=This is a test document.,question=What is this?": True
+    }
 
     metric_values = metric._compute()
     assert metric_values == {
@@ -97,11 +101,15 @@ def test_f1_for_eqa_span_mismatch():
 
     metric._update(doc)
     # assert internal state
-    assert metric.exact_scores == {'text=This is a test document.,question=What is this?': 0}
-    assert metric.f1_scores == {'text=This is a test document.,question=What is this?': 0.6666666666666666}
-    assert metric.has_answer_qids == ['text=This is a test document.,question=What is this?']
+    assert metric.exact_scores == {"text=This is a test document.,question=What is this?": 0}
+    assert metric.f1_scores == {
+        "text=This is a test document.,question=What is this?": 0.6666666666666666
+    }
+    assert metric.has_answer_qids == ["text=This is a test document.,question=What is this?"]
     assert metric.no_answer_qids == []
-    assert metric.qas_id_to_has_answer == {'text=This is a test document.,question=What is this?': True}
+    assert metric.qas_id_to_has_answer == {
+        "text=This is a test document.,question=What is this?": True
+    }
 
     metric_values = metric._compute()
     assert metric_values == {
