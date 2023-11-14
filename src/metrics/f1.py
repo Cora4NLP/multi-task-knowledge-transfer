@@ -124,7 +124,9 @@ class SQuADF1ForExtractiveQuestionAnswering(DocumentMetric):
             predicted_answers = predicted_answers_for_questions[question]
             # if qas_id not in preds:
             if len(predicted_answers) == 0:
-                logger.warning(f"Missing prediction for {qas_id}")
+                # logger.warning(f"Missing prediction for {qas_id}")
+                self.exact_scores[qas_id] = 0
+                self.f1_scores[qas_id] = 0.0
             else:
                 # prediction = preds[qas_id]
                 best_predicted_answer = max(predicted_answers, key=lambda ann: ann.score)
