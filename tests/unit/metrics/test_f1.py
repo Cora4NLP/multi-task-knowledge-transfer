@@ -1,4 +1,4 @@
-from src.metrics.f1 import SQuADF1ForExtractiveQuestionAnswering
+from src.metrics import SQuADF1ForExtractiveQuestionAnswering
 from src.taskmodules.extractive_question_answering import (
     ExtractiveAnswer,
     ExtractiveQADocument,

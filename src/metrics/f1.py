@@ -3,13 +3,12 @@ import logging
 import re
 import string
 from collections import defaultdict
-from functools import partial
-from typing import Callable, Collection, Dict, Hashable, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple
 
 from pytorch_ie.core import Annotation, Document, DocumentMetric
 from pytorch_ie.metrics import F1Metric
 
-from src.taskmodules.extractive_question_answering import ExtractiveAnswer, ExtractiveQADocument
+from src.taskmodules.extractive_question_answering import ExtractiveQADocument
 
 logger = logging.getLogger(__name__)
 
