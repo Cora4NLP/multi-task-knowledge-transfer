@@ -5,6 +5,7 @@ import string
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Tuple
 
+import pandas as pd
 from pytorch_ie.core import Annotation, Document, DocumentMetric
 from pytorch_ie.metrics import F1Metric
 
@@ -70,11 +71,13 @@ class SQuADF1ForExtractiveQuestionAnswering(DocumentMetric):
         self,
         no_answer_probs: Optional[Dict[str, float]] = None,
         no_answer_probability_threshold: float = 1.0,
+        show_as_markdown: bool = False,
     ) -> None:
         super().__init__()
         self.no_answer_probs = no_answer_probs
         self.no_answer_probability_threshold = no_answer_probability_threshold
         self.default_na_prob = 0.0
+        self.show_as_markdown = show_as_markdown
 
     def reset(self):
         self.exact_scores = {}
@@ -203,7 +206,10 @@ class SQuADF1ForExtractiveQuestionAnswering(DocumentMetric):
             # find_all_best_thresh(evaluation, preds, exact, f1, no_answer_probs, qas_id_to_has_answer)
 
         # return evaluation
-        return dict(evaluation)
+        result = dict(evaluation)
+        if self.show_as_markdown:
+            logger.info(f"\n{pd.Series(result, name=self.current_split).round(3).to_markdown()}")
+        return result
 
     def normalize_answer(self, s: str) -> str:
         """Lower text and remove punctuation, articles and extra whitespace."""
