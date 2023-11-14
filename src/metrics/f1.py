@@ -1,16 +1,15 @@
+import collections
 import logging
+import re
+import string
 from collections import defaultdict
-from typing import Callable, Optional, Set, Tuple
+from functools import partial
+from typing import Callable, Collection, Dict, Hashable, List, Optional, Set, Tuple, Union
 
-from pytorch_ie.core import Annotation, Document
+from pytorch_ie.core import Annotation, Document, DocumentMetric
 from pytorch_ie.metrics import F1Metric
 
 from src.taskmodules.extractive_question_answering import ExtractiveAnswer, ExtractiveQADocument
-import string
-import re
-import collections
-from typing import Callable, Collection, Dict, Hashable, Optional, Tuple
-from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,6 @@ class F1BestVsCandidatesMetric(F1Metric):
     def __init__(self, score_field: str = "score", **kwargs) -> None:
         super().__init__(**kwargs)
         self.score_field = score_field
-
 
     def calculate_counts(
         self,
@@ -68,114 +66,146 @@ class F1BestVsCandidatesMetric(F1Metric):
             return 0, 1, 1
 
 
-class F1ForExtractiveQuestionAnswering(F1Metric):
-    def __init__(self, score_field: str = "score", **kwargs) -> None:
-        super().__init__(layer="answers", **kwargs)
-        self.score_field = score_field
-        self.reset()
-
-    def calculate_counts(
+class SQuADF1ForExtractiveQuestionAnswering(DocumentMetric):
+    def __init__(
         self,
-        document: ExtractiveQADocument,
-        annotation_filter: Optional[Callable[[Annotation], bool]] = None,
-    ) -> Tuple[int, int, int]:
-        if annotation_filter is not None:
-            raise ValueError(f"{self.__class__.__name__} does not support annotation filters.")
-        predicted_annotations_per_question = defaultdict(set)
-        ann: ExtractiveAnswer
-        for ann in document[self.layer].predictions:
-            predicted_annotations_per_question[ann.question].add(ann)
-        gold_annotations_per_question = defaultdict(set)
-        for ann in document[self.layer]:
-            gold_annotations_per_question[ann.question].add(ann)
-
-        tp, fp, fn = 0, 0, 0
-        questions = set(gold_annotations_per_question) | set(predicted_annotations_per_question)
-        for question in questions:
-            gold_annotations: Set[ExtractiveAnswer] = gold_annotations_per_question.get(
-                question, set()
-            )
-
-
-            predicted_annotations: Set[ExtractiveAnswer] = predicted_annotations_per_question.get(
-                question, set()
-            )
-
-            if len(gold_annotations) == 0 and len(predicted_annotations) == 0:
-                continue
-
-            if len(gold_annotations) > 0 and len(predicted_annotations) == 0:
-                fn += 1
-                continue
-
-            if len(gold_annotations) == 0 and len(predicted_annotations) > 0:
-                fp += 1
-                continue
-
-            if any(getattr(ann, self.score_field) is None for ann in predicted_annotations):
-                raise ValueError(
-                    f"All predicted annotations must have a {self.score_field} value to calculate "
-                    f"{self.__class__.__name__}."
-                )
-            best_predicted_annotation: ExtractiveAnswer = max(
-                predicted_annotations, key=lambda ann: getattr(ann, self.score_field)
-            ) # take best phrase from different strides
-
-            # TODO: calculate the actual tp, fp, fn with respect to all gold questions
-
-        return tp, fp, fn
-
-
-#class SQuADF1ForExtractiveQuestionAnswering(F1Metric):
-class SQuADF1ForExtractiveQuestionAnswering(F1Metric):
-    def __init__(self, score_field: str = "score", **kwargs) -> None:
-        super().__init__(layer="answers", **kwargs)
-        self.score_field = score_field
-        self.reset()
-        self.labels = ["overall"]
-
-    def has_this_label(self, ann: Annotation, label_field: str, label: str) -> bool:
-        return getattr(ann, label_field) == label
+        no_answer_probs: Optional[Dict[str, float]] = None,
+        no_answer_probability_threshold: float = 1.0,
+    ) -> None:
+        super().__init__()
+        self.no_answer_probs = no_answer_probs
+        self.no_answer_probability_threshold = no_answer_probability_threshold
+        self.default_na_prob = 0.0
 
     def reset(self):
-        self.counts = defaultdict(lambda: (0, 0))
+        self.exact_scores = {}
+        self.f1_scores = {}
+        # qas_id_to_has_answer = {example.qas_id: bool(example.answers) for example in examples}
+        self.qas_id_to_has_answer = {}
+        # has_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if has_answer]
+        self.has_answer_qids = []
+        # no_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if not has_answer]
+        self.no_answer_qids = []
 
-    def add_counts(self, counts: Tuple[float, float], label: str):
-        self.counts[label] = (
-            self.counts[label][0] + counts[0],
-            self.counts[label][1] + counts[1],
-        )
-    def _update(self, document: Document):
+    def _update(self, document: ExtractiveQADocument):
+        gold_answers_for_questions = defaultdict(list)
+        predicted_answers_for_questions = defaultdict(list)
+        for ann in document.answers:
+            gold_answers_for_questions[ann.question].append(ann)
+        for ann in document.answers.predictions:
+            predicted_answers_for_questions[ann.question].append(ann)
 
-        for label in self.labels:
-            new_counts = self.calculate_counts(
-                document=document,
-                #annotation_filter=partial(
-                #    self.has_this_label, label_field=self.label_field, label=label
-                #),
-                annotation_filter=None,
+        for idx, question in enumerate(document.questions):
+            # qas_id = example.qas_id
+            if document.id is None:
+                qas_id = f"text={document.text},question={question}"
+            else:
+                qas_id = document.id + f"_{idx}"
+
+            # qas_id_to_has_answer = {example.qas_id: bool(example.answers) for example in examples}
+            self.qas_id_to_has_answer[qas_id] = bool(gold_answers_for_questions[question])
+            # has_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if has_answer]
+            # no_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if not has_answer]
+            if self.qas_id_to_has_answer[qas_id]:
+                self.has_answer_qids.append(qas_id)
+            else:
+                self.no_answer_qids.append(qas_id)
+
+            # gold_answers = [answer["text"] for answer in example.answers if self.normalize_answer(answer["text"])]
+            gold_answers = [
+                str(answer)
+                for answer in gold_answers_for_questions[question]
+                if self.normalize_answer(str(answer))
+            ]
+
+            if not gold_answers:
+                # For unanswerable questions, only correct answer is empty string
+                gold_answers = [""]
+
+            predicted_answers = predicted_answers_for_questions[question]
+            # if qas_id not in preds:
+            if len(predicted_answers) == 0:
+                logger.warning(f"Missing prediction for {qas_id}")
+            else:
+                # prediction = preds[qas_id]
+                best_predicted_answer = max(predicted_answers, key=lambda ann: ann.score)
+                prediction = str(best_predicted_answer)
+                self.exact_scores[qas_id] = max(
+                    self.compute_exact(a, prediction) for a in gold_answers
+                )
+                self.f1_scores[qas_id] = max(self.compute_f1(a, prediction) for a in gold_answers)
+
+    def apply_no_ans_threshold(self, scores: Dict[str, float]) -> Dict[str, float]:
+        new_scores = {}
+        for qid, s in scores.items():
+            # pred_na = na_probs[qid] > na_prob_thresh
+            no_prob = (
+                self.no_answer_probs[qid]
+                if self.no_answer_probs is not None
+                else self.default_na_prob
             )
-            self.add_counts(new_counts, label=label)
+            pred_na = no_prob > self.no_answer_probability_threshold
+            if pred_na:
+                new_scores[qid] = float(not self.qas_id_to_has_answer[qid])
+            else:
+                new_scores[qid] = s
+        return new_scores
+
+    def make_eval_dict(
+        self, exact_scores: Dict[str, float], f1_scores: Dict[str, float], qid_list=None
+    ) -> collections.OrderedDict:
+        if not qid_list:
+            total = len(exact_scores)
+            return collections.OrderedDict(
+                [
+                    ("exact", 100.0 * sum(exact_scores.values()) / total),
+                    ("f1", 100.0 * sum(f1_scores.values()) / total),
+                    ("total", total),
+                ]
+            )
+        else:
+            total = len(qid_list)
+            return collections.OrderedDict(
+                [
+                    ("exact", 100.0 * sum(exact_scores[k] for k in qid_list) / total),
+                    ("f1", 100.0 * sum(f1_scores[k] for k in qid_list) / total),
+                    ("total", total),
+                ]
+            )
+
+    def merge_eval(
+        self, main_eval: Dict[str, float], new_eval: Dict[str, float], prefix: str
+    ) -> None:
+        for k in new_eval:
+            main_eval[f"{prefix}_{k}"] = new_eval[k]
+
     def _compute(self) -> Dict[str, Dict[str, float]]:
-        res = dict()
 
-        if self.per_label:
-            res["overall"] = {"f1": 0.0, "em": 0.0}
+        exact_threshold = self.apply_no_ans_threshold(self.exact_scores)
+        f1_threshold = self.apply_no_ans_threshold(self.f1_scores)
 
-        print(self.counts.items())
-        for label, counts in self.counts.items():
+        evaluation = self.make_eval_dict(exact_threshold, f1_threshold)
 
-            f1, em = counts
-            res[label] = {"f1": f1, "em": em}
+        if self.has_answer_qids:
+            has_ans_eval = self.make_eval_dict(
+                exact_threshold, f1_threshold, qid_list=self.has_answer_qids
+            )
+            self.merge_eval(evaluation, has_ans_eval, "HasAns")
 
-            #
-            #if label in self.labels:
-            #    res[label]["f1"] += f1 / len(self.labels)
-            #    res[label]["em"] += em / len(self.labels)
+        if self.no_answer_qids:
+            no_ans_eval = self.make_eval_dict(
+                exact_threshold, f1_threshold, qid_list=self.no_answer_qids
+            )
+            self.merge_eval(evaluation, no_ans_eval, "NoAns")
 
-        return res
+        if self.no_answer_probs:
+            raise NotImplementedError
+            # find_all_best_thresh(evaluation, preds, exact, f1, no_answer_probs, qas_id_to_has_answer)
 
-    def normalize_answer(self,s):
+        # return evaluation
+        return dict(evaluation)
+
+    def normalize_answer(self, s: str) -> str:
         """Lower text and remove punctuation, articles and extra whitespace."""
 
         def remove_articles(text):
@@ -194,18 +224,15 @@ class SQuADF1ForExtractiveQuestionAnswering(F1Metric):
 
         return white_space_fix(remove_articles(remove_punc(lower(s))))
 
-    #def __init__(self, score_field: str = "score", **kwargs) -> None:
-    def get_tokens(self,s):
-         if not s:
-           return []
-         return self.normalize_answer(s).split()
+    def get_tokens(self, s: str) -> List[str]:
+        if not s:
+            return []
+        return self.normalize_answer(s).split()
 
-
-    def compute_exact(self,a_gold, a_pred):
+    def compute_exact(self, a_gold: str, a_pred: str) -> int:
         return int(self.normalize_answer(a_gold) == self.normalize_answer(a_pred))
 
-
-    def compute_f1(self,a_gold, a_pred):
+    def compute_f1(self, a_gold: str, a_pred: str) -> float:
         gold_toks = self.get_tokens(a_gold)
         pred_toks = self.get_tokens(a_pred)
         common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
@@ -219,63 +246,3 @@ class SQuADF1ForExtractiveQuestionAnswering(F1Metric):
         recall = 1.0 * num_same / len(gold_toks)
         f1 = (2 * precision * recall) / (precision + recall)
         return f1
-
-    def compute_exact(self, a_gold, a_pred):
-        return int(self.normalize_answer(a_gold) == self.normalize_answer(a_pred))
-
-    def calculate_counts(
-        self,
-        document: ExtractiveQADocument,
-        annotation_filter: Optional[Callable[[Annotation], bool]] = None,
-    ) -> Tuple[int, int, int]:
-        if annotation_filter is not None:
-            raise ValueError(f"{self.__class__.__name__} does not support annotation filters.")
-        predicted_annotations_per_question = defaultdict(set)
-        passage_per_question = defaultdict(set)
-        ann: ExtractiveAnswer
-        #print(document[self.layer])
-        for ann in document[self.layer].predictions:
-            predicted_annotations_per_question[ann.question].add(ann)
-        gold_annotations_per_question = defaultdict(set)
-        for ann in document[self.layer]:
-            gold_annotations_per_question[ann.question].add(ann)
-
-        for ann in document[self.layer]:
-            print("Ann:", ann, type(ann))
-            #print("question:",ann.question)
-            passage_per_question[ann.question].add(ann)
-        tp, fp, fn = 0, 0, 0
-        questions = set(gold_annotations_per_question) | set(predicted_annotations_per_question)
-        for question in questions:
-            gold_annotations: Set[ExtractiveAnswer] = gold_annotations_per_question.get(
-                question, set()
-            )
-            predicted_annotations: Set[ExtractiveAnswer] = predicted_annotations_per_question.get(
-                question, set()
-            )
-
-            #passage=
-            #print("--question--:", question)
-            #print("--passage--:",[ p for p in passage_per_question[question]])
-            #print("gold_annotations:", [ g.__str__() for g in gold_annotations])
-            #print("predicted_annotations:", [ p.__str__() for p in predicted_annotations])
-
-            best_f1=0
-            best_em=0
-            for g in gold_annotations:
-                for p in predicted_annotations:
-                    f1=self.compute_f1(g.__str__(), p.__str__())
-                    em = self.compute_exact(g.__str__(), p.__str__())
-
-                    if f1 > best_f1:
-                        best_f1=f1
-                        best_em=em
-
-                    #if em > best_em:
-                    #    best_em=em
-
-            #print("F1:",best_f1)
-            #print("EM:", best_em)
-
-        #return tp, fp, fn
-        return best_f1, best_em
