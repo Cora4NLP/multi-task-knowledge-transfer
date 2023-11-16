@@ -94,11 +94,11 @@ log entry: [frozen pre-trained target-model + frozen bert (coref learning rate o
 | frozen-BERT + frozen-BERT<sub>10</sub>-3x                                | 0.692258 | 86.5103  | 0.00089    | [2023-11-13](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-bert-3x-10-truncated)              |
 | frozen-BERT + frozen-NER<sub>10</sub>-RE<sub>10</sub>-SQUAD<sub>10</sub> | 0.701959 | 86.4457  | 0.00428    | [2023-11-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-ner--re--squad-model-10-truncated) |
 
-## Experiments
+## Aggregation experiments
 
 **Idea:** test different ways of aggregating the token embeddings (attention vs mean vs sum).
 
-**Findings:** attention is the clear winner followed by mean and then sum aggregation. Ineterstingly, the validation loss for sum aggregation is very big (602.827 with frozen-target and 926.887 with frozen BERT) compared to the other methods (e.g., 99.4617 for frozen-target with attention and 70.611 for frozen-target with BERT).
+**Findings:** attention is the clear winner followed by mean and then sum aggregation. Interestingly, the validation loss for sum aggregation is very big (602.827 with frozen-target and 926.887 with frozen BERT) compared to the other methods (e.g., 99.4617 for frozen-target with attention and 70.611 for frozen-target with BERT).
 
 | setting                     | aggregate | val/f1   | val/loss | val/f1/std | log entry                                                                                                                                                                                  |
 | :-------------------------- | :-------- | :------- | :------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
