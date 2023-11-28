@@ -109,6 +109,56 @@ log entry: [frozen pre-trained target-model + frozen bert (coref learning rate o
 | frozen-BERT + frozen-MRPC   | mean      | 0.632592 | 245.824  | 0.02306    | [2023-11-16](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-mrpc-model-with-mean-aggregation)                     |
 | frozen-BERT + frozen-MRPC   | sum       | 0.623386 | 926.887  | 0.01060    | [2023-11-16](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-mrpc-model-with-sum-aggregation)                      |
 
+## Projections ablation experiments
+
+**Idea:** test whether removing key, query and value projections hurts the performance (attention-based aggregation). We also test different learning rate values for BERT.
+
+**Findings:** 1e-5 is the best lr when we have all projections, 5e-5 is the best lr w/o any projections, 1e-4 works best with only query projection and 1e-5 is the best lr when we have only keys and values projections. Overall, removing the query projection leads to the best average f1 score (0.7406). However, the difference is very small and there is no clear pattern regarding the learning rate optimization.
+
+frozen-target + frozen-MRPC with Q, K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7294 |       102.149 |
+|    5e-5 |      0.7332 |       103.068 |
+|    1e-5 |      0.7372 |       89.4812 |
+|    1e-6 |      0.7335 |       78.4313 |
+
+log entry: [frozen-MRPC + frozen-BERT (Q, K, V projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/coref_probing/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-key-and-value-projections)
+
+frozen-target + frozen-MRPC without Q, K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7358 |       121.089 |
+|    5e-5 |      0.7376 |       124.365 |
+|    1e-5 |      0.7372 |       121.953 |
+|    1e-6 |      0.7370 |       126.127 |
+
+log entry: [frozen-MRPC + frozen-BERT (no projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/coref_probing/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-key-and-value-projections)
+
+frozen-target + frozen-MRPC with Q projection but w/o K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7401 |       134.469 |
+|    5e-5 |      0.7387 |       126.815 |
+|    1e-5 |      0.7357 |       108.715 |
+|    1e-6 |      0.7356 |       113.756 |
+
+log entry: [frozen-MRPC + frozen-BERT (Q projection only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/coref_probing/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-projection-but-wo-key-and-value-projections)
+
+frozen-target + frozen-MRPC without Q projection but with K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7305 |       116.805 |
+|    5e-5 |      0.7339 |       106.148 |
+|    1e-5 |      0.7406 |       110.213 |
+|    1e-6 |      0.7317 |       85.3664 |
+
+log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/coref_probing/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-projection-but-with-key-and-value-projections)
+
 ## TODOs & Ideas:
 
 - double-check that tuning models is better than freezing them, also it would be interesting to check how much the weights change compared to the original models, could we quantify this?
