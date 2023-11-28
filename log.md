@@ -3025,3 +3025,173 @@ model performances:
   | train/loss_step  | 0.00878699 | 0.0156929 |  1.42966 |     3 |  2.84362 | 0.953731 | 0.00188104 |     1.63671 |
   | val/f1           |   0.691871 |   0.69246 | 0.692746 |     3 | 0.693032 | 0.692258 |   0.691283 | 0.000891977 |
   | val/loss         |    83.9887 |   90.7219 |  91.1377 |     3 |  91.5534 |  86.5103 |    77.2555 |     8.02567 |
+
+## 2023-11-16
+
+### Coreference resolution - frozen pre-trained target-model + frozen MRPC model with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/5crxriyp
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0inmbtz0
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/jm8v7un4
+
+- metric values per seed
+
+  |     | ('model_save_dir',)                                                                                          | ('val/loss',) | ('train/loss_step',) | ('train/f1',) | ('train/loss_epoch',) | ('val/f1',) | ('train/loss',) |
+  | --: | :----------------------------------------------------------------------------------------------------------- | ------------: | -------------------: | ------------: | --------------------: | ----------: | --------------: |
+  |   0 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-15_23-03-37 |       170.254 |            0.0402214 |      0.825021 |               47.6317 |    0.712913 |         47.6317 |
+  |   1 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_01-25-46 |       163.803 |              59.5883 |      0.812954 |               53.9894 |    0.704383 |         53.9894 |
+  |   2 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_03-20-54 |       162.376 |            0.0229799 |      0.821196 |               49.5471 |    0.712752 |         49.5471 |
+
+- aggregated values:
+
+  |                  |       25% |       50% |      75% | count |      max |     mean |       min |        std |
+  | :--------------- | --------: | --------: | -------: | ----: | -------: | -------: | --------: | ---------: |
+  | train/f1         |  0.817075 |  0.821196 | 0.823108 |     3 | 0.825021 | 0.819724 |  0.812954 | 0.00616682 |
+  | train/loss       |   48.5894 |   49.5471 |  51.7683 |     3 |  53.9894 |  50.3894 |   47.6317 |    3.26149 |
+  | train/loss_epoch |   48.5894 |   49.5471 |  51.7683 |     3 |  53.9894 |  50.3894 |   47.6317 |    3.26149 |
+  | train/loss_step  | 0.0316006 | 0.0402214 |  29.8143 |     3 |  59.5883 |  19.8838 | 0.0229799 |    34.3851 |
+  | val/f1           |  0.708568 |  0.712752 | 0.712832 |     3 | 0.712913 | 0.710016 |  0.704383 | 0.00487871 |
+  | val/loss         |    163.09 |   163.803 |  167.029 |     3 |  170.254 |  165.478 |   162.376 |    4.19771 |
+
+### Coreference resolution - frozen pre-trained target-model + frozen MRPC model with sum aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate=sum \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0w5213um
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/1kglce1w
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/h2hwkut1
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('train/loss_step',) | ('val/loss',) | ('model_save_dir',)                                                                                          | ('train/f1',) | ('train/loss',) | ('val/f1',) |
+  | --: | --------------------: | -------------------: | ------------: | :----------------------------------------------------------------------------------------------------------- | ------------: | --------------: | ----------: |
+  |   0 |               203.842 |          1.54972e-06 |       611.204 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-15_23-04-03 |      0.803246 |         203.842 |    0.703389 |
+  |   1 |               228.301 |                    0 |       600.567 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_01-36-36 |      0.786511 |         228.301 |    0.696807 |
+  |   2 |               147.375 |            0.0159391 |       596.709 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_03-36-34 |      0.835945 |         147.375 |    0.715437 |
+
+- aggregated values:
+
+  |                  |        25% |         50% |        75% | count |       max |       mean |      min |        std |
+  | :--------------- | ---------: | ----------: | ---------: | ----: | --------: | ---------: | -------: | ---------: |
+  | train/f1         |   0.794879 |    0.803246 |   0.819596 |     3 |  0.835945 |   0.808568 | 0.786511 |  0.0251431 |
+  | train/loss       |    175.609 |     203.842 |    216.072 |     3 |   228.301 |    193.173 |  147.375 |    41.5046 |
+  | train/loss_epoch |    175.609 |     203.842 |    216.072 |     3 |   228.301 |    193.173 |  147.375 |    41.5046 |
+  | train/loss_step  | 7.7486e-07 | 1.54972e-06 | 0.00797033 |     3 | 0.0159391 | 0.00531355 |        0 |   0.009202 |
+  | val/f1           |   0.700098 |    0.703389 |   0.709413 |     3 |  0.715437 |   0.705211 | 0.696807 | 0.00944762 |
+  | val/loss         |    598.638 |     600.567 |    605.886 |     3 |   611.204 |    602.827 |  596.709 |    7.50692 |
+
+### Coreference resolution - frozen BERT + frozen MRPC model with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased:bert-base-cased,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased,bert-base-cased-mrpc] \
+  +model.aggregate=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/20cd29eu
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/bsizzsgy
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/r6gxnrw0
+
+- metric values per seed
+
+  |     | ('val/f1',) | ('train/loss_epoch',) | ('val/loss',) | ('train/f1',) | ('train/loss',) | ('train/loss_step',) | ('model_save_dir',)                                                                                          |
+  | --: | ----------: | --------------------: | ------------: | ------------: | --------------: | -------------------: | :----------------------------------------------------------------------------------------------------------- |
+  |   0 |    0.606199 |               181.579 |       236.746 |      0.620931 |         181.579 |              88.3647 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-15_23-04-40 |
+  |   1 |    0.642766 |               120.206 |       252.035 |      0.704447 |         120.206 |              3.03073 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_00-18-49 |
+  |   2 |    0.648812 |                101.93 |        248.69 |      0.732535 |          101.93 |                    0 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_03-04-47 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.662689 | 0.704447 | 0.718491 |     3 | 0.732535 | 0.685971 | 0.620931 | 0.0580506 |
+  | train/loss       |  111.068 |  120.206 |  150.893 |     3 |  181.579 |  134.572 |   101.93 |   41.7226 |
+  | train/loss_epoch |  111.068 |  120.206 |  150.893 |     3 |  181.579 |  134.572 |   101.93 |   41.7226 |
+  | train/loss_step  |  1.51536 |  3.03073 |  45.6977 |     3 |  88.3647 |  30.4652 |        0 |   50.1654 |
+  | val/f1           | 0.624482 | 0.642766 | 0.645789 |     3 | 0.648812 | 0.632592 | 0.606199 | 0.0230561 |
+  | val/loss         |  242.718 |   248.69 |  250.363 |     3 |  252.035 |  245.824 |  236.746 |   8.03726 |
+
+### Coreference resolution - frozen BERT + frozen MRPC model with sum aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased:bert-base-cased,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased,bert-base-cased-mrpc] \
+  +model.aggregate=sum \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/6772eqtu
+  - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/p2wd6zvz
+  - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/o6uc89gi
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('val/loss',) | ('val/f1',) | ('model_save_dir',)                                                                                          | ('train/loss_step',) | ('train/f1',) | ('train/loss',) |
+  | --: | --------------------: | ------------: | ----------: | :----------------------------------------------------------------------------------------------------------- | -------------------: | ------------: | --------------: |
+  |   0 |               645.012 |       929.096 |    0.612491 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-15_23-04-29 |                    0 |      0.640408 |         645.012 |
+  |   1 |               467.937 |        907.93 |    0.633671 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_00-56-08 |                    0 |      0.695304 |         467.937 |
+  |   2 |               601.655 |       943.636 |    0.623996 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-11-16_04-01-27 |              479.947 |      0.658383 |         601.655 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.649395 | 0.658383 | 0.676844 |     3 | 0.695304 | 0.664698 | 0.640408 | 0.0279879 |
+  | train/loss       |  534.796 |  601.655 |  623.333 |     3 |  645.012 |  571.534 |  467.937 |      92.3 |
+  | train/loss_epoch |  534.796 |  601.655 |  623.333 |     3 |  645.012 |  571.534 |  467.937 |      92.3 |
+  | train/loss_step  |        0 |        0 |  239.974 |     3 |  479.947 |  159.982 |        0 |   277.098 |
+  | val/f1           | 0.618244 | 0.623996 | 0.628834 |     3 | 0.633671 | 0.623386 | 0.612491 | 0.0106029 |
+  | val/loss         |  918.513 |  929.096 |  936.366 |     3 |  943.636 |  926.887 |   907.93 |   17.9555 |
