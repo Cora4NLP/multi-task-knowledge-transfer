@@ -109,6 +109,73 @@ log entry: [frozen pre-trained target-model + frozen bert (coref learning rate o
 | frozen-BERT + frozen-MRPC   | mean      | 0.632592 | 245.824  | 0.02306    | [2023-11-16](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-mrpc-model-with-mean-aggregation)                     |
 | frozen-BERT + frozen-MRPC   | sum       | 0.623386 | 926.887  | 0.01060    | [2023-11-16](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-bert--frozen-mrpc-model-with-sum-aggregation)                      |
 
+## Projections ablation experiments
+
+**Idea:** test whether removing key, query and value projections hurts the performance (for attention-based aggregation). We also test different learning rate values for BERT.
+
+**Findings:** 1e-5 is the best lr when we have all projections, 5e-5 is the best lr w/o any projections, 1e-4 works best with only query projection and 1e-5 is the best lr when we have only keys and values projections. Overall, removing the query projection leads to the best average f1 score (0.7406). However, the difference is very small and there is no clear pattern regarding the learning rate optimization.
+
+**Setting:** frozen-target + frozen-MRPC with Q, K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7294 |       102.149 |
+|    5e-5 |      0.7332 |       103.068 |
+|    1e-5 |  **0.7372** |       89.4812 |
+|    1e-6 |      0.7335 |       78.4313 |
+
+log entry: [frozen-MRPC + frozen-BERT (Q, K, V projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-key-and-value-projections)
+
+**Setting:** frozen-target + frozen-MRPC without Q, K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7358 |       121.089 |
+|    5e-5 |  **0.7376** |       124.365 |
+|    1e-5 |      0.7372 |       121.953 |
+|    1e-6 |      0.7370 |       126.127 |
+
+log entry: [frozen-MRPC + frozen-BERT (no projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-key-and-value-projections)
+
+**Setting:** frozen-target + frozen-MRPC with Q projection but w/o K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |  **0.7401** |       134.469 |
+|    5e-5 |      0.7387 |       126.815 |
+|    1e-5 |      0.7357 |       108.715 |
+|    1e-6 |      0.7356 |       113.756 |
+
+log entry: [frozen-MRPC + frozen-BERT (Q projection only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-projection-but-wo-key-and-value-projections)
+
+**Setting:** frozen-target + frozen-MRPC without Q projection but with K and V projections
+
+| bert lr | mean val/f1 | mean val/loss |
+| ------: | ----------: | ------------: |
+|    1e-4 |      0.7305 |       116.805 |
+|    5e-5 |      0.7339 |       106.148 |
+|    1e-5 |  **0.7406** |       110.213 |
+|    1e-6 |      0.7317 |       85.3664 |
+
+log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-projection-but-with-key-and-value-projections)
+
+## Probing experiments
+
+**Idea:** check whether different pre-trained models work well on the coreference task. Each pre-trained model is frozen and we use mean for embeddings aggregation to avoid introducing additional parameters into the model.
+
+**Findings:** as expected, frozen-target performs the best (0.7375 val/f1). Surprisingly, frozen-NER performs very poorly (only 0.3563 val/f1). Standard BERT (w/o any fine-tuning) gives the best scores among the models that were not fine-tuned on the coreference task (0.6495). Another interesting observation is that having frozen BERT 3 times gives a noticeable drop in performance (almost -3%). This means that we probably introduce some noise when combining embeddings with mean aggregation.
+
+| setting             | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                    |
+| :------------------ | :----- | :------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-target       | 0.7375 | 117.221  | 0.00291    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation)     |
+| frozen-MRPC         | 0.6116 | 242.417  | 0.02836    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation)       |
+| frozen-NER          | 0.3563 | 512.712  | 0.02122    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation)        |
+| frozen-RE           | 0.5227 | 691.528  | 0.02390    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation)         |
+| frozen-SQUAD        | 0.5079 | 577.224  | 0.03011    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-qa-model-with-mean-aggregation)         |
+| frozen-BERT         | 0.6495 | 295.832  | 0.00977    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation)       |
+| frozen-NER-RE-SQUAD | 0.5793 | 269.619  | 0.03082    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-re-qa-models-with-mean-aggregation) |
+| frozen-BERT-3x      | 0.6195 | 320.306  | 0.00708    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-3x-models-with-mean-aggregation)   |
+
 ## TODOs & Ideas:
 
 - double-check that tuning models is better than freezing them, also it would be interesting to check how much the weights change compared to the original models, could we quantify this?
