@@ -5422,3 +5422,343 @@ metric values (averaged over 5 seeds):
   | train/loss_step  | 466.404    | 676.722    | 721.169    |       3 | 765.615    | 566.141    | 256.086    | 272.169     |
   | val/f1           |   0.633547 |   0.638293 |   0.641814 |       3 |   0.645336 |   0.637476 |   0.628801 |   0.0082974 |
   | val/loss         | 789.163    | 789.562    | 801.986    |       3 | 814.411    | 797.579    | 788.763    |  14.5823    |
+
+## 2023-12-05
+
+### Learning rate optimization for Q, K, V ablations - frozen target model and frozen MRPC with attention aggregation, with all Q, K, V projections
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate.type=attention \
+  model.task_learning_rate=1e-4 \
+  model.bert_learning_rate=3e-6,3e-5,3e-4,1e-3,3e-3 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +wandb_watch=attention_activation \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+
+  ```
+
+- wandb runs for different learning rates:
+
+  - lr 3e-6: 2023-12-03_10-46-19
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/r0xj4qnr
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/qk5v6cjl
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/zed5lc8y
+
+  - lr 3e-5:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/rb6w9o5j
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ow56b0za
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cc2k60e3
+
+  - lr 3e-4:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ksinrhz5
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hgwgp68g
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/acr2hqy4
+
+  - lr 1e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/konrickd
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/etdn1ocy
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/eevtpox3
+
+  - lr 3e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ipaqud23
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hic1rt44
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hnff9nuf
+
+- metric values per learning rate and per seed
+
+  |    | ('model_save_dir',)                                                                                          |   ('val/loss',) |   ('val/f1',) |   ('train/loss',) |   ('train/loss_epoch',) |   ('train/f1',) |   ('train/loss_step',) |
+  |\---:|:-------------------------------------------------------------------------------------------------------------|----------------:|--------------:|------------------:|------------------------:|----------------:|-----------------------:|
+  |  0 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_10-46-23 |         90.3917 |      0.736685 |           5.49784 |                 5.49784 |        0.950838 |            4.76837e-07 |
+  |  1 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_12-58-16 |         95.7792 |      0.741728 |           4.67594 |                 4.67594 |        0.956538 |            0.650753    |
+  |  2 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_15-35-43 |         91.6284 |      0.737483 |           5.21134 |                 5.21134 |        0.954076 |            7.66149     |
+  |  3 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_17-59-11 |         98.9764 |      0.734576 |           6.66846 |                 6.66846 |        0.944463 |            0.00424778  |
+  |  4 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_19-19-58 |        106.576  |      0.736453 |           5.99738 |                 5.99738 |        0.948242 |           58.5348      |
+  |  5 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_21-01-52 |        106.917  |      0.737454 |           6.11588 |                 6.11588 |        0.948053 |            0.000526222 |
+  |  6 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_22-39-35 |        194.913  |      0.726582 |          17.8957  |                17.8957  |        0.917471 |            0.130908    |
+  |  7 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_00-12-51 |        129.725  |      0.720768 |          17.6404  |                17.6404  |        0.904706 |            0.030089    |
+  |  8 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_01-12-30 |         91.5339 |      0.72336  |          16.9795  |                16.9795  |        0.897415 |            4.05311e-06 |
+  |  9 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_01-55-21 |         76.1384 |      0.708573 |          36.5994  |                36.5994  |        0.853806 |           15.2539      |
+  | 10 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_02-25-40 |         95.0682 |      0.705751 |          45.9747  |                45.9747  |        0.852222 |           22.1443      |
+  | 11 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-00-06 |         76.4159 |      0.709228 |          36.7929  |                36.7929  |        0.853613 |           30.3364      |
+  | 12 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-30-22 |       4384.84   |      0.712273 |         635.893   |               635.893   |        0.877878 |         2751.07        |
+  | 13 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_05-11-44 |         76.9546 |      0.693868 |         156.016   |               156.016   |        0.81556  |          319.922       |
+  | 14 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_05-37-40 |         77.9449 |      0.694581 |         156.275   |               156.275   |        0.815388 |           64.7312      |
+
+- aggregated values:
+
+  |                  |        25% |       50% |        75% |   count |         max |       mean |          min |          std |
+  |:\-----------------|-----------:|----------:|-----------:|--------:|------------:|-----------:|-------------:|-------------:|
+  | train/f1         |  0.853709  |  0.904706 |   0.948148 |      15 |    0.956538 |   0.899351 |  0.815388    |    0.0514041 |
+  | train/loss       |  6.05663   | 17.6404   |  41.3838   |      15 |  635.893    |  76.949    |  4.67594     |  162.619     |
+  | train/loss_epoch |  6.05663   | 17.6404   |  41.3838   |      15 |  635.893    |  76.949    |  4.67594     |  162.619     |
+  | train/loss_step  |  0.0171684 |  7.66149  |  44.4356   |      15 | 2751.07     | 218.031    |  4.76837e-07 |  705.438     |
+  | val/f1           |  0.7089    |  0.72336  |   0.736569 |      15 |    0.741728 |   0.721291 |  0.693868    |    0.0162844 |
+  | val/loss         | 84.1683    | 95.0682   | 106.746    |      15 | 4384.84     | 386.254    | 76.1384      | 1106.58      |
+
+### Learning rate optimization for Q, K, V ablations - frozen target model and frozen MRPC with attention aggregation, w/o Q, K, V projections
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate.type=attention \
+  +model.aggregate.project_target_query=False \
+  +model.aggregate.project_target_key=False \
+  +model.aggregate.project_target_value=False \
+  model.task_learning_rate=1e-4 \
+  model.bert_learning_rate=3e-6,3e-5,3e-4,1e-3,3e-3 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +wandb_watch=attention_activation \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+
+  ```
+
+- wandb runs for different learning rates:
+
+  - lr 3e-6:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/pcllgn6v
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/2jnhnqyu
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/shis4gm0
+
+  - lr 3e-5:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/kz4kq2s0
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ny3qqz01
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/pd26wkr7
+
+  - lr 3e-4:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/u8dchp4a
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/iz550ihb
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/do608e6r
+
+  - lr 1e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/c6qb80io
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/890dnpqh
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/f9lao54q
+
+  - lr 3e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/v8cszlp4
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/90amame2
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/z964oqqk
+
+- metric values per learning rate and per seed
+
+  |    |   ('train/loss',) |   ('val/f1',) |   ('train/loss_step',) | ('model_save_dir',)                                                                                          |   ('train/loss_epoch',) |   ('val/loss',) |   ('train/f1',) |
+  |\---:|------------------:|--------------:|-----------------------:|:-------------------------------------------------------------------------------------------------------------|------------------------:|----------------:|----------------:|
+  |  0 |           5.7035  |      0.740362 |            1.77167     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_10-49-02 |                 5.7035  |         137.51  |        0.955489 |
+  |  1 |           7.1795  |      0.736991 |           28.9452      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_13-23-31 |                 7.1795  |         118.876 |        0.942228 |
+  |  2 |           6.48877 |      0.738909 |            8.89461     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_14-48-23 |                 6.48877 |         131.484 |        0.950562 |
+  |  3 |           6.14006 |      0.739948 |            1.90735e-06 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_16-54-59 |                 6.14006 |         133.769 |        0.951041 |
+  |  4 |           7.41002 |      0.737017 |           40.7763      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_19-01-39 |                 7.41002 |         119.286 |        0.94268  |
+  |  5 |           5.53306 |      0.741386 |            7.52306     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_20-26-34 |                 5.53306 |         141.253 |        0.956938 |
+  |  6 |           5.73979 |      0.742185 |           10.2745      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_23-15-24 |                 5.73979 |         142.788 |        0.954993 |
+  |  7 |           7.27489 |      0.734396 |           26.4146      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_01-41-24 |                 7.27489 |         128.55  |        0.944103 |
+  |  8 |           5.90571 |      0.741789 |            0           | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-15-45 |                 5.90571 |         149.427 |        0.954266 |
+  |  9 |           8.37675 |      0.734229 |            5.57069     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_05-46-15 |                 8.37675 |         111.024 |        0.935597 |
+  | 10 |           7.42409 |      0.73579  |           31.2659      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_06-52-35 |                 7.42409 |         131.746 |        0.942922 |
+  | 11 |           8.20839 |      0.73387  |           12.8788      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_08-27-09 |                 8.20839 |         116.403 |        0.937965 |
+  | 12 |           7.68432 |      0.734402 |            9.94356     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_09-43-21 |                 7.68432 |         123.781 |        0.941003 |
+  | 13 |           7.74515 |      0.735413 |           30.4327      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_11-10-43 |                 7.74515 |         124.891 |        0.940979 |
+  | 14 |           6.21635 |      0.741021 |            5.66886     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_12-38-10 |                 6.21635 |         151.1   |        0.953723 |
+
+- aggregated values:
+
+  |                  |        25% |        50% |        75% |   count |        max |       mean |        min |         std |
+  |:\-----------------|-----------:|-----------:|-----------:|--------:|-----------:|-----------:|-----------:|------------:|
+  | train/f1         |   0.941616 |   0.944103 |   0.953994 |      15 |   0.956938 |   0.946966 |   0.935597 |  0.00713158 |
+  | train/loss       |   6.02288  |   7.1795   |   7.55421  |      15 |   8.37675  |   6.86869  |   5.53306  |  0.956545   |
+  | train/loss_epoch |   6.02288  |   7.1795   |   7.55421  |      15 |   8.37675  |   6.86869  |   5.53306  |  0.956545   |
+  | train/loss_step  |   5.61977  |   9.94356  |  27.6799   |      15 |  40.7763   |  14.6907   |   0        | 13.1937     |
+  | val/f1           |   0.734907 |   0.737017 |   0.740691 |      15 |   0.742185 |   0.737847 |   0.73387  |  0.0030832  |
+  | val/loss         | 121.533    | 131.484    | 139.381    |      15 | 151.1      | 130.793    | 111.024    | 12.0404     |
+
+### Learning rate optimization for Q, K, V ablations - frozen target model and frozen MRPC with attention aggregation, no Q projection, only K, V projections
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate.type=attention \
+  +model.aggregate.project_target_query=False \
+  model.task_learning_rate=1e-4 \
+  model.bert_learning_rate=3e-6,3e-5,3e-4,1e-3,3e-3 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +wandb_watch=attention_activation \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+
+  ```
+
+- wandb runs for different learning rates:
+
+  - lr 3e-6:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cwsae0kp
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/xacd2gmg
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/rqpc4f8u
+
+  - lr 3e-5:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/gs687obo
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/9ydv1oaa
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ihqgwk1t
+
+  - lr 3e-4:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/djfeq8e9
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/o5yu10h2
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0t7mp0yi
+
+  - lr 1e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/q2ipxife
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cusrxoom
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/eze6j8gr
+
+  - lr 3e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/q64v6yd5
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/0odxsz0f
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/cg94ryrk
+
+- metric values per learning rate and per seed
+
+  |    |   ('train/loss',) |   ('train/loss_step',) | ('model_save_dir',)                                                                                          |   ('val/f1',) |   ('val/loss',) |   ('train/loss_epoch',) |   ('train/f1',) |
+  |\---:|------------------:|-----------------------:|:-------------------------------------------------------------------------------------------------------------|--------------:|----------------:|------------------------:|----------------:|
+  |  0 |           6.36651 |           17.7831      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_10-48-18 |      0.736583 |         88.6615 |                 6.36651 |        0.944462 |
+  |  1 |           5.31569 |            1.38434     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_12-55-44 |      0.739504 |         92.2307 |                 5.31569 |        0.951661 |
+  |  2 |           4.53131 |            0.000194411 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_15-28-02 |      0.740375 |        101.824  |                 4.53131 |        0.959168 |
+  |  3 |           7.14362 |            0.00153387  | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_18-58-17 |      0.734707 |         89.6431 |                 7.14362 |        0.937913 |
+  |  4 |           5.86495 |           39.0168      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_20-05-59 |      0.734961 |        107.984  |                 5.86495 |        0.949245 |
+  |  5 |           6.49318 |           38.7097      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_21-51-49 |      0.735151 |        102.661  |                 6.49318 |        0.94752  |
+  |  6 |          15.4455  |            2.52634     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_23-20-41 |      0.729626 |        237.402  |                15.4455  |        0.930484 |
+  |  7 |          18.8657  |           15.8015      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_01-38-40 |      0.719206 |        117.828  |                18.8657  |        0.899168 |
+  |  8 |          15.7794  |            0           | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_02-34-00 |      0.719877 |         85.1609 |                15.7794  |        0.89622  |
+  |  9 |          37.3601  |            0           | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-12-30 |      0.708218 |         77.9059 |                37.3601  |        0.856213 |
+  | 10 |          58.7342  |            0           | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-42-26 |      0.704407 |        115.961  |                58.7342  |        0.851302 |
+  | 11 |          36.9539  |           65.5665      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_04-20-55 |      0.707446 |         78.6293 |                36.9539  |        0.85426  |
+  | 12 |         590.32    |          440.527       | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_04-51-04 |      0.696489 |        708.087  |               590.32    |        0.832636 |
+  | 13 |         150.793   |           46.5254      | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_05-36-40 |      0.693673 |         71.6562 |               150.793   |        0.816337 |
+  | 14 |         625.387   |          376.447       | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_06-02-35 |      0.695038 |        928.034  |               625.387   |        0.839005 |
+
+- aggregated values:
+
+  |                  |          25% |        50% |        75% |   count |        max |       mean |       min |         std |
+  |:\-----------------|-------------:|-----------:|-----------:|--------:|-----------:|-----------:|----------:|------------:|
+  | train/f1         |  0.852781    |   0.899168 |   0.945991 |      15 |   0.959168 |   0.897706 |  0.816337 |   0.0512496 |
+  | train/loss       |  6.42985     |  15.7794   |  48.0472   |      15 | 625.387    | 105.69     |  4.53131  | 207.371     |
+  | train/loss_epoch |  6.42985     |  15.7794   |  48.0472   |      15 | 625.387    | 105.69     |  4.53131  | 207.371     |
+  | train/loss_step  |  0.000864139 |  15.8015   |  42.7711   |      15 | 440.527    |  69.6193   |  0        | 139.676     |
+  | val/f1           |  0.705926    |   0.719877 |   0.735056 |      15 |   0.740375 |   0.719684 |  0.693673 |   0.017404  |
+  | val/loss         | 86.9112      | 101.824    | 116.894    |      15 | 928.034    | 200.245    | 71.6562   | 257.247     |
+
+### Learning rate optimization for Q, K, V ablations - frozen target model and frozen MRPC with attention aggregation, no K, V projections, only Q projection
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
+  +model.aggregate.type=attention \
+  +model.aggregate.project_target_key=False \
+  +model.aggregate.project_target_value=False \
+  model.task_learning_rate=1e-4 \
+  model.bert_learning_rate=3e-6,3e-5,3e-4,1e-3,3e-3 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +wandb_watch=attention_activation \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+
+  ```
+
+- wandb runs for different learning rates:
+
+  - lr 3e-6:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/rbng65mx
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/vwkqtej3
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/ie46lbtl
+
+  - lr 3e-5:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/e7p195eq
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/gny0pdxy
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/rpqi9xkd
+
+  - lr 3e-4:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/m2vg6kz7
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/n67houss
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/gs3l8am1
+
+  - lr 1e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/18prz2b5
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/60xnay0w
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/hvz60ifh
+
+  - lr 3e-3:
+
+    - seed1: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/df4qtv3c
+    - seed2: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/8xq3pme1
+    - seed3: https://wandb.ai/tanikina/conll2012-multi_model_coref_hoi-training/runs/y9rqr77n
+
+- metric values per learning rate and per seed
+
+  |    |   ('val/f1',) |   ('train/loss_step',) |   ('train/loss',) |   ('train/loss_epoch',) | ('model_save_dir',)                                                                                          |   ('train/f1',) |   ('val/loss',) |
+  |\---:|--------------:|-----------------------:|------------------:|------------------------:|:-------------------------------------------------------------------------------------------------------------|----------------:|----------------:|
+  |  0 |      0.738854 |           43.7351      |           6.49285 |                 6.49285 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_10-49-28 |        0.949846 |         124.034 |
+  |  1 |      0.740581 |            1.78814e-06 |           6.12598 |                 6.12598 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_12-57-16 |        0.950768 |         129.961 |
+  |  2 |      0.739759 |            0           |           6.7247  |                 6.7247  | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_15-10-10 |        0.948267 |         124.199 |
+  |  3 |      0.739854 |           20.2515      |           5.9808  |                 5.9808  | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_17-08-18 |        0.952259 |         128.902 |
+  |  4 |      0.739994 |            4.76837e-07 |           5.9807  |                 5.9807  | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_19-16-31 |        0.952044 |         130.434 |
+  |  5 |      0.739649 |            0           |           6.50989 |                 6.50989 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_21-31-09 |        0.948699 |         126.526 |
+  |  6 |      0.736821 |            0.00019454  |           7.42486 |                 7.42486 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-03_23-30-54 |        0.944438 |         126.147 |
+  |  7 |      0.739587 |            0.175386    |           6.28247 |                 6.28247 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_01-05-58 |        0.953391 |         147.04  |
+  |  8 |      0.738718 |           17.4024      |           7.37775 |                 7.37775 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_03-45-28 |        0.945674 |         132.453 |
+  |  9 |      0.73627  |           54.9368      |           6.86909 |                 6.86909 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_05-40-35 |        0.949295 |         135.219 |
+  | 10 |      0.739723 |            0.280123    |           7.46497 |                 7.46497 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_07-49-40 |        0.945078 |         129.934 |
+  | 11 |      0.738585 |            0.00566232  |           6.55533 |                 6.55533 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_09-34-19 |        0.950455 |         139.888 |
+  | 12 |      0.73702  |           22.3402      |           6.85007 |                 6.85007 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_11-48-29 |        0.946905 |         140.46  |
+  | 13 |      0.737917 |            0.220479    |       29459.3     |             29459.3     | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_14-03-05 |        0.912687 |         130.66  |
+  | 14 |      0.740333 |            5.96046e-07 |           6.91523 |                 6.91523 | /netscratch/anikina/multi-task-knowledge-transfer/models/conll2012/multi_model_coref_hoi/2023-12-04_15-49-06 |        0.948573 |         137.411 |
+
+- aggregated values:
+
+  |                  |           25% |        50% |        75% |   count |          max |        mean |        min |          std |
+  |:\-----------------|--------------:|-----------:|-----------:|--------:|-------------:|------------:|-----------:|-------------:|
+  | train/f1         |   0.946289    |   0.948699 |   0.950612 |      15 |     0.953391 |    0.946559 |   0.912687 |    0.0097355 |
+  | train/loss       |   6.38766     |   6.7247   |   7.14649  |      15 | 29459.3      | 1970.19     |   5.9807   | 7604.63      |
+  | train/loss_epoch |   6.38766     |   6.7247   |   7.14649  |      15 | 29459.3      | 1970.19     |   5.9807   | 7604.63      |
+  | train/loss_step  |   1.19209e-06 |   0.175386 |  18.8269   |      15 |    54.9368   |   10.6232   |   0        |   17.829     |
+  | val/f1           |   0.738251    |   0.739587 |   0.739806 |      15 |     0.740581 |    0.738911 |   0.73627  |    0.0013445 |
+  | val/loss         | 127.714       | 130.434    | 136.315    |      15 |   147.04     |  132.218    | 124.034    |    6.60057   |
