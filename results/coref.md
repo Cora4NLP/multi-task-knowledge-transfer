@@ -113,15 +113,20 @@ log entry: [frozen pre-trained target-model + frozen bert (coref learning rate o
 
 **Idea:** test whether removing key, query and value projections hurts the performance (for attention-based aggregation). We also test different learning rate values for BERT.
 
-**Findings:** 1e-5 is the best lr when we have all projections, 5e-5 is the best lr w/o any projections, 1e-4 works best with only query projection and 1e-5 is the best lr when we have only keys and values projections. Overall, removing the query projection leads to the best average f1 score (0.7406). However, the difference is very small and there is no clear pattern regarding the learning rate optimization.
+**Findings:** when attention uses query, key and value projections lower learning rate (3e-6) leads to better performance (0.7386). For the setting when we do not have any projections 3e-4 and 3e-5 result in the best val/f1 score (0.7395), however the difference is very small compared to other learning rates. Changing BERT learning rate does not seem to have any effect when we do not use any projections. When only the query projection is available the best learning rate is 1e-4 with 0.7401 val/f1 score. Different learning rates do not have much impact on this setting. Finally, if we remove the query projection but leave the key and value projections we get better results with the lower learning rates (e.g., 0.7406 val/f1 with lr 1e-5). This shows that those settings that use more projections need a lower BERT learning rate than the ones that do not use any or only a single one (for the query). However, the final difference in f1 scores is very small and we can achieve almost the same performance with or without projections.
 
 **Setting:** frozen-target + frozen-MRPC with Q, K and V projections
 
 | bert lr | mean val/f1 | mean val/loss |
 | ------: | ----------: | ------------: |
+|    3e-3 |      0.7002 |       1513.25 |
+|    1e-3 |      0.7079 |       82.5408 |
+|    3e-4 |      0.7236 |       138.724 |
 |    1e-4 |      0.7294 |       102.149 |
 |    5e-5 |      0.7332 |       103.068 |
-|    1e-5 |  **0.7372** |       89.4812 |
+|    3e-5 |      0.7362 |       104.157 |
+|    1e-5 |      0.7372 |       89.4812 |
+|    3e-6 |  **0.7386** |       92.5998 |
 |    1e-6 |      0.7335 |       78.4313 |
 
 log entry: [frozen-MRPC + frozen-BERT (Q, K, V projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-key-and-value-projections)
@@ -130,9 +135,14 @@ log entry: [frozen-MRPC + frozen-BERT (Q, K, V projections)](https://github.com/
 
 | bert lr | mean val/f1 | mean val/loss |
 | ------: | ----------: | ------------: |
+|    3e-3 |      0.7370 |       133.257 |
+|    1e-3 |      0.7346 |       119.724 |
+|    3e-4 |  **0.7395** |       140.255 |
 |    1e-4 |      0.7358 |       121.089 |
-|    5e-5 |  **0.7376** |       124.365 |
+|    5e-5 |      0.7376 |       124.365 |
+|    3e-5 |  **0.7395** |       131.436 |
 |    1e-5 |      0.7372 |       121.953 |
+|    3e-6 |      0.7388 |       129.290 |
 |    1e-6 |      0.7370 |       126.127 |
 
 log entry: [frozen-MRPC + frozen-BERT (no projections)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-key-and-value-projections)
@@ -141,9 +151,14 @@ log entry: [frozen-MRPC + frozen-BERT (no projections)](https://github.com/Cora4
 
 | bert lr | mean val/f1 | mean val/loss |
 | ------: | ----------: | ------------: |
+|    3e-3 |      0.7384 |       136.177 |
+|    1e-3 |      0.7382 |       135.014 |
+|    3e-4 |      0.7384 |       135.213 |
 |    1e-4 |  **0.7401** |       134.469 |
 |    5e-5 |      0.7387 |       126.815 |
+|    3e-5 |      0.7398 |       128.621 |
 |    1e-5 |      0.7357 |       108.715 |
+|    3e-6 |      0.7397 |       126.065 |
 |    1e-6 |      0.7356 |       113.756 |
 
 log entry: [frozen-MRPC + frozen-BERT (Q projection only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-with-query-projection-but-wo-key-and-value-projections)
@@ -152,9 +167,14 @@ log entry: [frozen-MRPC + frozen-BERT (Q projection only)](https://github.com/Co
 
 | bert lr | mean val/f1 | mean val/loss |
 | ------: | ----------: | ------------: |
+|    3e-3 |      0.6951 |       569.259 |
+|    1e-3 |      0.7067 |       90.8321 |
+|    3e-4 |      0.7229 |       146.797 |
 |    1e-4 |      0.7305 |       116.805 |
 |    5e-5 |      0.7339 |       106.148 |
+|    3e-5 |      0.7349 |       100.096 |
 |    1e-5 |  **0.7406** |       110.213 |
+|    3e-6 |      0.7388 |       94.2387 |
 |    1e-6 |      0.7317 |       85.3664 |
 
 log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#bert-lr-tuning-for-coref-frozen-pretrained-coref--frozen-mrpc-attention-aggregation-without-query-projection-but-with-key-and-value-projections)
@@ -175,6 +195,116 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 | frozen-BERT         | 0.6495 | 295.832  | 0.00977    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation)       |
 | frozen-NER-RE-SQUAD | 0.5793 | 269.619  | 0.03082    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-re-qa-models-with-mean-aggregation) |
 | frozen-BERT-3x      | 0.6195 | 320.306  | 0.00708    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-3x-models-with-mean-aggregation)   |
+
+## Probing experiments with truncated models
+
+**Idea:** do the same as in the [probing experiments above](#probing-experiments) but with the truncated models (6-11 layers).
+
+**Findings:** for the frozen-target setup we have a predictable behaviour with the f1 scores going down from 0.7375 to 0.6723 when we decrease the number of available layers (from 12 to 6). Interestingly, MRPC shows better scores when truncated to layer 8 or 9 (0.6626 val/f1), NER performs very poorly when only the output of the final layer is considered (0.3563 val/f1) but the score increases to 0.6176 when we use the output of the 6th layer. Similarly to MRPC, RE model achieves best performance with the truncation to the 9th layer (0.6240 val/f1). SQUAD shows the same pattern with the difference of +13.98 f1 points when we truncate the model to the first 8 layers. Finally, frozen-BERT has slightly better performance when we truncate the model to the 9th or 10th layer but the difference is smaller than e.g., for SQUAD or NER. The best score is 0.6640 with frozen-BERT<sub>10</sub>.
+
+Frozen target
+
+| setting                    | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                       |
+| :------------------------- | :----- | :------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| frozen-target<sub>12</sub> | 0.7375 | 117.221  | 0.00291    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation)                        |
+| frozen-target<sub>11</sub> | 0.7303 | 1137.19  | 0.00482    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-target<sub>10</sub> | 0.7251 | 1270.77  | 0.0058     | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-target<sub>9</sub>  | 0.7286 | 1638.51  | 0.0034     | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-target<sub>8</sub>  | 0.7147 | 1432.39  | 0.00127    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-target<sub>7</sub>  | 0.6953 | 1209.98  | 0.0024     | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-target<sub>6</sub>  | 0.6723 | 1071.08  | 0.00209    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-target-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+Frozen MRPC
+
+| setting                  | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                     |
+| :----------------------- | :----- | :------- | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-MRPC<sub>12</sub> | 0.6116 | 242.417  | 0.02836    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation)                        |
+| frozen-MRPC<sub>11</sub> | 0.6375 | 797.579  | 0.00082    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-MRPC<sub>10</sub> | 0.6524 | 824.06   | 0.01113    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-MRPC<sub>9</sub>  | 0.6626 | 887.15   | 0.00610    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-MRPC<sub>8</sub>  | 0.6613 | 862.599  | 0.00408    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-MRPC<sub>7</sub>  | 0.6550 | 886.209  | 0.01268    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-MRPC<sub>6</sub>  | 0.6280 | 873.283  | 0.00830    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+Frozen NER
+
+| setting                 | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                    |
+| :---------------------- | :----- | :------- | :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-NER<sub>12</sub> | 0.3563 | 512.712  | 0.02122    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation)                        |
+| frozen-NER<sub>11</sub> | 0.5315 | 930.88   | 0.01473    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-NER<sub>10</sub> | 0.5575 | 1043.45  | 0.01816    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-NER<sub>9</sub>  | 0.5623 | 1089.59  | 0.02427    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-NER<sub>8</sub>  | 0.5983 | 927.081  | 0.01198    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-NER<sub>7</sub>  | 0.5821 | 919.705  | 0.03259    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-NER<sub>6</sub>  | 0.6176 | 925.745  | 0.01533    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+Frozen RE
+
+| setting                | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                   |
+| :--------------------- | :----- | :------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-RE<sub>12</sub> | 0.5227 | 691.528  | 0.02390    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation)                        |
+| frozen-RE<sub>11</sub> | 0.5869 | 997.296  | 0.00706    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-RE<sub>10</sub> | 0.5951 | 1053.81  | 0.00167    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-RE<sub>9</sub>  | 0.6240 | 986.183  | 0.01412    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-RE<sub>8</sub>  | 0.6132 | 984.823  | 0.00242    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-RE<sub>7</sub>  | 0.6148 | 1001.3   | 0.00371    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-RE<sub>6</sub>  | 0.6065 | 996.46   | 0.01435    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+Frozen SQUAD
+
+| setting                   | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                      |
+| :------------------------ | :----- | :------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-SQUAD<sub>12</sub> | 0.5079 | 577.224  | 0.03011    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-qa-model-with-mean-aggregation)                           |
+| frozen-SQUAD<sub>11</sub> | 0.6282 | 931.756  | 0.02304    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-SQUAD<sub>10</sub> | 0.6419 | 935.4    | 0.01579    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-SQUAD<sub>9</sub>  | 0.6431 | 937.324  | 0.00303    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-SQUAD<sub>8</sub>  | 0.6477 | 911.96   | 0.00653    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-SQUAD<sub>7</sub>  | 0.6412 | 935.452  | 0.00729    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-SQUAD<sub>6</sub>  | 0.6379 | 920.508  | 0.00702    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-squad-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+Frozen BERT
+
+| setting                  | val/f1 | val/loss | val/f1/std | log entry                                                                                                                                                                     |
+| :----------------------- | :----- | :------- | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-BERT<sub>12</sub> | 0.6495 | 295.832  | 0.00977    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation)                        |
+| frozen-BERT<sub>11</sub> | 0.6353 | 791.918  | 0.00333    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-11-layers) |
+| frozen-BERT<sub>10</sub> | 0.6640 | 865.084  | 0.01664    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-10-layers) |
+| frozen-BERT<sub>9</sub>  | 0.6627 | 864.179  | 0.0079     | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-9-layers)  |
+| frozen-BERT<sub>8</sub>  | 0.6496 | 803.509  | 0.01842    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-8-layers)  |
+| frozen-BERT<sub>7</sub>  | 0.6499 | 842.642  | 0.01655    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-7-layers)  |
+| frozen-BERT<sub>6</sub>  | 0.6233 | 807.78   | 0.00955    | [2023-12-04](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-model-with-mean-aggregation-truncated-to-6-layers)  |
+
+## Comparing the val/f1 scores and loss of the truncated models ([W&B project](https://wandb.ai/tanikina/probing-coref-truncated-models-training)).
+
+### 11 layers
+
+<img src="images/val_f1_truncation-11.png" width=70% height=70% />
+<img src="images/val_loss_truncation-11.png" width=70% height=70% />
+
+### 10 layers
+
+<img src="images/val_f1_truncation-10.png" width=70% height=70% />
+<img src="images/val_loss_truncation-10.png" width=70% height=70% />
+
+### 9 layers
+
+<img src="images/val_f1_truncation-9.png" width=70% height=70% />
+<img src="images/val_loss_truncation-9.png" width=70% height=70% />
+
+### 8 layers
+
+<img src="images/val_f1_truncation-8.png" width=70% height=70% />
+<img src="images/val_loss_truncation-8.png" width=70% height=70% />
+
+### 7 layers
+
+<img src="images/val_f1_truncation-7.png" width=70% height=70% />
+<img src="images/val_loss_truncation-7.png" width=70% height=70% />
+
+### 6 layers
+
+<img src="images/val_f1_truncation-6.png" width=70% height=70% />
+<img src="images/val_loss_truncation-6.png" width=70% height=70% />
 
 ## TODOs & Ideas:
 
