@@ -6132,3 +6132,52 @@ metric values (averaged over 5 seeds):
   | train/loss_step  |  55.6945 |  111.389 |  160.495 |     3 |  209.601 |  106.997 |        0 |    104.87 |
   | val/f1           | 0.677396 | 0.684904 | 0.687949 |     3 | 0.690993 | 0.681928 | 0.669888 | 0.0108628 |
   | val/loss         |  461.667 |  471.637 |  474.706 |     3 |  477.775 |  467.037 |  451.697 |   13.6342 |
+
+### Coreference probing - frozen BERT (10 layers), MRPC (9 layers), RE (9 layers), NER (6 layers) and SQUAD (8 layers) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased:bert-base-cased,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased,bert-base-cased-mrpc,bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased=10 \
+  +model.truncate_models.bert-base-cased-mrpc=9 \
+  +model.truncate_models.bert-base-cased-re-tacred=9 \
+  +model.truncate_models.bert-base-cased-ner-ontonotes=6 \
+  +model.truncate_models.bert-base-cased-qa-squad2=8 \
+  trainer=gpu \
+  seed=1,2,3 \
+  name=probing/coref-truncated-models \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-coref-truncated-models-training/runs/4a19lvgn
+  - seed2: https://wandb.ai/tanikina/probing-coref-truncated-models-training/runs/9mqq65yv
+  - seed3: https://wandb.ai/tanikina/probing-coref-truncated-models-training/runs/m9usxyuq
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('model_save_dir',)                                                                                         | ('val/f1',) | ('val/loss',) | ('train/f1',) | ('train/loss',) | ('train/loss_step',) |
+  | --: | --------------------: | :---------------------------------------------------------------------------------------------------------- | ----------: | ------------: | ------------: | --------------: | -------------------: |
+  |   0 |               265.973 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/coref-truncated-models/2023-12-13_18-10-57 |     0.65414 |        741.04 |      0.757919 |         265.973 |                    0 |
+  |   1 |               299.045 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/coref-truncated-models/2023-12-13_20-38-30 |     0.65399 |       685.569 |      0.740882 |         299.045 |              62.8341 |
+  |   2 |               230.385 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/coref-truncated-models/2023-12-13_22-47-03 |    0.659264 |       711.461 |      0.777122 |         230.385 |              34.6284 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.749401 | 0.757919 | 0.767521 |     3 | 0.777122 | 0.758641 | 0.740882 |  0.0181307 |
+  | train/loss       |  248.179 |  265.973 |  282.509 |     3 |  299.045 |  265.134 |  230.385 |    34.3379 |
+  | train/loss_epoch |  248.179 |  265.973 |  282.509 |     3 |  299.045 |  265.134 |  230.385 |    34.3379 |
+  | train/loss_step  |  17.3142 |  34.6284 |  48.7313 |     3 |  62.8341 |  32.4875 |        0 |    31.4717 |
+  | val/f1           | 0.654065 |  0.65414 | 0.656702 |     3 | 0.659264 | 0.655798 |  0.65399 | 0.00300271 |
+  | val/loss         |  698.515 |  711.461 |   726.25 |     3 |   741.04 |   712.69 |  685.569 |    27.7562 |
