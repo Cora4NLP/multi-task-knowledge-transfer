@@ -6181,3 +6181,956 @@ metric values (averaged over 5 seeds):
   | train/loss_step  |  17.3142 |  34.6284 |  48.7313 |     3 |  62.8341 |  32.4875 |        0 |    31.4717 |
   | val/f1           | 0.654065 |  0.65414 | 0.656702 |     3 | 0.659264 | 0.655798 |  0.65399 | 0.00300271 |
   | val/loss         |  698.515 |  711.461 |   726.25 |     3 |   741.04 |   712.69 |  685.569 |    27.7562 |
+
+## 2023-12-19
+
+### Coreference probing with normalization - frozen NER with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes} \
+  +model.freeze_models=[bert-base-cased-ner-ontonotes] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/gonfmbgn
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/8jgnixys
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/86zzg4yr
+
+- metric values per seed
+
+  |     | ('train/f1',) | ('model_save_dir',)                                                                             | ('train/loss_step',) | ('train/loss',) | ('val/loss',) | ('train/loss_epoch',) | ('val/f1',) |
+  | --: | ------------: | :---------------------------------------------------------------------------------------------- | -------------------: | --------------: | ------------: | --------------------: | ----------: |
+  |   0 |      0.374454 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_19-13-47 |              90.6568 |         71.4751 |       84.5088 |               71.4751 |    0.492618 |
+  |   1 |      0.331292 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_20-39-48 |              4.29522 |         74.9203 |       77.5316 |               74.9203 |    0.442246 |
+  |   2 |      0.398591 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_21-34-00 |              30.7845 |          69.998 |       74.1357 |                69.998 |     0.50349 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.352873 | 0.374454 | 0.386522 |     3 | 0.398591 | 0.368112 | 0.331292 | 0.0340946 |
+  | train/loss       |  70.7366 |  71.4751 |  73.1977 |     3 |  74.9203 |  72.1311 |   69.998 |   2.52584 |
+  | train/loss_epoch |  70.7366 |  71.4751 |  73.1977 |     3 |  74.9203 |  72.1311 |   69.998 |   2.52584 |
+  | train/loss_step  |  17.5399 |  30.7845 |  60.7207 |     3 |  90.6568 |  41.9122 |  4.29522 |   44.2431 |
+  | val/f1           | 0.467432 | 0.492618 | 0.498054 |     3 |  0.50349 | 0.479451 | 0.442246 | 0.0326761 |
+  | val/loss         |  75.8336 |  77.5316 |  81.0202 |     3 |  84.5088 |  78.7254 |  74.1357 |   5.28862 |
+
+### Coreference probing with normalization - frozen RE with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf} \
+  +model.freeze_models=[bert-base-cased-re-tacred] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/jivtinsz
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/tb8brjl3
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/3gg3fnwf
+
+- metric values per seed
+
+  |     | ('train/f1',) | ('val/loss',) | ('train/loss',) | ('val/f1',) | ('train/loss_step',) | ('model_save_dir',)                                                                             | ('train/loss_epoch',) |
+  | --: | ------------: | ------------: | --------------: | ----------: | -------------------: | :---------------------------------------------------------------------------------------------- | --------------------: |
+  |   0 |      0.628328 |       54.8789 |         39.1673 |    0.604592 |              44.6658 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_23-24-42 |               39.1673 |
+  |   1 |      0.439866 |       25.7741 |         16.9885 |     0.42011 |              2.43843 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_02-16-11 |               16.9885 |
+  |   2 |      0.423448 |       28.2419 |         19.2089 |    0.416315 |              63.3149 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_04-16-54 |               19.2089 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |      std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | -------: |
+  | train/f1         | 0.431657 | 0.439866 | 0.534097 |     3 | 0.628328 | 0.497214 | 0.423448 | 0.113845 |
+  | train/loss       |  18.0987 |  19.2089 |  29.1881 |     3 |  39.1673 |  25.1215 |  16.9885 |  12.2145 |
+  | train/loss_epoch |  18.0987 |  19.2089 |  29.1881 |     3 |  39.1673 |  25.1215 |  16.9885 |  12.2145 |
+  | train/loss_step  |  23.5521 |  44.6658 |  53.9904 |     3 |  63.3149 |  36.8064 |  2.43843 |    31.19 |
+  | val/f1           | 0.418213 |  0.42011 | 0.512351 |     3 | 0.604592 | 0.480339 | 0.416315 | 0.107623 |
+  | val/loss         |   27.008 |  28.2419 |  41.5604 |     3 |  54.8789 |  36.2983 |  25.7741 |  16.1385 |
+
+### Coreference probing with normalization - frozen MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/rx62fgkh
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/7omeafs2
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/ow8w7ocj
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('train/f1',) | ('train/loss_epoch',) | ('val/loss',) | ('train/loss',) | ('model_save_dir',)                                                                             | ('val/f1',) |
+  | --: | -------------------: | ------------: | --------------------: | ------------: | --------------: | :---------------------------------------------------------------------------------------------- | ----------: |
+  |   0 |          0.000328628 |      0.440812 |               17.3894 |       22.2899 |         17.3894 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_19-20-09 |    0.427555 |
+  |   1 |               1.1371 |      0.729493 |                27.992 |       45.6755 |          27.992 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_20-22-38 |    0.665758 |
+  |   2 |              29.5804 |      0.716185 |               29.9298 |       46.0592 |         29.9298 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_23-34-41 |    0.664903 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |         min |      std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | ----------: | -------: |
+  | train/f1         | 0.578498 | 0.716185 | 0.722839 |     3 | 0.729493 |  0.62883 |    0.440812 | 0.162965 |
+  | train/loss       |  22.6907 |   27.992 |  28.9609 |     3 |  29.9298 |  25.1037 |     17.3894 |  6.75071 |
+  | train/loss_epoch |  22.6907 |   27.992 |  28.9609 |     3 |  29.9298 |  25.1037 |     17.3894 |  6.75071 |
+  | train/loss_step  | 0.568717 |   1.1371 |  15.3587 |     3 |  29.5804 |  10.2393 | 0.000328628 |  16.7595 |
+  | val/f1           | 0.546229 | 0.664903 | 0.665331 |     3 | 0.665758 | 0.586072 |    0.427555 |  0.13728 |
+  | val/loss         |  33.9827 |  45.6755 |  45.8673 |     3 |  46.0592 |  38.0082 |     22.2899 |  13.6138 |
+
+### Coreference probing with normalization - frozen QA with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/38rd8x07
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/fgkmr12u
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/nc24a4wh
+
+- metric values per seed
+
+  |     | ('val/f1',) | ('train/loss_step',) | ('model_save_dir',)                                                                             | ('val/loss',) | ('train/loss',) | ('train/f1',) | ('train/loss_epoch',) |
+  | --: | ----------: | -------------------: | :---------------------------------------------------------------------------------------------- | ------------: | --------------: | ------------: | --------------------: |
+  |   0 |    0.602521 |              65.2014 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_02-23-26 |       55.6594 |         50.2751 |      0.560974 |               50.2751 |
+  |   1 |    0.594648 |              81.0149 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_05-26-09 |       57.0809 |         51.5113 |      0.550413 |               51.5113 |
+  |   2 |    0.589616 |              7.79414 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_08-00-08 |       59.3776 |         52.1831 |      0.545206 |               52.1831 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.547809 | 0.550413 | 0.555693 |     3 | 0.560974 | 0.552198 | 0.545206 | 0.00803444 |
+  | train/loss       |  50.8932 |  51.5113 |  51.8472 |     3 |  52.1831 |  51.3231 |  50.2751 |   0.967813 |
+  | train/loss_epoch |  50.8932 |  51.5113 |  51.8472 |     3 |  52.1831 |  51.3231 |  50.2751 |   0.967813 |
+  | train/loss_step  |  36.4978 |  65.2014 |  73.1082 |     3 |  81.0149 |  51.3368 |  7.79414 |    38.5291 |
+  | val/f1           | 0.592132 | 0.594648 | 0.598584 |     3 | 0.602521 | 0.595595 | 0.589616 | 0.00650416 |
+  | val/loss         |  56.3701 |  57.0809 |  58.2292 |     3 |  59.3776 |  57.3726 |  55.6594 |     1.8762 |
+
+### Coreference probing with normalization - frozen BERT with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased:bert-base-cased} \
+  +model.freeze_models=[bert-base-cased] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/qcxp814g
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/mt1ttjk6
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/habzbz55
+
+- metric values per seed
+
+  |     | ('train/loss',) | ('train/loss_epoch',) | ('model_save_dir',)                                                                             | ('val/loss',) | ('val/f1',) | ('train/f1',) | ('train/loss_step',) |
+  | --: | --------------: | --------------------: | :---------------------------------------------------------------------------------------------- | ------------: | ----------: | ------------: | -------------------: |
+  |   0 |         22.0661 |               22.0661 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_19-20-24 |       47.8592 |    0.664629 |      0.767183 |              17.4379 |
+  |   1 |         25.6453 |               25.6453 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_21-03-01 |       46.8137 |    0.664283 |      0.747177 |             0.843221 |
+  |   2 |         19.8816 |               19.8816 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_22-24-53 |       50.6923 |    0.666068 |      0.781902 |              34.2952 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |         std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ----------: |
+  | train/f1         |  0.75718 | 0.767183 | 0.774543 |     3 | 0.781902 | 0.765421 | 0.747177 |   0.0174296 |
+  | train/loss       |  20.9738 |  22.0661 |  23.8557 |     3 |  25.6453 |   22.531 |  19.8816 |     2.90983 |
+  | train/loss_epoch |  20.9738 |  22.0661 |  23.8557 |     3 |  25.6453 |   22.531 |  19.8816 |     2.90983 |
+  | train/loss_step  |  9.14057 |  17.4379 |  25.8666 |     3 |  34.2952 |  17.5254 | 0.843221 |     16.7262 |
+  | val/f1           | 0.664456 | 0.664629 | 0.665349 |     3 | 0.666068 | 0.664993 | 0.664283 | 0.000946719 |
+  | val/loss         |  47.3364 |  47.8592 |  49.2757 |     3 |  50.6923 |   48.455 |  46.8137 |     2.00676 |
+
+### Coreference probing with normalization - frozen target with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi} \
+  +model.freeze_models=[bert-base-cased-coref-hoi] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/9c2egekb
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/vm3y8a7j
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/sh9acofq
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('model_save_dir',)                                                                             | ('train/loss_epoch',) | ('val/loss',) | ('train/f1',) | ('val/f1',) | ('train/loss',) |
+  | --: | -------------------: | :---------------------------------------------------------------------------------------------- | --------------------: | ------------: | ------------: | ----------: | --------------: |
+  |   0 |          1.66893e-05 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_00-21-37 |               5.86364 |       68.8238 |      0.916157 |    0.721886 |         5.86364 |
+  |   1 |          0.000743973 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_02-00-48 |               5.46372 |       70.6066 |      0.918693 |    0.723964 |         5.46372 |
+  |   2 |           0.00563328 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_03-49-51 |               4.74006 |       75.2874 |      0.923055 |    0.724028 |         4.74006 |
+
+- aggregated values:
+
+  |                  |         25% |         50% |        75% | count |        max |       mean |         min |        std |
+  | :--------------- | ----------: | ----------: | ---------: | ----: | ---------: | ---------: | ----------: | ---------: |
+  | train/f1         |    0.917425 |    0.918693 |   0.920874 |     3 |   0.923055 |   0.919302 |    0.916157 | 0.00348942 |
+  | train/loss       |     5.10189 |     5.46372 |    5.66368 |     3 |    5.86364 |    5.35581 |     4.74006 |   0.569507 |
+  | train/loss_epoch |     5.10189 |     5.46372 |    5.66368 |     3 |    5.86364 |    5.35581 |     4.74006 |   0.569507 |
+  | train/loss_step  | 0.000380331 | 0.000743973 | 0.00318862 |     3 | 0.00563328 | 0.00213131 | 1.66893e-05 | 0.00305451 |
+  | val/f1           |    0.722925 |    0.723964 |   0.723996 |     3 |   0.724028 |   0.723293 |    0.721886 |  0.0012184 |
+  | val/loss         |     69.7152 |     70.6066 |     72.947 |     3 |    75.2874 |    71.5726 |     68.8238 |     3.3383 |
+
+### Coreference probing with normalization - frozen MRPC, RE, NER, QA with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-mrpc,bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/7soi8t0a
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/hh22jqzw
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/5klnma3z
+
+- metric values per seed
+
+  |     | ('val/loss',) | ('val/f1',) | ('train/f1',) | ('train/loss_step',) | ('train/loss_epoch',) | ('model_save_dir',)                                                                             | ('train/loss',) |
+  | --: | ------------: | ----------: | ------------: | -------------------: | --------------------: | :---------------------------------------------------------------------------------------------- | --------------: |
+  |   0 |       48.1774 |    0.656211 |      0.713603 |              102.451 |               28.7021 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_19-41-31 |         28.7021 |
+  |   1 |       47.2379 |    0.654313 |      0.701002 |              5.88729 |               30.9851 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_23-35-03 |         30.9851 |
+  |   2 |        48.904 |    0.656252 |       0.70544 |              22.8048 |               30.5328 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_02-53-19 |         30.5328 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.703221 |  0.70544 | 0.709522 |     3 | 0.713603 | 0.706682 | 0.701002 | 0.00639166 |
+  | train/loss       |  29.6174 |  30.5328 |   30.759 |     3 |  30.9851 |  30.0733 |  28.7021 |     1.2089 |
+  | train/loss_epoch |  29.6174 |  30.5328 |   30.759 |     3 |  30.9851 |  30.0733 |  28.7021 |     1.2089 |
+  | train/loss_step  |   14.346 |  22.8048 |   62.628 |     3 |  102.451 |  43.7144 |  5.88729 |     51.566 |
+  | val/f1           | 0.655262 | 0.656211 | 0.656231 |     3 | 0.656252 | 0.655592 | 0.654313 | 0.00110803 |
+  | val/loss         |  47.7076 |  48.1774 |  48.5407 |     3 |   48.904 |  48.1064 |  47.2379 |   0.835299 |
+
+### Coreference probing with normalization - frozen RE, NER, QA with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/ummaqljy
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/pom01vfp
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/k40fvm18
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('train/f1',) | ('val/f1',) | ('val/loss',) | ('train/loss_step',) | ('train/loss',) | ('model_save_dir',)                                                                             |
+  | --: | --------------------: | ------------: | ----------: | ------------: | -------------------: | --------------: | :---------------------------------------------------------------------------------------------- |
+  |   0 |               36.1398 |      0.661055 |    0.637295 |       52.4738 |            0.0703753 |         36.1398 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_19-46-56 |
+  |   1 |               36.6651 |      0.656616 |    0.636053 |       51.9889 |              113.394 |         36.6651 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-17_23-33-40 |
+  |   2 |               36.1854 |      0.659374 |    0.637668 |       51.3551 |             0.385166 |         36.1854 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_03-09-19 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |       min |         std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | --------: | ----------: |
+  | train/f1         | 0.657995 | 0.659374 | 0.660214 |     3 | 0.661055 | 0.659015 |  0.656616 |  0.00224117 |
+  | train/loss       |  36.1626 |  36.1854 |  36.4253 |     3 |  36.6651 |  36.3301 |   36.1398 |    0.291023 |
+  | train/loss_epoch |  36.1626 |  36.1854 |  36.4253 |     3 |  36.6651 |  36.3301 |   36.1398 |    0.291023 |
+  | train/loss_step  | 0.227771 | 0.385166 |  56.8896 |     3 |  113.394 |  37.9499 | 0.0703753 |     65.3368 |
+  | val/f1           | 0.636674 | 0.637295 | 0.637481 |     3 | 0.637668 | 0.637005 |  0.636053 | 0.000845502 |
+  | val/loss         |   51.672 |  51.9889 |  52.2313 |     3 |  52.4738 |  51.9393 |   51.3551 |    0.561004 |
+
+### Coreference probing with normalization - frozen RE, NER, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/envne1nu
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/qpczi5jh
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/tn3pn775
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('val/loss',) | ('val/f1',) | ('model_save_dir',)                                                                             | ('train/loss',) | ('train/f1',) | ('train/loss_step',) |
+  | --: | --------------------: | ------------: | ----------: | :---------------------------------------------------------------------------------------------- | --------------: | ------------: | -------------------: |
+  |   0 |               28.5054 |       48.6782 |    0.653039 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_06-55-12 |         28.5054 |      0.716517 |            0.0182618 |
+  |   1 |                31.721 |       49.3379 |    0.649622 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_10-42-49 |          31.721 |      0.697944 |              3.99333 |
+  |   2 |               31.1708 |       49.0504 |    0.651955 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_13-43-33 |         31.1708 |       0.70118 |              36.3688 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |       min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | --------: | ---------: |
+  | train/f1         | 0.699562 |  0.70118 | 0.708849 |     3 | 0.716517 | 0.705214 |  0.697944 | 0.00992185 |
+  | train/loss       |  29.8381 |  31.1708 |  31.4459 |     3 |   31.721 |  30.4657 |   28.5054 |    1.71982 |
+  | train/loss_epoch |  29.8381 |  31.1708 |  31.4459 |     3 |   31.721 |  30.4657 |   28.5054 |    1.71982 |
+  | train/loss_step  |   2.0058 |  3.99333 |  20.1811 |     3 |  36.3688 |  13.4601 | 0.0182618 |    19.9388 |
+  | val/f1           | 0.650789 | 0.651955 | 0.652497 |     3 | 0.653039 | 0.651539 |  0.649622 | 0.00174623 |
+  | val/loss         |  48.8643 |  49.0504 |  49.1942 |     3 |  49.3379 |  49.0222 |   48.6782 |   0.330756 |
+
+### Coreference probing with normalization - frozen QA, NER, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/6ina6r97
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/3pa33avv
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/8evmpcod
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('model_save_dir',)                                                                             | ('val/f1',) | ('val/loss',) | ('train/f1',) | ('train/loss',) | ('train/loss_step',) |
+  | --: | --------------------: | :---------------------------------------------------------------------------------------------- | ----------: | ------------: | ------------: | --------------: | -------------------: |
+  |   0 |               37.1514 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_16-48-28 |    0.650186 |       47.8781 |      0.667914 |         37.1514 |              36.8341 |
+  |   1 |               31.6446 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_19-37-13 |    0.658343 |        47.238 |      0.699212 |         31.6446 |              18.9016 |
+  |   2 |               37.3797 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-18_23-53-17 |     0.64542 |       48.9429 |       0.65934 |         37.3797 |              10.1475 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |     min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | ------: | --------: |
+  | train/f1         | 0.663627 | 0.667914 | 0.683563 |     3 | 0.699212 | 0.675489 | 0.65934 | 0.0209876 |
+  | train/loss       |   34.398 |  37.1514 |  37.2656 |     3 |  37.3797 |  35.3919 | 31.6446 |   3.24728 |
+  | train/loss_epoch |   34.398 |  37.1514 |  37.2656 |     3 |  37.3797 |  35.3919 | 31.6446 |   3.24728 |
+  | train/loss_step  |  14.5245 |  18.9016 |  27.8679 |     3 |  36.8341 |  21.9611 | 10.1475 |   13.6039 |
+  | val/f1           | 0.647803 | 0.650186 | 0.654265 |     3 | 0.658343 | 0.651316 | 0.64542 | 0.0065352 |
+  | val/loss         |   47.558 |  47.8781 |  48.4105 |     3 |  48.9429 |  48.0196 |  47.238 |  0.861238 |
+
+### Coreference probing with normalization - frozen QA, RE, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-re-tacred,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  +model.normalize_embeddings=True \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/normalized \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-normalized-training/runs/fmhz3kcl
+  - seed2: https://wandb.ai/tanikina/probing-normalized-training/runs/j63zc8s8
+  - seed3: https://wandb.ai/tanikina/probing-normalized-training/runs/6tudtgag
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('val/f1',) | ('model_save_dir',)                                                                             | ('train/f1',) | ('train/loss',) | ('train/loss_epoch',) | ('val/loss',) |
+  | --: | -------------------: | ----------: | :---------------------------------------------------------------------------------------------- | ------------: | --------------: | --------------------: | ------------: |
+  |   0 |              33.1225 |    0.653703 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-19_02-29-26 |      0.709982 |         29.5407 |               29.5407 |       46.4006 |
+  |   1 |             0.204524 |    0.649948 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-19_05-37-57 |      0.701985 |         30.7002 |               30.7002 |       47.1603 |
+  |   2 |                18.66 |    0.652928 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/normalized/2023-12-19_08-26-42 |      0.706523 |          30.432 |                30.432 |        48.774 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.704254 | 0.706523 | 0.708252 |     3 | 0.709982 | 0.706163 | 0.701985 | 0.00401039 |
+  | train/loss       |  29.9864 |   30.432 |  30.5661 |     3 |  30.7002 |  30.2243 |  29.5407 |    0.60701 |
+  | train/loss_epoch |  29.9864 |   30.432 |  30.5661 |     3 |  30.7002 |  30.2243 |  29.5407 |    0.60701 |
+  | train/loss_step  |  9.43227 |    18.66 |  25.8913 |     3 |  33.1225 |   17.329 | 0.204524 |    16.4993 |
+  | val/f1           | 0.651438 | 0.652928 | 0.653315 |     3 | 0.653703 | 0.652193 | 0.649948 |  0.0019823 |
+  | val/loss         |  46.7804 |  47.1603 |  47.9671 |     3 |   48.774 |   47.445 |  46.4006 |    1.21205 |
+
+### Coreference probing - frozen RE, NER, QA with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/full \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-full-training/runs/3udot8eg
+  - seed2: https://wandb.ai/tanikina/probing-full-training/runs/9ttst7y5
+  - seed3: https://wandb.ai/tanikina/probing-full-training/runs/y5rcy8c2
+
+- metric values per seed
+
+  |     | ('model_save_dir',)                                                                       | ('val/loss',) | ('train/f1',) | ('train/loss_step',) | ('val/f1',) | ('train/loss_epoch',) | ('train/loss',) |
+  | --: | :---------------------------------------------------------------------------------------- | ------------: | ------------: | -------------------: | ----------: | --------------------: | --------------: |
+  |   0 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-17_20-02-59 |       248.951 |      0.549666 |              166.738 |    0.601872 |               230.768 |         230.768 |
+  |   1 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-17_23-12-20 |       247.667 |      0.520001 |              465.965 |    0.586383 |               279.048 |         279.048 |
+  |   2 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_01-27-18 |       290.776 |       0.52328 |              263.435 |    0.580256 |               272.851 |         272.851 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.521641 |  0.52328 | 0.536473 |     3 | 0.549666 | 0.530982 | 0.520001 | 0.0162634 |
+  | train/loss       |   251.81 |  272.851 |  275.949 |     3 |  279.048 |  260.889 |  230.768 |   26.2687 |
+  | train/loss_epoch |   251.81 |  272.851 |  275.949 |     3 |  279.048 |  260.889 |  230.768 |   26.2687 |
+  | train/loss_step  |  215.086 |  263.435 |    364.7 |     3 |  465.965 |  298.712 |  166.738 |   152.701 |
+  | val/f1           | 0.583319 | 0.586383 | 0.594127 |     3 | 0.601872 | 0.589504 | 0.580256 | 0.0111405 |
+  | val/loss         |  248.309 |  248.951 |  269.863 |     3 |  290.776 |  262.465 |  247.667 |   24.5264 |
+
+### Coreference probing - frozen QA, NER, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/full \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-full-training/runs/x1lofyy8
+  - seed2: https://wandb.ai/tanikina/probing-full-training/runs/2u175ogt
+  - seed3: https://wandb.ai/tanikina/probing-full-training/runs/qxbg8ieg
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('val/loss',) | ('model_save_dir',)                                                                       | ('train/f1',) | ('val/f1',) | ('train/loss_epoch',) | ('train/loss',) |
+  | --: | -------------------: | ------------: | :---------------------------------------------------------------------------------------- | ------------: | ----------: | --------------------: | --------------: |
+  |   0 |              280.139 |       196.743 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_03-47-35 |       0.55502 |    0.619841 |               201.685 |         201.685 |
+  |   1 |              69.9742 |       198.249 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_06-27-47 |      0.516303 |    0.596272 |                244.26 |          244.26 |
+  |   2 |              40.2131 |       200.215 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_08-09-37 |      0.512569 |    0.594232 |               250.681 |         250.681 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.514436 | 0.516303 | 0.535661 |     3 |  0.55502 | 0.527964 | 0.512569 | 0.0235054 |
+  | train/loss       |  222.973 |   244.26 |   247.47 |     3 |  250.681 |  232.209 |  201.685 |   26.6281 |
+  | train/loss_epoch |  222.973 |   244.26 |   247.47 |     3 |  250.681 |  232.209 |  201.685 |   26.6281 |
+  | train/loss_step  |  55.0936 |  69.9742 |  175.057 |     3 |  280.139 |  130.109 |  40.2131 |   130.779 |
+  | val/f1           | 0.595252 | 0.596272 | 0.608056 |     3 | 0.619841 | 0.603448 | 0.594232 |  0.014233 |
+  | val/loss         |  197.496 |  198.249 |  199.232 |     3 |  200.215 |  198.403 |  196.743 |   1.74105 |
+
+### Coreference probing - frozen QA, RE, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-re-tacred,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/full \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-full-training/runs/c9l0dylz
+  - seed2: https://wandb.ai/tanikina/probing-full-training/runs/grpetavx
+  - seed3: https://wandb.ai/tanikina/probing-full-training/runs/h151rpvc
+
+- metric values per seed
+
+  |     | ('train/f1',) | ('train/loss_epoch',) | ('train/loss_step',) | ('model_save_dir',)                                                                       | ('val/loss',) | ('val/f1',) | ('train/loss',) |
+  | --: | ------------: | --------------------: | -------------------: | :---------------------------------------------------------------------------------------- | ------------: | ----------: | --------------: |
+  |   0 |      0.597682 |               200.108 |              681.312 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_09-46-40 |        230.36 |     0.61542 |         200.108 |
+  |   1 |      0.592396 |               206.583 |              376.216 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_12-22-34 |       231.394 |    0.616908 |         206.583 |
+  |   2 |      0.590505 |               210.038 |               81.074 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_14-47-24 |       237.465 |    0.622694 |         210.038 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.591451 | 0.592396 | 0.595039 |     3 | 0.597682 | 0.593528 | 0.590505 | 0.00371961 |
+  | train/loss       |  203.345 |  206.583 |   208.31 |     3 |  210.038 |  205.576 |  200.108 |    5.04089 |
+  | train/loss_epoch |  203.345 |  206.583 |   208.31 |     3 |  210.038 |  205.576 |  200.108 |    5.04089 |
+  | train/loss_step  |  228.645 |  376.216 |  528.764 |     3 |  681.312 |  379.534 |   81.074 |    300.133 |
+  | val/f1           | 0.616164 | 0.616908 | 0.619801 |     3 | 0.622694 | 0.618341 |  0.61542 | 0.00384261 |
+  | val/loss         |  230.877 |  231.394 |  234.429 |     3 |  237.465 |  233.073 |   230.36 |    3.83854 |
+
+### Coreference probing - frozen RE, NER, MRPC with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/full \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-full-training/runs/sef6i5oe
+  - seed2: https://wandb.ai/tanikina/probing-full-training/runs/2axv0vl1
+  - seed3: https://wandb.ai/tanikina/probing-full-training/runs/ps4riknw
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('val/f1',) | ('val/loss',) | ('train/loss',) | ('train/loss_epoch',) | ('train/f1',) | ('model_save_dir',)                                                                       |
+  | --: | -------------------: | ----------: | ------------: | --------------: | --------------------: | ------------: | :---------------------------------------------------------------------------------------- |
+  |   0 |               108.58 |    0.618648 |       227.437 |         182.612 |               182.612 |      0.599982 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-19_21-19-18 |
+  |   1 |              230.278 |    0.645249 |       212.226 |         126.172 |               126.172 |      0.651422 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-20_00-13-11 |
+  |   2 |              34.2899 |    0.604329 |       242.958 |         217.768 |               217.768 |      0.569193 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-20_04-40-56 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.584588 | 0.599982 | 0.625702 |     3 | 0.651422 | 0.606866 | 0.569193 | 0.0415443 |
+  | train/loss       |  154.392 |  182.612 |   200.19 |     3 |  217.768 |  175.517 |  126.172 |   46.2081 |
+  | train/loss_epoch |  154.392 |  182.612 |   200.19 |     3 |  217.768 |  175.517 |  126.172 |   46.2081 |
+  | train/loss_step  |  71.4349 |   108.58 |  169.429 |     3 |  230.278 |  124.383 |  34.2899 |   98.9453 |
+  | val/f1           | 0.611489 | 0.618648 | 0.631948 |     3 | 0.645249 | 0.622742 | 0.604329 | 0.0207646 |
+  | val/loss         |  219.832 |  227.437 |  235.198 |     3 |  242.958 |   227.54 |  212.226 |   15.3661 |
+
+### Coreference probing - frozen MRPC, RE, NER, QA with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-mrpc,bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/full \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-full-training/runs/kf5q5q59
+  - seed2: https://wandb.ai/tanikina/probing-full-training/runs/18t2ynve
+  - seed3: https://wandb.ai/tanikina/probing-full-training/runs/gwe6qx5u
+
+- metric values per seed
+
+  |     | ('train/f1',) | ('val/loss',) | ('train/loss_step',) | ('model_save_dir',)                                                                       | ('train/loss',) | ('train/loss_epoch',) | ('val/f1',) |
+  | --: | ------------: | ------------: | -------------------: | :---------------------------------------------------------------------------------------- | --------------: | --------------------: | ----------: |
+  |   0 |      0.620618 |       211.469 |              128.068 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_04-05-32 |         145.443 |               145.443 |    0.631344 |
+  |   1 |      0.603311 |       190.521 |              161.399 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_07-19-34 |         162.966 |               162.966 |    0.629587 |
+  |   2 |      0.557692 |       200.257 |              766.528 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/full/2023-12-18_10-01-42 |         199.632 |               199.632 |     0.60474 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |       std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | --------: |
+  | train/f1         | 0.580502 | 0.603311 | 0.611965 |     3 | 0.620618 | 0.593874 | 0.557692 | 0.0325074 |
+  | train/loss       |  154.205 |  162.966 |  181.299 |     3 |  199.632 |  169.347 |  145.443 |   27.6522 |
+  | train/loss_epoch |  154.205 |  162.966 |  181.299 |     3 |  199.632 |  169.347 |  145.443 |   27.6522 |
+  | train/loss_step  |  144.733 |  161.399 |  463.963 |     3 |  766.528 |  351.998 |  128.068 |    359.38 |
+  | val/f1           | 0.617164 | 0.629587 | 0.630466 |     3 | 0.631344 | 0.621891 |  0.60474 |  0.014879 |
+  | val/loss         |  195.389 |  200.257 |  205.863 |     3 |  211.469 |  200.749 |  190.521 |   10.4826 |
+
+### Coreference probing with truncation - frozen RE (9 layer), NER (6 layer), QA (8 layer) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased-re-tacred=9 \
+  +model.truncate_models.bert-base-cased-ner-ontonotes=6 \
+  +model.truncate_models.bert-base-cased-qa-squad2=8 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/truncated \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-truncated-training/runs/ufv393g0
+  - seed2: https://wandb.ai/tanikina/probing-truncated-training/runs/hujn5gz2
+  - seed3: https://wandb.ai/tanikina/probing-truncated-training/runs/61jydam7
+
+- metric values per seed
+
+  |     | ('train/f1',) | ('train/loss',) | ('train/loss_step',) | ('val/f1',) | ('model_save_dir',)                                                                            | ('train/loss_epoch',) | ('val/loss',) |
+  | --: | ------------: | --------------: | -------------------: | ----------: | :--------------------------------------------------------------------------------------------- | --------------------: | ------------: |
+  |   0 |      0.714093 |         354.968 |              471.208 |    0.642457 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-17_19-59-57 |               354.968 |       715.573 |
+  |   1 |      0.780096 |         224.666 |              270.242 |    0.656157 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-17_21-50-52 |               224.666 |       763.283 |
+  |   2 |      0.745908 |         290.715 |              544.875 |    0.652541 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_00-51-06 |               290.715 |       787.992 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         |     0.73 | 0.745908 | 0.763002 |     3 | 0.780096 | 0.746699 | 0.714093 |  0.0330085 |
+  | train/loss       |  257.691 |  290.715 |  322.842 |     3 |  354.968 |  290.117 |  224.666 |    65.1531 |
+  | train/loss_epoch |  257.691 |  290.715 |  322.842 |     3 |  354.968 |  290.117 |  224.666 |    65.1531 |
+  | train/loss_step  |  370.725 |  471.208 |  508.041 |     3 |  544.875 |  428.775 |  270.242 |    142.149 |
+  | val/f1           | 0.647499 | 0.652541 | 0.654349 |     3 | 0.656157 | 0.650385 | 0.642457 | 0.00709999 |
+  | val/loss         |  739.428 |  763.283 |  775.637 |     3 |  787.992 |  755.616 |  715.573 |    36.8131 |
+
+### Coreference probing with truncation - frozen MRPC (9 layer), NER (6 layer), QA (8 layer) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased-mrpc=9 \
+  +model.truncate_models.bert-base-cased-ner-ontonotes=6 \
+  +model.truncate_models.bert-base-cased-qa-squad2=8 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/truncated \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-truncated-training/runs/vylsknh4
+  - seed2: https://wandb.ai/tanikina/probing-truncated-training/runs/pswyqd56
+  - seed3: https://wandb.ai/tanikina/probing-truncated-training/runs/d0edi1pk
+
+- metric values per seed
+
+  |     | ('train/loss',) | ('val/loss',) | ('train/loss_step',) | ('train/loss_epoch',) | ('val/f1',) | ('model_save_dir',)                                                                            | ('train/f1',) |
+  | --: | --------------: | ------------: | -------------------: | --------------------: | ----------: | :--------------------------------------------------------------------------------------------- | ------------: |
+  |   0 |          324.31 |        726.94 |              189.798 |                324.31 |    0.649263 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_03-13-50 |      0.731751 |
+  |   1 |         291.792 |        726.74 |              338.732 |               291.792 |    0.655341 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_05-12-17 |      0.749938 |
+  |   2 |         191.578 |       764.662 |                    0 |               191.578 |    0.665642 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_07-26-28 |      0.801797 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.740845 | 0.749938 | 0.775867 |     3 | 0.801797 | 0.761162 | 0.731751 |  0.0363468 |
+  | train/loss       |  241.685 |  291.792 |  308.051 |     3 |   324.31 |  269.227 |  191.578 |    69.1832 |
+  | train/loss_epoch |  241.685 |  291.792 |  308.051 |     3 |   324.31 |  269.227 |  191.578 |    69.1832 |
+  | train/loss_step  |  94.8992 |  189.798 |  264.265 |     3 |  338.732 |  176.177 |        0 |    169.776 |
+  | val/f1           | 0.652302 | 0.655341 | 0.660491 |     3 | 0.665642 | 0.656748 | 0.649263 | 0.00827988 |
+  | val/loss         |   726.84 |   726.94 |  745.801 |     3 |  764.662 |  739.447 |   726.74 |    21.8367 |
+
+### Coreference probing with truncation - frozen MRPC (9 layer), RE (9 layer), QA (8 layer) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-qa-squad2,bert-base-cased-re-tacred,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased-mrpc=9 \
+  +model.truncate_models.bert-base-cased-re-tacred=9 \
+  +model.truncate_models.bert-base-cased-qa-squad2=8 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/truncated \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-truncated-training/runs/dprc4wmd
+  - seed2: https://wandb.ai/tanikina/probing-truncated-training/runs/4y4kz57l
+  - seed3: https://wandb.ai/tanikina/probing-truncated-training/runs/dzuypvot
+
+- metric values per seed
+
+  |     | ('train/loss_epoch',) | ('model_save_dir',)                                                                            | ('train/loss_step',) | ('val/loss',) | ('train/loss',) | ('val/f1',) | ('train/f1',) |
+  | --: | --------------------: | :--------------------------------------------------------------------------------------------- | -------------------: | ------------: | --------------: | ----------: | ------------: |
+  |   0 |               105.857 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_10-48-53 |             0.122762 |       807.914 |         105.857 |     0.67393 |      0.856183 |
+  |   1 |               217.109 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_15-44-05 |              131.769 |       812.584 |         217.109 |    0.665269 |      0.795788 |
+  |   2 |               262.777 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_18-49-59 |              46.3554 |       803.596 |         262.777 |    0.661352 |      0.773227 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         | 0.784508 | 0.795788 | 0.825985 |     3 | 0.856183 | 0.808399 | 0.773227 |  0.0428916 |
+  | train/loss       |  161.483 |  217.109 |  239.943 |     3 |  262.777 |  195.247 |  105.857 |     80.712 |
+  | train/loss_epoch |  161.483 |  217.109 |  239.943 |     3 |  262.777 |  195.247 |  105.857 |     80.712 |
+  | train/loss_step  |  23.2391 |  46.3554 |  89.0621 |     3 |  131.769 |  59.4156 | 0.122762 |    66.7877 |
+  | val/f1           | 0.663311 | 0.665269 |   0.6696 |     3 |  0.67393 |  0.66685 | 0.661352 | 0.00643641 |
+  | val/loss         |  805.755 |  807.914 |  810.249 |     3 |  812.584 |  808.031 |  803.596 |    4.49523 |
+
+### Coreference probing with truncation - frozen MRPC (9 layer), RE (9 layer), NER (6 layer) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
+  +model.freeze_models=[bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-mrpc] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased-mrpc=9 \
+  +model.truncate_models.bert-base-cased-re-tacred=9 \
+  +model.truncate_models.bert-base-cased-ner-ontonotes=6 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/truncated \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-truncated-training/runs/uhmna1ja
+  - seed2: https://wandb.ai/tanikina/probing-truncated-training/runs/2gkzyhul
+  - seed3: https://wandb.ai/tanikina/probing-truncated-training/runs/keesw0c3
+
+- metric values per seed
+
+  |     | ('train/loss_step',) | ('train/loss_epoch',) | ('model_save_dir',)                                                                            | ('train/f1',) | ('val/f1',) | ('val/loss',) | ('train/loss',) |
+  | --: | -------------------: | --------------------: | :--------------------------------------------------------------------------------------------- | ------------: | ----------: | ------------: | --------------: |
+  |   0 |              5.88322 |               293.103 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-19_21-53-57 |      0.744763 |    0.653596 |       734.703 |         293.103 |
+  |   1 |              19.3133 |               239.715 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-20_00-28-23 |      0.773015 |    0.663318 |       755.433 |         239.715 |
+  |   2 |          0.000792027 |               233.728 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-20_03-35-21 |      0.774022 |     0.66177 |       734.002 |         233.728 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |         min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | ----------: | ---------: |
+  | train/f1         | 0.758889 | 0.773015 | 0.773519 |     3 | 0.774022 | 0.763933 |    0.744763 |  0.0166095 |
+  | train/loss       |  236.721 |  239.715 |  266.409 |     3 |  293.103 |  255.515 |     233.728 |    32.6895 |
+  | train/loss_epoch |  236.721 |  239.715 |  266.409 |     3 |  293.103 |  255.515 |     233.728 |    32.6895 |
+  | train/loss_step  |  2.94201 |  5.88322 |  12.5983 |     3 |  19.3133 |  8.39912 | 0.000792027 |    9.89904 |
+  | val/f1           | 0.657683 |  0.66177 | 0.662544 |     3 | 0.663318 | 0.659561 |    0.653596 | 0.00522377 |
+  | val/loss         |  734.353 |  734.703 |  745.068 |     3 |  755.433 |   741.38 |     734.002 |    12.1759 |
+
+### Coreference probing with truncation - frozen MRPC (9 layer), RE (9 layer), NER (6 layer), QA (8 layer) with mean aggregation
+
+- command:
+
+  ```bash
+  python src/train.py \
+  experiment=conll2012_coref_hoi_multimodel_base \
+  +model.pretrained_models={bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc,bert-base-cased-re-tacred:models/pretrained/bert-base-cased-re-tacred-20230919-hf,bert-base-cased-ner-ontonotes:models/pretrained/bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2:models/pretrained/bert-base-cased-qa-squad2} \
+  +model.freeze_models=[bert-base-cased-mrpc,bert-base-cased-re-tacred,bert-base-cased-ner-ontonotes,bert-base-cased-qa-squad2] \
+  +model.aggregate.type=mean \
+  model.task_learning_rate=1e-4 \
+  +model.truncate_models.bert-base-cased-mrpc=9 \
+  +model.truncate_models.bert-base-cased-re-tacred=9 \
+  +model.truncate_models.bert-base-cased-ner-ontonotes=6 \
+  +model.truncate_models.bert-base-cased-qa-squad2=8 \
+  trainer=gpu \
+  seed=1,2,3 \
+  +hydra.callbacks.save_job_return.integrate_multirun_result=true \
+  name=probing/truncated \
+  --multirun
+
+  ```
+
+- wandb runs for different seeds:
+
+  - seed1: https://wandb.ai/tanikina/probing-truncated-training/runs/22mia798
+  - seed2: https://wandb.ai/tanikina/probing-truncated-training/runs/4pynmfgl
+  - seed3: https://wandb.ai/tanikina/probing-truncated-training/runs/k2ekyio8
+
+- metric values per seed
+
+  |     | ('model_save_dir',)                                                                            | ('train/loss',) | ('val/loss',) | ('train/f1',) | ('train/loss_step',) | ('val/f1',) | ('train/loss_epoch',) |
+  | --: | :--------------------------------------------------------------------------------------------- | --------------: | ------------: | ------------: | -------------------: | ----------: | --------------------: |
+  |   0 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-17_19-51-17 |         265.841 |       743.353 |      0.758746 |                    0 |    0.653618 |               265.841 |
+  |   1 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-17_22-23-10 |         257.644 |       724.205 |      0.762854 |               147.46 |    0.653763 |               257.644 |
+  |   2 | /netscratch/anikina/multi-task-knowledge-transfer/models/probing/truncated/2023-12-18_00-59-07 |         210.603 |       721.847 |      0.785828 |              715.651 |    0.662423 |               210.603 |
+
+- aggregated values:
+
+  |                  |      25% |      50% |      75% | count |      max |     mean |      min |        std |
+  | :--------------- | -------: | -------: | -------: | ----: | -------: | -------: | -------: | ---------: |
+  | train/f1         |   0.7608 | 0.762854 | 0.774341 |     3 | 0.785828 | 0.769143 | 0.758746 |   0.014595 |
+  | train/loss       |  234.123 |  257.644 |  261.742 |     3 |  265.841 |  244.696 |  210.603 |    29.8086 |
+  | train/loss_epoch |  234.123 |  257.644 |  261.742 |     3 |  265.841 |  244.696 |  210.603 |    29.8086 |
+  | train/loss_step  |  73.7298 |   147.46 |  431.555 |     3 |  715.651 |  287.703 |        0 |    377.876 |
+  | val/f1           | 0.653691 | 0.653763 | 0.658093 |     3 | 0.662423 | 0.656602 | 0.653618 | 0.00504224 |
+  | val/loss         |  723.026 |  724.205 |  733.779 |     3 |  743.353 |  729.802 |  721.847 |    11.7949 |
