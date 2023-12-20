@@ -79,6 +79,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         model_name: Optional[str] = None,
         gradient_clip_val: Optional[float] = None,
         gradient_clip_algorithm: str = "norm",
+        normalize_embeddings: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -101,6 +102,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             aggregate=aggregate,
             freeze_models=freeze_models,
             truncate_models=truncate_models,
+            normalize_embeddings=normalize_embeddings,
         )
 
         self.num_genres = num_genres if num_genres else len(genres)

@@ -3,6 +3,7 @@ from copy import copy
 from typing import Any, Dict, List, Optional, Union
 
 import torch
+import torch.nn.functional as F
 from torch.nn import Module, ModuleDict
 from transformers import AutoConfig, AutoModel, BertModel
 
@@ -245,6 +246,8 @@ class TransformerMultiModel(Module):
         # The size of the vocabulary of the tokenizer. If provided, the token embeddings of all models are resized
         # to this size.
         tokenizer_vocab_size: Optional[int] = None,
+        # L2 normalization
+        normalize_embeddings: bool = False,
     ):
         super().__init__()
         if len(pretrained_models) < 1:
@@ -261,6 +264,7 @@ class TransformerMultiModel(Module):
             )
         self.default_config_name = pretrained_default_config
         self.configs = {}
+        self.normalize_embeddings = normalize_embeddings
         for model_id, model_name_or_path in pretrained_models.items():
             config_kwargs = {}
             # default to the model name or path if no name_or_path is provided
@@ -358,6 +362,12 @@ class TransformerMultiModel(Module):
         results_per_model = {
             model_name: model(**inputs) for model_name, model in self.models.items()
         }
-        # get the logits from each model output
-        logits_per_model = {k: v[0] for k, v in results_per_model.items()}
+        if self.normalize_embeddings:
+            # get the normalized logits from each model output
+            logits_per_model = {
+                k: F.normalize(v[0], p=2, dim=-1) for k, v in results_per_model.items()
+            }
+        else:
+            # get the logits from each model output
+            logits_per_model = {k: v[0] for k, v in results_per_model.items()}
         return self.aggregate(logits_per_model)
