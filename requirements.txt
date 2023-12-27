@@ -1,5 +1,7 @@
 # --------- pytorch-ie --------- #
 pytorch-ie>=0.24.3,<0.25.0
+# context: https://github.com/ArneBinder/pie-datasets/issues/93
+datasets<2.16.0
 # pie-utils provides some useful helper methods for pytorch-ie,
 # e.g. document processors or span utils (convert span annotations
 # to sequence encodings such as BIO, IO or BIOUL, and back).
