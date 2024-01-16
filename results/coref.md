@@ -196,7 +196,7 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 | frozen-NER-RE-SQUAD | 0.5793 | 269.619  | 0.03082    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-ner-re-qa-models-with-mean-aggregation) |
 | frozen-BERT-3x      | 0.6195 | 320.306  | 0.00708    | [2023-11-27](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-bert-3x-models-with-mean-aggregation)   |
 
-## Probing experiments with truncated models
+## Probing experiments with truncated models (mean)
 
 **Idea:** do the same as in the [probing experiments above](#probing-experiments) but with the truncated models (6-11 layers).
 
@@ -308,7 +308,7 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 <img src="images/val_f1_truncation-6.png" width=70% height=70% />
 <img src="images/val_loss_truncation-6.png" width=70% height=70% />
 
-## Probing experiments with truncated models
+## Probing experiments with truncated models (mean)
 
 **Idea:** combine the best performing layer for each model with the frozen target and also compare different combinations of truncated models.
 
@@ -349,7 +349,7 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 | frozen-MRPC<sub>9</sub> + frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub>                                                       | 0.6596 | 741.38   | 0.0052     | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing-with-truncation---frozen-mrpc-9-layer-re-9-layer-ner-6-layer-with-mean-aggregation)                      |
 | frozen-MRPC<sub>9</sub> + frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub> + frozen-SQUAD<sub>8</sub>                            | 0.6566 | 729.802  | 0.005      | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing-with-truncation---frozen-mrpc-9-layer-re-9-layer-ner-6-layer-qa-8-layer-with-mean-aggregation)           |
 
-## Probing experiments with normalized models
+## Probing experiments with normalized models (mean)
 
 **Idea:** apply L2 norm to the output of each model before combining the embeddings.
 
@@ -377,7 +377,7 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 | frozen-MRPC + frozen-RE + frozen-NER                | 0.6515 | 49.0222  | 0.00175    | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing-with-normalization---frozen-re-ner-mrpc-with-mean-aggregation)     |
 | frozen-MRPC + frozen-RE + frozen-NER + frozen-SQUAD | 0.6556 | 48.1064  | 0.0011     | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing-with-normalization---frozen-mrpc-re-ner-qa-with-mean-aggregation)  |
 
-## Probing experiments with different combinations of full models
+## Probing experiments with different combinations of full models (mean)
 
 **Idea:** test whether combining pre-trained models can improve the results compared to the setting when we use a single model.
 
@@ -405,7 +405,7 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 | frozen-MRPC + frozen-RE + frozen-NER                | 0.6227 | 227.54   | 0.02077    | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-re-ner-mrpc-with-mean-aggregation)    |
 | frozen-MRPC + frozen-RE + frozen-NER + frozen-SQUAD | 0.6219 | 200.749  | 0.01488    | [2023-12-19](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-probing---frozen-mrpc-re-ner-qa-with-mean-aggregation) |
 
-## Comparing the val/f1 scores of full, truncated and normalized models and their combinations
+## Comparing the val/f1 scores of full, truncated and normalized models and their combinations (mean aggregation)
 
 ### Single models
 
@@ -422,6 +422,109 @@ log entry: [frozen-MRPC + frozen-BERT (K, V projections only)](https://github.co
 ### Combined multiple models
 
 <img src="images/full-truncated-normalized-combined-models.png" width=100% height=100% />
+
+## Probing experiments with truncated models (attention)
+
+**Idea:** truncate each model to the best performing layer and use attention for embedding aggregation.
+
+**Findings:** the effect of truncation is more pronounced for single models. Also, the target coreference model, MRPC and BERT do not benefit from truncation. However, NER has +9% increase in val/f1, SQUAD has +6.7% and RE +2.7% compared to the single non-truncated models (see also [the corresponding plot](#comparing-the-valf1-scores-of-full-truncated-and-normalized-models-and-their-combinations-attention-aggregation)). In general, multiple models (2-x and 3-x combinations) achieve better performance than single models.
+
+### Truncated models and their combinations with attention aggregation
+
+| setting                                                                                             | val/f1   | val/loss | val/f1/std | log entry                                                                                                                                                                |
+| :-------------------------------------------------------------------------------------------------- | :------- | :------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| frozen-MRPC<sub>9</sub>                                                                             | 0.672651 | 155.003  | 0.00300769 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-mrpc-9-with-attention-aggregation)                       |
+| frozen-NER<sub>6</sub>                                                                              | 0.643105 | 145.431  | 0.0022242  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-ner-6-with-attention-aggregation)                        |
+| frozen-RE<sub>9</sub>                                                                               | 0.637273 | 171.076  | 0.0070384  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-re-9-with-attention-aggregation)                         |
+| frozen-SQUAD<sub>8</sub>                                                                            | 0.66468  | 170.503  | 0.00557655 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-squad-8-with-attention-aggregation)                      |
+| frozen-BERT<sub>10</sub>                                                                            | 0.681845 | 173.268  | 0.00797752 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-bert-10-with-attention-aggregation)                      |
+| frozen-RE<sub>9</sub> + frozen-MRPC<sub>9</sub>                                                     | 0.687833 | 121.236  | 0.00315658 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-re-9--mrpc-9-with-attention-aggregation)                 |
+| frozen-NER<sub>6</sub> + frozen-MRPC<sub>9</sub>                                                    | 0.686681 | 109.892  | 0.00461117 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-ner-6--mrpc-9-with-attention-aggregation)                |
+| frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub>                                                      | 0.670246 | 108.743  | 0.0030897  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-re-9--ner-6-with-attention-aggregation)                  |
+| frozen-SQUAD<sub>8</sub> + frozen-MRPC<sub>9</sub>                                                  | 0.689803 | 118.49   | 0.00438541 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-squad-8--mrpc-9-with-attention-aggregation)              |
+| frozen-RE<sub>9</sub> + frozen-SQUAD<sub>8</sub>                                                    | 0.678562 | 123.458  | 0.0059257  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-re-9--squad-8-with-attention-aggregation)                |
+| frozen-NER<sub>6</sub> + frozen-SQUAD<sub>8</sub>                                                   | 0.676514 | 106.711  | 0.0055373  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-ner-6--squad-8-with-attention-aggregation)               |
+| frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub> + frozen-SQUAD<sub>8</sub>                           | 0.689792 | 102.829  | 0.00315073 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-re-9--ner-6--squad-8-with-attention-aggregation)         |
+| frozen-MRPC<sub>9</sub> + frozen-NER<sub>6</sub> + frozen-SQUAD<sub>8</sub>                         | 0.695588 | 99.5801  | 0.00349365 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-mrpc-9--ner-6--squad-8-with-attention-aggregation)       |
+| frozen-MRPC<sub>9</sub> + frozen-RE<sub>9</sub> + frozen-SQUAD<sub>8</sub>                          | 0.688117 | 92.8314  | 0.00689193 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-mrpc-9--re-9--squad-8-with-attention-aggregation)        |
+| frozen-MRPC<sub>9</sub> + frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub>                            | 0.692967 | 97.3832  | 0.00517453 | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-mrpc-9--re-9--ner-6-with-attention-aggregation)          |
+| frozen-MRPC<sub>9</sub> + frozen-RE<sub>9</sub> + frozen-NER<sub>6</sub> + frozen-SQUAD<sub>8</sub> | 0.693888 | 83.7634  | 0.0074047  | [2023-01-10](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---truncated-mrpc-9--re-9--ner-6--squad-8-with-attention-aggregation) |
+
+## Probing experiments with normalized models (attention)
+
+**Idea:** apply L2 norm to the output of each model before combining the embeddings.
+
+**Findings:** L2 norm does not work well for attention-based aggregation. Unlike in the [mean setting](#probing-experiments-with-normalized-models-mean), most of the models have a substantial drop in performance. E.g., RE loses -20% and BERT -23.2% val/f1. Only MRPC and SQUAD do not show decreased performance in this setting but there are also no significant improvements (see [the plot](#comparing-the-valf1-scores-of-full-truncated-and-normalized-models-and-their-combinations-attention-aggregation)).
+
+### Normalized models and their combinations with attention aggregation
+
+| setting                                             | val/f1   | val/loss | val/f1/std | log entry                                                                                                                                                                       |
+| :-------------------------------------------------- | :------- | :------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| frozen-MRPC                                         | 0.674845 | 47.1442  | 0.00287237 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc-with-attention-aggregation-and-normalization)                 |
+| frozen-NER                                          | 0.548155 | 70.4543  | 0.0101745  | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner-with-attention-aggregation-and-normalization)                  |
+| frozen-RE                                           | 0.410094 | 26.8787  | 0.00137878 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re-with-attention-aggregation-and-normalization)                   |
+| frozen-SQUAD                                        | 0.609778 | 59.7448  | 0.00604308 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re-with-attention-aggregation-and-normalization)                   |
+| frozen-BERT                                         | 0.439401 | 20.5582  | 0.00701831 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-bert-with-attention-aggregation-and-normalization)                 |
+| frozen-target                                       | 0.731104 | 69.0498  | 0.00544911 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-coref-hoi-with-attention-aggregation-and-normalization)            |
+| frozen-RE + frozen-MRPC                             | 0.510637 | 29.9053  | 0.138049   | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--mrpc-with-attention-aggregation-and-normalization)             |
+| frozen-NER + frozen-MRPC                            | 0.673562 | 47.636   | 0.00458003 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner--mrpc-with-attention-aggregation-and-normalization)            |
+| frozen-RE + frozen-NER                              | 0.628029 | 54.9121  | 0.00360856 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--ner-with-attention-aggregation-and-normalization)              |
+| frozen-SQUAD + frozen-MRPC                          | 0.589957 | 38.0529  | 0.150394   | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-squad--mrpc-with-attention-aggregation-and-normalization)          |
+| frozen-RE + frozen-SQUAD                            | 0.64493  | 51.8757  | 0.00297652 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--squad-with-attention-aggregation-and-normalization)            |
+| frozen-NER + frozen-SQUAD                           | 0.625125 | 52.914   | 0.00586305 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner--squad-with-attention-aggregation-and-normalization)           |
+| frozen-RE + frozen-NER + frozen-SQUAD               | 0.647068 | 50.5772  | 0.00496935 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--ner--squad-with-attention-aggregation-and-normalization)       |
+| frozen-MRPC + frozen-NER + frozen-SQUAD             | 0.591008 | 38.1187  | 0.140478   | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--ner--squad-with-attention-aggregation-and-normalization)     |
+| frozen-MRPC + frozen-RE + frozen-SQUAD              | 0.671673 | 46.0764  | 0.00208763 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--squad-with-attention-aggregation-and-normalization)      |
+| frozen-MRPC + frozen-RE + frozen-NER                | 0.668826 | 47.3133  | 0.00156691 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--ner-with-attention-aggregation-and-normalization)        |
+| frozen-MRPC + frozen-RE + frozen-NER + frozen-SQUAD | 0.668042 | 46.9918  | 0.00531737 | [2024-01-08](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--ner--squad-with-attention-aggregation-and-normalization) |
+
+## Probing experiments with different combinations of full models (attention)
+
+**Idea:** test whether combining pre-trained models can improve the results compared to the setting when we use a single model. Similar to [this](#probing-experiments-with-different-combinations-of-full-models-mean) but using attention for aggregation.
+
+**Findings:** combined models tend to perform better than the single ones. The best score is achieved by the combination of MRPC, NER and SQUAD (0.692 val/f1). Combining all four models does not further improve the performance. Also, attention-based aggregation outperforms mean aggregation in all settings except for the coreference target where it performs on par with the mean-aggregated model (see [the plot](#comparing-the-valf1-scores-of-full-models-with-mean-and-attention-based-aggregation)).
+
+### Full models and their combinations with attention aggregation
+
+| setting                                             | val/f1   | val/loss | val/f1/std | log entry                                                                                                                                                     |
+| :-------------------------------------------------- | :------- | :------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| frozen-MRPC                                         | 0.670464 | 65.3682  | 0.0070194  | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc-with-attention-aggregation)                 |
+| frozen-NER                                          | 0.553029 | 81.3176  | 0.0121541  | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner-with-attention-aggregation)                  |
+| frozen-RE                                           | 0.609666 | 82.3223  | 0.00497678 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re-with-attention-aggregation)                   |
+| frozen-SQUAD                                        | 0.598172 | 76.8875  | 0.0151241  | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-squad-with-attention-aggregation)                |
+| frozen-BERT                                         | 0.671506 | 83.9012  | 0.00491249 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-bert-with-attention-aggregation)                 |
+| frozen-target                                       | 0.735966 | 97.2517  | 0.00311543 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-target-with-attention-aggregation)               |
+| frozen-RE + frozen-MRPC                             | 0.675565 | 65.3359  | 0.00362263 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--mrpc-with-attention-aggregation)             |
+| frozen-NER + frozen-MRPC                            | 0.67939  | 63.7652  | 0.00779582 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner--mrpc-with-attention-aggregation)            |
+| frozen-RE + frozen-NER                              | 0.640016 | 68.1384  | 0.00744489 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--ner-with-attention-aggregation)              |
+| frozen-SQUAD + frozen-MRPC                          | 0.67873  | 60.8965  | 0.00918734 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-squad--mrpc-with-attention-aggregation)          |
+| frozen-RE + frozen-SQUAD                            | 0.650197 | 66.5956  | 0.00386294 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--squad-with-attention-aggregation)            |
+| frozen-NER + frozen-SQUAD                           | 0.650168 | 62.0986  | 0.00458479 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-ner--squad-with-attention-aggregation)           |
+| frozen-RE + frozen-NER + frozen-SQUAD               | 0.66243  | 61.0639  | 0.00142193 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-re--ner--squad-with-attention-aggregation)       |
+| frozen-MRPC + frozen-NER + frozen-SQUAD             | 0.692123 | 62.8922  | 0.00173043 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--ner--squad-with-attention-aggregation)     |
+| frozen-MRPC + frozen-RE + frozen-SQUAD              | 0.686309 | 64.8602  | 0.00601987 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--squad-with-attention-aggregation)      |
+| frozen-MRPC + frozen-RE + frozen-NER                | 0.683049 | 64.9278  | 0.00103655 | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--ner-with-attention-aggregation)        |
+| frozen-MRPC + frozen-RE + frozen-NER + frozen-SQUAD | 0.690279 | 65.4037  | 0.0044564  | [2024-01-06](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference---frozen-mrpc--re--ner--squad-with-attention-aggregation) |
+
+## Comparing the val/f1 scores of full, truncated and normalized models and their combinations (attention aggregation)
+
+### Single models
+
+<img src="images/full-truncated-normalized-single-models-attn.png" width=100% height=100% />
+
+### Combined models 2x
+
+<img src="images/full-truncated-normalized-combined-2x-models-attn.png" width=100% height=100% />
+
+### Combined multiple models
+
+<img src="images/full-truncated-normalized-combined-models-attn.png" width=100% height=100% />
+
+## Comparing the val/f1 scores of full models with mean and attention-based aggregation
+
+### Single models (mean vs attention)
+
+<img src="images/full-mean-vs-attn.png" width=100% height=100% />
 
 ## TODOs & Ideas:
 
