@@ -79,7 +79,8 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         model_name: Optional[str] = None,
         gradient_clip_val: Optional[float] = None,
         gradient_clip_algorithm: str = "norm",
-        normalize_embeddings: bool = False,
+        normalize_embeddings: Optional[bool] = False,
+        cossim_target_embed_key: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -103,6 +104,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
             freeze_models=freeze_models,
             truncate_models=truncate_models,
             normalize_embeddings=normalize_embeddings,
+            cossim_target_embed_key=cossim_target_embed_key,
         )
 
         self.num_genres = num_genres if num_genres else len(genres)
@@ -277,7 +279,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         gold_starts=None,
         gold_ends=None,
         gold_mention_cluster_map=None,
-    ) -> Tuple[CorefHoiModelBatchOutput, Optional[torch.Tensor]]:
+    ) -> Tuple[CorefHoiModelBatchOutput, Optional[torch.Tensor], Optional[Dict]]:
         batch_size = input_ids.shape[0]
         assert batch_size == 1, "Only support batch size 1 for now"
         # use just first example in batch
@@ -305,7 +307,9 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
 
         # get the sequence logits aggregated over all models
         model_inputs = {"input_ids": input_ids, "attention_mask": input_mask}
-        embedded_inputs = self.base_models(**model_inputs)  # [seg length, num tokens, emb size]
+        embedded_inputs, embed_cossim_dict = self.base_models(
+            **model_inputs
+        )  # [seg length, num tokens, emb size]
 
         input_mask = input_mask.to(torch.bool)  # [seg length, num tokens]
         mention_doc = embedded_inputs[input_mask]
@@ -563,6 +567,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
                     top_antecedent_scores=top_antecedent_scores,
                 ),
                 None,
+                embed_cossim_dict,
             )
 
         # Get gold labels
@@ -683,6 +688,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
                 top_antecedent_scores=top_antecedent_scores,
             ),
             loss,
+            embed_cossim_dict,
         )
 
     def _extract_top_spans(
@@ -799,13 +805,14 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         self,
         stage: str,
         batch: CorefHoiModelStepBatchEncoding,
+        batch_idx: int,
     ):
         inputs, targets = batch
         # check the target content
         assert targets is not None, "target has to be available for training"
         assert set(targets) == {"gold_starts", "gold_ends", "gold_mention_cluster_map"}
 
-        batch_predictions, loss = self(**inputs, **targets)
+        batch_predictions, loss, embed_cossim_dict = self(**inputs, **targets)
         cluster2mentions: Dict[int, List[List[int]]] = dict()
         for mention_idx, m_cluster in enumerate(
             targets["gold_mention_cluster_map"][0].cpu().detach().numpy().tolist()
@@ -842,6 +849,19 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         # show loss on each step only during training
         self.log(f"{stage}/f1", f1_value, on_step=True, on_epoch=False, prog_bar=True)
         self.log(f"{stage}/loss", loss, on_step=(stage == TRAINING), on_epoch=True, prog_bar=True)
+        per_batch_embed_cossim_dict = dict()
+        for cossim_model_name in embed_cossim_dict:
+            # add batch_idx
+            per_batch_key = str(batch_idx) + "/" + cossim_model_name
+            per_batch_embed_cossim_dict[per_batch_key] = embed_cossim_dict[cossim_model_name]
+
+            self.log(
+                f"{stage}/cossim: {per_batch_key}",
+                per_batch_embed_cossim_dict[per_batch_key],
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+            )
 
         return loss
 
@@ -852,7 +872,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         for opt in self.optimizers():
             opt.zero_grad()
 
-        loss = self.step(stage=TRAINING, batch=batch)
+        loss = self.step(stage=TRAINING, batch=batch, batch_idx=batch_idx)
         self.manual_backward(loss)
 
         for opt in self.optimizers():
@@ -872,10 +892,10 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         return loss
 
     def validation_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
-        return self.step(stage=VALIDATION, batch=batch)
+        return self.step(stage=VALIDATION, batch=batch, batch_idx=batch_idx)
 
     def test_step(self, batch: CorefHoiModelStepBatchEncoding, batch_idx: int):
-        return self.step(stage=TEST, batch=batch)
+        return self.step(stage=TEST, batch=batch, batch_idx=batch_idx)
 
     def on_train_epoch_end(self):
         self.epoch_end(stage=TRAINING)

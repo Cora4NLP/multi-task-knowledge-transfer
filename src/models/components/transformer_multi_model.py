@@ -85,6 +85,7 @@ class AttentionBasedAggregator(Module):
         project_target_value: Whether to project the target model embeddings with a linear value layer. If disabled,
             the target model embeddings are used directly as the value vectors. Defaults to True.
         reuse_target_query_as_key: Whether to reuse the target model query vector as the key vector. Defaults to True.
+        concat_last_layers: Whether to concatenate the embeddings of the last k layers. Defaults to 1 (only the last hidden layer is used).
 
     Returns:
         The aggregated model output of shape (batch_size, num_tokens, output_size).
@@ -104,6 +105,7 @@ class AttentionBasedAggregator(Module):
         project_target_key: bool = True,
         project_target_value: bool = True,
         reuse_target_query_as_key: bool = True,
+        concat_last_layers: int = 1,
     ):
         super().__init__()
         # the index of the model to use as the query. If a string is provided, it is the key of the model in
@@ -116,13 +118,30 @@ class AttentionBasedAggregator(Module):
         self.output_size = output_size or input_size
         self.n_models = len(model_ids)
         self.attention_logger = AggregatorAttentionLogger(model_ids)
+        self.concat_last_layers = concat_last_layers
+
+        if self.concat_last_layers > 1:
+            if (
+                not (project_target_query)
+                or not (project_target_key)
+                or not (project_target_value)
+            ):
+                logger.warning(
+                    "We need projections for the embeddings if concat_last_layer is used, project_target_query, project_target_key and project_target_value are overwritten with True."
+                )
+                project_target_query = True
+                project_target_key = True
+                project_target_value = True
+            # by default self.input_size=self.config.hidden_size
+            # we need to multiply it by the number of concatenated layers
+            self.input_size = self.concat_last_layers * self.input_size
 
         if not (project_target_query and project_target_key) and self.hidden_size != input_size:
             logger.warning(
                 f"We do not project the target embeddings with a query or key layer, "
                 f"so hidden_size [{self.hidden_size}] is overwritten with input_size [{input_size}]."
             )
-            self.hidden_size = input_size
+            self.hidden_size = self.input_size
 
         if not project_target_value and self.output_size != self.input_size:
             logger.warning(
@@ -168,13 +187,33 @@ class AttentionBasedAggregator(Module):
         query_key = (
             self.query_idx if isinstance(self.query_idx, str) else list(x.keys())[self.query_idx]
         )
-        # (batch_size, num_tokens, output_size, num_models)
-        values = torch.stack([k(v) for k, v in zip(self.values, x.values())], dim=-1)
+        # values: (batch_size, num_tokens, output_size, num_models)
+        if self.concat_last_layers > 1:
+            values = torch.stack(
+                [
+                    k(
+                        torch.stack([state for state in v.hidden_states], dim=-1)[
+                            :, :, :, -self.concat_last_layers :
+                        ].flatten(start_dim=-2)
+                    )
+                    for k, v in zip(self.values, x.values())
+                ],
+                dim=-1,
+            )
+        else:
+            values = torch.stack([k(v) for k, v in zip(self.values, x.values())], dim=-1)
+
         batch_size, num_tokens = values.shape[:2]
 
         if self.mode_query == "token":
             # (batch_size, num_tokens, hidden_size)
-            query = self.query(x[query_key])
+            if self.concat_last_layers > 1:
+                query = torch.stack([state for state in x[query_key].hidden_states], dim=-1)
+                query = self.query(
+                    query[:, :, :, -self.concat_last_layers :].flatten(start_dim=-2)
+                )
+            else:
+                query = self.query(x[query_key])
         elif self.mode_query == "cls":
             # (batch_size, hidden_size)
             query_cls = self.query(x[query_key][:, 0, :])
@@ -193,7 +232,21 @@ class AttentionBasedAggregator(Module):
 
         if self.mode_keys == "token":
             # (batch_size, num_tokens, hidden_size, num_models)
-            keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+            if self.concat_last_layers > 1:
+                keys = torch.stack(
+                    [
+                        k(
+                            torch.stack([state for state in v.hidden_states], dim=-1)[
+                                :, :, :, -self.concat_last_layers :
+                            ].flatten(start_dim=-2)
+                        )
+                        for k, v in zip(self.keys, x.values())
+                    ],
+                    dim=-1,
+                )
+            else:
+                keys = torch.stack([k(v) for k, v in zip(self.keys, x.values())], dim=-1)
+
         elif self.mode_keys == "cls":
             # (batch_size, hidden_size, num_models)
             keys_cls = torch.stack([k(v[:, 0, :]) for k, v in zip(self.keys, x.values())], dim=-1)
@@ -247,7 +300,9 @@ class TransformerMultiModel(Module):
         # to this size.
         tokenizer_vocab_size: Optional[int] = None,
         # L2 normalization
-        normalize_embeddings: bool = False,
+        normalize_embeddings: Optional[bool] = False,
+        # Name of the model that we use as a target for computing embedding cossim.
+        cossim_target_embed_key: Optional[str] = None,
     ):
         super().__init__()
         if len(pretrained_models) < 1:
@@ -265,6 +320,8 @@ class TransformerMultiModel(Module):
         self.default_config_name = pretrained_default_config
         self.configs = {}
         self.normalize_embeddings = normalize_embeddings
+        self.cossim_target_embed_key = cossim_target_embed_key
+        self.cossim = torch.nn.CosineSimilarity(dim=-1, eps=1e-6)
         for model_id, model_name_or_path in pretrained_models.items():
             config_kwargs = {}
             # default to the model name or path if no name_or_path is provided
@@ -331,7 +388,20 @@ class TransformerMultiModel(Module):
         else:
             # copy to not modify the original
             aggregate_config = copy(aggregate)
+        if "concat_last_layers" in aggregate_config:
+            self.concat_last_layers = aggregate_config["concat_last_layers"]
+        else:
+            self.concat_last_layers = 1  # default value
         aggregate_type = aggregate_config.pop("type")
+        # we don't support concatenation of multiple last layers (concat_last_layers > 1)
+        # for embedding aggregation methods that do not use attention
+        if self.concat_last_layers > 1 and aggregate_type != "attention":
+            logger.warning(
+                f"Concatenation of multiple layers is not supported for {aggregate_type} aggregation, setting concat_last_layers to 1"
+            )
+            self.concat_last_layers = 1
+            aggregate_config["concat_last_layers"] = 1
+
         if aggregate_type == "mean":
             self.aggregate = aggregate_mean
         elif aggregate_type == "sum":
@@ -360,14 +430,37 @@ class TransformerMultiModel(Module):
 
     def forward(self, **inputs):
         results_per_model = {
-            model_name: model(**inputs) for model_name, model in self.models.items()
+            model_name: model(**inputs, output_hidden_states=True)
+            for model_name, model in self.models.items()
         }
         if self.normalize_embeddings:
-            # get the normalized logits from each model output
-            logits_per_model = {
-                k: F.normalize(v[0], p=2, dim=-1) for k, v in results_per_model.items()
-            }
+            if self.concat_last_layers > 1:
+                raise NotImplementedError(
+                    "Normalization with concatenated last layers is not supported"
+                )
+            else:
+                # get the normalized logits from each model output
+                logits_per_model = {
+                    k: F.normalize(v[0], p=2, dim=-1) for k, v in results_per_model.items()
+                }
         else:
             # get the logits from each model output
-            logits_per_model = {k: v[0] for k, v in results_per_model.items()}
-        return self.aggregate(logits_per_model)
+            if self.concat_last_layers > 1:
+                logits_per_model = {k: v for k, v in results_per_model.items()}
+            else:
+                logits_per_model = {k: v[0] for k, v in results_per_model.items()}
+        # log cossim
+        embed_cossim_dict = dict()
+        if self.cossim_target_embed_key is not None:
+            if self.concat_last_layers > 1:
+                target_embeds = logits_per_model[self.cossim_target_embed_key].last_hidden_state
+            else:
+                target_embeds = logits_per_model[self.cossim_target_embed_key]
+            for model_id, model_embeds in logits_per_model.items():
+                if model_id != self.cossim_target_embed_key:
+                    if self.concat_last_layers > 1:
+                        model_embeds = model_embeds.last_hidden_state
+                    embed_cossim = self.cossim(target_embeds, model_embeds)
+                    embed_cossim = torch.mean(torch.mean(embed_cossim, dim=-1), dim=-1)
+                    embed_cossim_dict[self.cossim_target_embed_key + "/" + model_id] = embed_cossim
+        return self.aggregate(logits_per_model), embed_cossim_dict
