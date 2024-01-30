@@ -79,7 +79,7 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         model_name: Optional[str] = None,
         gradient_clip_val: Optional[float] = None,
         gradient_clip_algorithm: str = "norm",
-        normalize_embeddings: Optional[bool] = False,
+        normalize_embeddings: bool = False,
         cossim_target_embed_key: Optional[str] = None,
         **kwargs,
     ) -> None:
