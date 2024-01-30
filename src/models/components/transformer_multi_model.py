@@ -85,7 +85,7 @@ class AttentionBasedAggregator(Module):
         project_target_value: Whether to project the target model embeddings with a linear value layer. If disabled,
             the target model embeddings are used directly as the value vectors. Defaults to True.
         reuse_target_query_as_key: Whether to reuse the target model query vector as the key vector. Defaults to True.
-        use_outputs_from_last_n_layers: Whether to concatenate the embeddings of the last k layers. Defaults to 1 (only the last hidden layer is used).
+        use_outputs_from_last_n_layers: Whether to concatenate the embeddings of the last n layers. Defaults to 1 (only the last hidden layer is used).
 
     Returns:
         The aggregated model output of shape (batch_size, num_tokens, output_size).
@@ -441,7 +441,7 @@ class TransformerMultiModel(Module):
                     "Normalization with concatenated last layers is not supported"
                 )
             else:
-                # get the normalized logits from each model output
+                # get the normalized logits (L2 norm) from each model output
                 logits_per_model = {
                     k: F.normalize(v[0], p=2, dim=-1) for k, v in results_per_model.items()
                 }
