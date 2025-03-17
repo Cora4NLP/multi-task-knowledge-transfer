@@ -11,7 +11,9 @@
 
 </div>
 
-![probing_workflow.png](figures/probing_workflow.png "Probing workflow with Coreference Resolution (Coref) as target task and four different source tasks: Relation Extraction (RE), Question Answering (QA), Named Entity Recognition (NER), and Paraphrase Detection (MRPC).")
+<p align="center">
+<img src="figures/probing_workflow.png" alt="Probing workflow with Coreference Resolution (Coref) as target task and four different source tasks: Relation Extraction (RE), Question Answering (QA), Named Entity Recognition (NER), and Paraphrase Detection (MRPC)." width=42% height=42%>
+</p>
 
 ## 📌 Description
 
