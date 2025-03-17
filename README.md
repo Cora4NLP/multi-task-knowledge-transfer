@@ -261,3 +261,16 @@ pre-commit run -a
 # run tests
 pytest -k "not slow" --cov --cov-report term-missing
 ```
+
+## 📃 Citation
+
+```bibtex
+@article{Anikina2025ReversePE,
+  title={Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution},
+  author={Tatiana Anikina and Arne Binder and David Harbecke and Stalin Varanasi and Leonhard Hennig and Simon Ostermann and Sebastian Moller and Josef van Genabith},
+  journal={ArXiv},
+  year={2025},
+  volume={abs/2501.19316},
+  url={https://api.semanticscholar.org/CorpusID:276079972}
+}
+```
