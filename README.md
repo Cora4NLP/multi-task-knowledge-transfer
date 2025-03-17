@@ -18,7 +18,7 @@
 ## 📌 Description
 
 This repository contains the code for the experiments described in the
-paper [Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution (Anikina et al., RepL4NLP 2024)](https://arxiv.org/pdf/2501.19316) that will be presented at the 10th Workshop on Representation Learning for NLP co-located with NAACL 2025 in Albuquerque, New Mexico. See the [official website](https://sites.google.com/view/repl4nlp2025) for more information.
+paper [Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution (Anikina et al., RepL4NLP 2025)](https://arxiv.org/pdf/2501.19316) that will be presented at the 10th Workshop on Representation Learning for NLP co-located with NAACL 2025 in Albuquerque, New Mexico. See the [official website](https://sites.google.com/view/repl4nlp2025) for more information.
 
 ## 📃 Abstract
 
