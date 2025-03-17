@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v5.0.0
     hooks:
       # list of supported hooks: https://pre-commit.com/hooks.html
       - id: trailing-whitespace
@@ -30,7 +30,7 @@ repos:
 
   # python docstring formatting
   - repo: https://github.com/myint/docformatter
-    rev: v1.4
+    rev: 06907d0 # v1.4
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-summaries=99, --wrap-descriptions=99]
@@ -64,7 +64,7 @@ repos:
 
   # md formatting
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.14
+    rev: 0.7.17
     hooks:
       - id: mdformat
         args: ["--number"]
