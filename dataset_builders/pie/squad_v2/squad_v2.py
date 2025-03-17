@@ -81,6 +81,7 @@ class SquadV2Config(datasets.BuilderConfig):
 
     def __init__(self, **kwargs):
         """BuilderConfig for SQuAD v2.0.
+
         Args:
           **kwargs: keyword arguments forwarded to super.
         """

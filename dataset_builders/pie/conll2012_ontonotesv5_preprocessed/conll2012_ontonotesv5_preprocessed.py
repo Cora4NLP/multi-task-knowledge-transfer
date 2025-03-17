@@ -80,6 +80,7 @@ class Conll2012OntonotesV5PreprocessedConfig(datasets.BuilderConfig):
 
     def __init__(self, **kwargs):
         """BuilderConfig for CDCP.
+
         Args:
           **kwargs: keyword arguments forwarded to super.
         """
