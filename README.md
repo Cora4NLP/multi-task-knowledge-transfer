@@ -7,7 +7,7 @@
 <a href="https://hydra.cc/"><img alt="Config: Hydra" src="https://img.shields.io/badge/Config-Hydra-89b8cd"></a>
 <a href="https://github.com/ChristophAlt/pytorch-ie-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-PyTorch--IE--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
 [![Paper](http://img.shields.io/badge/paper-arxiv.2501.19316-B31B1B.svg)](https://arxiv.org/abs/2501.19316)
-[![Conference](http://img.shields.io/badge/Rep4NLP@NAACL-2025-4b44ce.svg)](https://sites.google.com/view/repl4nlp2025)
+[![Conference](http://img.shields.io/badge/RepL4NLP@NAACL-2025-4b44ce.svg)](https://sites.google.com/view/repl4nlp2025)
 
 </div>
 
@@ -18,7 +18,7 @@
 ## 📌 Description
 
 This repository contains the code for the experiments described in the
-paper [Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution (Anikina et al., Rep4NLP 2024)](https://arxiv.org/pdf/2501.19316) that will be presented at the 10th Workshop on Representation Learning for NLP co-located with NAACL 2025 in Albuquerque, New Mexico. See the [official website](https://sites.google.com/view/repl4nlp2025) for more information.
+paper [Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution (Anikina et al., RepL4NLP 2024)](https://arxiv.org/pdf/2501.19316) that will be presented at the 10th Workshop on Representation Learning for NLP co-located with NAACL 2025 in Albuquerque, New Mexico. See the [official website](https://sites.google.com/view/repl4nlp2025) for more information.
 
 ## 📃 Abstract
 
