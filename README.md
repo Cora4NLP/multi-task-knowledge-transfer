@@ -120,6 +120,26 @@ To run the data preparation code on the DFKI cluster, you can execute the follow
 $ usrun.sh --output=$PWD/preprocess-coref.out -p RTX3090-MLT --mem=24G scripts/prepare_coref_data.sh &
 ```
 
+Note that `usrun.sh` script is simply a wrapper for the srun command that loads the corresponding image that already includes all the libraraies installed from `requirements.txt`, you can also load any other image that supports torch, e.g. `IMAGE=/netscratch/enroot/nvcr.io_nvidia_pytorch_23.06-py3.sqsh` and then simply run `pip install -r requirements.txt` to get the same environment on the cluster.
+
+<details>
+
+<summary>Content of the `usrun.sh` script</summary>
+
+```
+#!/bin/sh
+IMAGE=/netscratch/anikina/updated-mtask-knowledge-transfer.sqsh
+srun -K \
+  --container-mounts=/netscratch:/netscratch,/ds:/ds,$HOME:$HOME \
+  --container-workdir=$HOME \
+  --container-image=$IMAGE \
+  --ntasks=1 \
+  --nodes=1 \
+  $*
+```
+
+</details>
+
 DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref`
 
 #### Extractive Question Answering
