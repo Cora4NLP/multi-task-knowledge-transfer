@@ -284,6 +284,27 @@ pre-commit run -a
 pytest -k "not slow" --cov --cov-report term-missing
 ```
 
+## How to reproduce our results?
+
+We have performed extensive experiments with different models and configurations. The experiments that are relevant for the paper are summarized in [`results/coref.md`](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/results/coref.md). Each set of experiments has a link to the log entry that includes the exact command to train a model for each configuration together with the obtained results and links to the W&B project.
+
+For instance, for the experiments with layer truncation with frozen target + frozen MRPC where we truncate only the MRPC model (frozen-target<sub>12</sub> + frozen-MRPC<sub>2</sub>) you can have a look at [the corresponding log entry](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-pre-trained-target-model--frozen-mrpc-model-mrpc-truncated-to-2-layers) linked in [this table](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/results/coref.md#experiments-with-layer-truncation-with-frozen-target--frozen-mrpc-where-we-truncate-only-the-mrpc-model) in `results/coref.md` where you can find the training command and the results:
+
+```
+python src/train.py \
+experiment=conll2012_coref_hoi_multimodel_base \
++model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
++model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
++model.aggregate=attention \
+model.task_learning_rate=1e-4 \
+trainer=gpu \
++model.truncate_models.bert-base-cased-mrpc=2 \
+seed=1,2,3 \
++wandb_watch=attention_activation \
++hydra.callbacks.save_job_return.integrate_multirun_result=true \
+--multirun
+```
+
 ## 📃 Citation
 
 ```bibtex
