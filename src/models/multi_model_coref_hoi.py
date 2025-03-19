@@ -289,7 +289,6 @@ class MultiModelCorefHoiModel(PyTorchIEModel):
         sentence_len = sentence_len[0]
         genre = genre[0]
         sentence_map = sentence_map[0]
-
         """Model and input are already on the device."""
         device = self.device
 

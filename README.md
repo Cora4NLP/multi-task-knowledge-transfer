@@ -6,14 +6,25 @@
 <a href="https://pytorchlightning.ai/"><img alt="Lightning" src="https://img.shields.io/badge/-Lightning-792ee5?logo=pytorchlightning&logoColor=white"></a>
 <a href="https://hydra.cc/"><img alt="Config: Hydra" src="https://img.shields.io/badge/Config-Hydra-89b8cd"></a>
 <a href="https://github.com/ChristophAlt/pytorch-ie-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-PyTorch--IE--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
-[![Paper](http://img.shields.io/badge/paper-arxiv.1001.2234-B31B1B.svg)](https://www.nature.com/articles/nature14539)
-[![Conference](http://img.shields.io/badge/AnyConference-year-4b44ce.svg)](https://papers.nips.cc/paper/2020)
+[![Paper](http://img.shields.io/badge/paper-arxiv.2501.19316-B31B1B.svg)](https://arxiv.org/abs/2501.19316)
+[![Conference](http://img.shields.io/badge/RepL4NLP@NAACL-2025-4b44ce.svg)](https://sites.google.com/view/repl4nlp2025)
 
 </div>
 
+<p align="center">
+<img src="figures/probing_workflow.png" alt="Probing workflow with Coreference Resolution (Coref) as target task and four different source tasks: Relation Extraction (RE), Question Answering (QA), Named Entity Recognition (NER), and Paraphrase Detection (MRPC)." width=42% height=42%>
+</p>
+
 ## 📌 Description
 
-What it does
+This repository contains the code for the experiments described in the
+paper [Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution (Anikina et al., RepL4NLP 2025)](https://arxiv.org/pdf/2501.19316) that will be presented at the 10th Workshop on Representation Learning for NLP co-located with NAACL 2025 in Albuquerque, New Mexico. See the [official website](https://sites.google.com/view/repl4nlp2025) for more information.
+
+## 📃 Abstract
+
+In this work, we reimagine classical probing to evaluate knowledge transfer from simple source to more complex target tasks. Instead of probing frozen representations from a complex source task on diverse simple target probing tasks (as usually done in probing), we explore the effectiveness of embeddings from multiple simple source tasks on a single target task. We select coreference resolution, a linguistically complex problem requiring contextual understanding, as focus target task, and test the usefulness of embeddings from comparably simpler tasks such as paraphrase detection, named entity recognition, and relation extraction. Through systematic experiments, we evaluate the impact of individual and combined task embeddings.
+
+Our findings reveal that task embeddings vary significantly in utility for coreference resolution, with semantic similarity tasks (e.g., paraphrase detection) proving most beneficial. Additionally, representations from intermediate layers of fine-tuned models often outperform those from final layers. Combining embeddings from multiple tasks consistently improves performance, with attention-based aggregation yielding substantial gains. These insights shed light on relationships between task-specific representations and their adaptability to complex downstream tasks, encouraging further exploration of embedding-level task transfer.
 
 ## 🚀 Quickstart
 
@@ -108,6 +119,26 @@ To run the data preparation code on the DFKI cluster, you can execute the follow
 ```
 $ usrun.sh --output=$PWD/preprocess-coref.out -p RTX3090-MLT --mem=24G scripts/prepare_coref_data.sh &
 ```
+
+Note that `usrun.sh` script is simply a wrapper for the `srun` command that loads the corresponding image that already includes all the libraries installed from `requirements.txt`, but you can also load any other image that supports torch, e.g. `IMAGE=/netscratch/enroot/nvcr.io_nvidia_pytorch_23.06-py3.sqsh` and then simply run `pip install -r requirements.txt` to get the same environment on the cluster.
+
+<details>
+
+<summary>Content of the `usrun.sh` script</summary>
+
+```
+#!/bin/sh
+IMAGE=/netscratch/anikina/updated-mtask-knowledge-transfer.sqsh
+srun -K \
+  --container-mounts=/netscratch:/netscratch,/ds:/ds,$HOME:$HOME \
+  --container-workdir=$HOME \
+  --container-image=$IMAGE \
+  --ntasks=1 \
+  --nodes=1 \
+  $*
+```
+
+</details>
 
 DFKI-internal: On the cluster, use `CONLL2012_ONTONOTESV5_PREPROCESSED_DATA_DIR=/ds/text/cora4nlp/datasets/ontonotes_coref`
 
@@ -251,4 +282,38 @@ pre-commit run -a
 
 # run tests
 pytest -k "not slow" --cov --cov-report term-missing
+```
+
+## How to reproduce our results?
+
+We have performed extensive experiments with different models and configurations. The experiments that are relevant for the paper are summarized in [`results/coref.md`](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/results/coref.md). Each set of experiments has a link to the log entry that includes the exact command to train a model for each configuration together with the obtained results and links to the W&B project.
+
+For instance, for the experiments with layer truncation with frozen target + frozen MRPC where we truncate only the MRPC model (frozen-target<sub>12</sub> + frozen-MRPC<sub>2</sub>) you can have a look at [the corresponding log entry](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/log.md#coreference-resolution---frozen-pre-trained-target-model--frozen-mrpc-model-mrpc-truncated-to-2-layers) linked in [this table](https://github.com/Cora4NLP/multi-task-knowledge-transfer/blob/main/results/coref.md#experiments-with-layer-truncation-with-frozen-target--frozen-mrpc-where-we-truncate-only-the-mrpc-model) in `results/coref.md` where you can find the training command and the results:
+
+```
+python src/train.py \
+experiment=conll2012_coref_hoi_multimodel_base \
++model.pretrained_models={bert-base-cased-coref-hoi:models/pretrained/bert-base-cased-coref-hoi,bert-base-cased-mrpc:bert-base-cased-finetuned-mrpc} \
++model.freeze_models=[bert-base-cased-coref-hoi,bert-base-cased-mrpc] \
++model.aggregate=attention \
+model.task_learning_rate=1e-4 \
+trainer=gpu \
++model.truncate_models.bert-base-cased-mrpc=2 \
+seed=1,2,3 \
++wandb_watch=attention_activation \
++hydra.callbacks.save_job_return.integrate_multirun_result=true \
+--multirun
+```
+
+## 📃 Citation
+
+```bibtex
+@article{Anikina2025ReversePE,
+  title={Reverse Probing: Evaluating Knowledge Transfer via Finetuned Task Embeddings for Coreference Resolution},
+  author={Tatiana Anikina and Arne Binder and David Harbecke and Stalin Varanasi and Leonhard Hennig and Simon Ostermann and Sebastian Moller and Josef van Genabith},
+  journal={ArXiv},
+  year={2025},
+  volume={abs/2501.19316},
+  url={https://api.semanticscholar.org/CorpusID:276079972}
+}
 ```
