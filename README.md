@@ -120,7 +120,7 @@ To run the data preparation code on the DFKI cluster, you can execute the follow
 $ usrun.sh --output=$PWD/preprocess-coref.out -p RTX3090-MLT --mem=24G scripts/prepare_coref_data.sh &
 ```
 
-Note that `usrun.sh` script is simply a wrapper for the srun command that loads the corresponding image that already includes all the libraraies installed from `requirements.txt`, you can also load any other image that supports torch, e.g. `IMAGE=/netscratch/enroot/nvcr.io_nvidia_pytorch_23.06-py3.sqsh` and then simply run `pip install -r requirements.txt` to get the same environment on the cluster.
+Note that `usrun.sh` script is simply a wrapper for the `srun` command that loads the corresponding image that already includes all the libraries installed from `requirements.txt`, but you can also load any other image that supports torch, e.g. `IMAGE=/netscratch/enroot/nvcr.io_nvidia_pytorch_23.06-py3.sqsh` and then simply run `pip install -r requirements.txt` to get the same environment on the cluster.
 
 <details>
 
